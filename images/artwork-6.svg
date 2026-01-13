@@ -1,0 +1,6 @@
+<svg width="800" height="1000" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1000" fill="#f0f0f0"/>
+  <rect x="300" y="400" width="200" height="200" fill="#c41e3a" opacity="0.7"/>
+  <text x="400" y="550" font-family="Arial" font-size="24" text-anchor="middle" fill="#333">Artwork 6</text>
+  <text x="400" y="580" font-family="Arial" font-size="16" text-anchor="middle" fill="#666">(Replace with your photo)</text>
+</svg>

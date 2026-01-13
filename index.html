@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Λ◦T – Original Acrylic Works by Takura</title>
+    <meta name="description" content="Original acrylic paintings exploring emotion and space. Red focal points against blue and white voids. Available worldwide.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="logo">Λ◦T</a>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="#gallery" data-i18n="nav.gallery">Gallery</a>
+                    <a href="#about" data-i18n="nav.about">About</a>
+                    <a href="#contact" data-i18n="nav.enquire">Enquire</a>
+                </div>
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="en" title="English">
+                        <span class="flag">🇬🇧</span>
+                    </button>
+                    <button class="lang-btn" data-lang="fr" title="Français">
+                        <span class="flag">🇫🇷</span>
+                    </button>
+                    <button class="lang-btn" data-lang="de" title="Deutsch">
+                        <span class="flag">🇩🇪</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="line" data-i18n="hero.line1">I paint what moves through me.</span>
+                <span class="line" data-i18n="hero.line2">Joy, loss, recognition.</span>
+                <span class="line" data-i18n="hero.line3">Moments held in space.</span>
+            </h1>
+            <p class="hero-subtitle" data-i18n="hero.subtitle">Original acrylic works by Takura</p>
+        </div>
+        <div class="hero-scroll">
+            <span data-i18n="hero.scroll">Scroll to explore</span>
+            <div class="scroll-indicator"></div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery">
+        <div class="gallery-intro">
+            <h2 data-i18n="gallery.title">Collection</h2>
+            <p data-i18n="gallery.description">Exploring how we hold emotion in space. Red focal points against blue and white voids. Each piece catches something before it escapes.</p>
+        </div>
+        
+        <div class="gallery-grid">
+            <!-- Artwork Item 1 -->
+            <div class="artwork-item" data-available="true">
+                <div class="artwork-image">
+                    <img src="images/artwork-1.svg" alt="Untitled Red Focal 01" loading="lazy">
+                    <div class="artwork-overlay">
+                        <button class="btn-inquire" onclick="openInquiry('Untitled Red Focal 01')">Enquire</button>
+                    </div>
+                </div>
+                <div class="artwork-info">
+                    <h3>Untitled Red Focal 01</h3>
+                    <p class="artwork-details">Acrylic on canvas | 60 × 80 cm | 2025</p>
+                    <p class="artwork-price">Price: POA</p>
+                    <p class="artwork-shipping">Worldwide shipping available</p>
+                    <span class="artwork-status available">Available</span>
+                </div>
+            </div>
+
+            <!-- Artwork Item 2 -->
+            <div class="artwork-item" data-available="true">
+                <div class="artwork-image">
+                    <img src="images/artwork-2.svg" alt="Blue Void with Memory" loading="lazy">
+                    <div class="artwork-overlay">
+                        <button class="btn-inquire" onclick="openInquiry('Blue Void with Memory')">Enquire</button>
+                    </div>
+                </div>
+                <div class="artwork-info">
+                    <h3>Blue Void with Memory</h3>
+                    <p class="artwork-details">Acrylic on canvas | 50 × 70 cm | 2025</p>
+                    <p class="artwork-price">Price: POA</p>
+                    <p class="artwork-shipping">Worldwide shipping available</p>
+                    <span class="artwork-status available">Available</span>
+                </div>
+            </div>
+
+            <!-- Artwork Item 3 -->
+            <div class="artwork-item" data-available="false">
+                <div class="artwork-image">
+                    <img src="images/artwork-3.svg" alt="Recognition Series 01" loading="lazy">
+                    <div class="sold-label">Sold</div>
+                </div>
+                <div class="artwork-info">
+                    <h3>Recognition Series 01</h3>
+                    <p class="artwork-details">Acrylic on canvas | 60 × 80 cm | 2024</p>
+                    <span class="artwork-status sold">Sold</span>
+                </div>
+            </div>
+
+            <!-- Artwork Item 4 -->
+            <div class="artwork-item" data-available="true">
+                <div class="artwork-image">
+                    <img src="images/artwork-4.svg" alt="White Space, Red Anchor" loading="lazy">
+                    <div class="artwork-overlay">
+                        <button class="btn-inquire" onclick="openInquiry('White Space, Red Anchor')">Enquire</button>
+                    </div>
+                </div>
+                <div class="artwork-info">
+                    <h3>White Space, Red Anchor</h3>
+                    <p class="artwork-details">Acrylic on canvas | 70 × 90 cm | 2025</p>
+                    <p class="artwork-price">Price: POA</p>
+                    <p class="artwork-shipping">Worldwide shipping available</p>
+                    <span class="artwork-status available">Available</span>
+                </div>
+            </div>
+
+            <!-- Artwork Item 5 -->
+            <div class="artwork-item" data-available="true">
+                <div class="artwork-image">
+                    <img src="images/artwork-5.svg" alt="Loss in Blue" loading="lazy">
+                    <div class="artwork-overlay">
+                        <button class="btn-inquire" onclick="openInquiry('Loss in Blue')">Enquire</button>
+                    </div>
+                </div>
+                <div class="artwork-info">
+                    <h3>Loss in Blue</h3>
+                    <p class="artwork-details">Acrylic on canvas | 60 × 80 cm | 2025</p>
+                    <p class="artwork-price">Price: POA</p>
+                    <p class="artwork-shipping">Worldwide shipping available</p>
+                    <span class="artwork-status available">Available</span>
+                </div>
+            </div>
+
+            <!-- Artwork Item 6 -->
+            <div class="artwork-item" data-available="true">
+                <div class="artwork-image">
+                    <img src="images/artwork-6.svg" alt="Joy Fragment" loading="lazy">
+                    <div class="artwork-overlay">
+                        <button class="btn-inquire" onclick="openInquiry('Joy Fragment')">Enquire</button>
+                    </div>
+                </div>
+                <div class="artwork-info">
+                    <h3>Joy Fragment</h3>
+                    <p class="artwork-details">Acrylic on canvas | 50 × 70 cm | 2025</p>
+                    <p class="artwork-price">Price: POA</p>
+                    <p class="artwork-shipping">Worldwide shipping available</p>
+                    <span class="artwork-status available">Available</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="about-container">
+            <div class="about-text">
+                <h2 data-i18n="about.title">About the Work</h2>
+                <p class="lead" data-i18n="about.lead">Creating visual moments where feeling becomes tangible.</p>
+                <p data-i18n="about.p1">These pieces explore how we hold emotion in space. The red focal points against blue and white natural voids. Joy, loss, recognition. Moments where memory finds form.</p>
+                <p data-i18n="about.p2">I've spent years understanding how people move through space, how light falls, where the eye rests. Now I paint those invisible structures—the architecture we build around our feelings, the voids we navigate between moments.</p>
+                <p data-i18n="about.p3">Each piece is an exploration. Acrylic on canvas. Immediate, direct, unrefined in the best way—catching something before it disappears.</p>
+            </div>
+            <div class="about-details">
+                <div class="detail-item">
+                    <h3 data-i18n="about.medium.title">Medium</h3>
+                    <p data-i18n="about.medium.text">Acrylic on canvas</p>
+                </div>
+                <div class="detail-item">
+                    <h3 data-i18n="about.style.title">Visual Language</h3>
+                    <p data-i18n="about.style.text">Abstract spatial exploration—red focal elements against blue and white natural voids</p>
+                </div>
+                <div class="detail-item">
+                    <h3 data-i18n="about.collection.title">Collection</h3>
+                    <p data-i18n="about.collection.text">15 original works, 2024-2025</p>
+                </div>
+                <div class="detail-item">
+                    <h3 data-i18n="about.approach.title">Approach</h3>
+                    <p data-i18n="about.approach.text">Each piece explores themes of joy, loss, and recognition through spatial experience</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact/Enquiry Section -->
+    <section id="contact" class="contact">
+        <div class="contact-container">
+            <h2 data-i18n="contact.title">Enquire About a Piece</h2>
+            <p class="contact-subtitle" data-i18n="contact.subtitle">All works are original, one-of-a-kind. Pricing transparent: time + materials + margin. Direct sales, no gallery commission.</p>
+            
+            <form class="contact-form" id="contactForm" method="POST" data-netlify="true" name="contact">
+                <input type="hidden" name="form-name" value="contact">
+                
+                <div class="form-group">
+                    <label for="name" data-i18n="contact.form.name">Your Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email" data-i18n="contact.form.email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone" data-i18n="contact.form.phone">Phone (Optional)</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="artwork" data-i18n="contact.form.artwork">Piece You're Interested In</label>
+                    <select id="artwork" name="artwork">
+                        <option value="" data-i18n="contact.form.select">Select a piece</option>
+                        <option value="Untitled Red Focal 01">Untitled Red Focal 01</option>
+                        <option value="Blue Void with Memory">Blue Void with Memory</option>
+                        <option value="White Space, Red Anchor">White Space, Red Anchor</option>
+                        <option value="Loss in Blue">Loss in Blue</option>
+                        <option value="Joy Fragment">Joy Fragment</option>
+                        <option value="General Enquiry" data-i18n="contact.form.general">General Enquiry</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message" data-i18n="contact.form.message">Message</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn-submit" data-i18n="contact.form.submit">Send Enquiry</button>
+            </form>
+
+            <div class="contact-direct">
+                <p><strong data-i18n="contact.direct.title">Prefer to reach out directly?</strong></p>
+                <p><span data-i18n="contact.direct.email">Email:</span> <a href="/cdn-cgi/l/email-protection#0c69627d79657e65697f4c6d606f64696175636a786465626b7f226f6361"><span class="__cf_email__" data-cfemail="81e4eff0f4e8f3e8e4f2c1e0ede2e9e4ecf8eee7f5e9e8efe6f2afe2eeec">[email&#160;protected]</span></a></p>
+                <p><span data-i18n="contact.direct.whatsapp">WhatsApp:</span> <a href="https://wa.me/27674414688" target="_blank">+27 67 441 4688</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-logo">Λ◦T</div>
+            <p>&copy; 2025 Takura. All works original and protected.</p>
+            <div class="footer-links">
+                <a href="#gallery">Gallery</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

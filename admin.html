@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Λ◦T – Admin Panel</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>Λ◦T Admin</h1>
+            <p>Enter password to manage your gallery</p>
+            <form id="loginForm">
+                <input type="password" id="passwordInput" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p id="loginError" class="error-message"></p>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="admin-container" style="display: none;">
+        <nav class="admin-nav">
+            <div class="admin-nav-header">
+                <h1>Λ◦T Admin Panel</h1>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="showTab('artworks')">Artworks</button>
+                <button class="tab-btn" onclick="showTab('about')">About Section</button>
+                <button class="tab-btn" onclick="showTab('settings')">Settings</button>
+            </div>
+        </nav>
+
+        <!-- Artworks Tab -->
+        <div id="artworksTab" class="tab-content active">
+            <div class="content-header">
+                <h2>Manage Artworks</h2>
+                <button onclick="openArtworkModal()" class="btn-primary">+ Add New Artwork</button>
+            </div>
+            
+            <div id="artworksList" class="artworks-grid">
+                <!-- Artworks will be loaded here -->
+            </div>
+        </div>
+
+        <!-- About Section Tab -->
+        <div id="aboutTab" class="tab-content">
+            <div class="content-header">
+                <h2>Edit About Section</h2>
+                <button onclick="saveAboutSection()" class="btn-primary">Save Changes</button>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label>Lead Text (subtitle)</label>
+                    <input type="text" id="aboutLead" placeholder="Creating visual moments where feeling becomes tangible.">
+                </div>
+                
+                <div class="form-group">
+                    <label>Paragraph 1</label>
+                    <textarea id="aboutP1" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Paragraph 2</label>
+                    <textarea id="aboutP2" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Paragraph 3</label>
+                    <textarea id="aboutP3" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settingsTab" class="tab-content">
+            <div class="content-header">
+                <h2>Admin Settings</h2>
+            </div>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label>Change Admin Password</label>
+                    <input type="password" id="newPassword" placeholder="New password">
+                    <button onclick="changePassword()" class="btn-secondary">Update Password</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Export Data (Backup)</label>
+                    <p class="help-text">Download all your artwork data and about text as a backup</p>
+                    <button onclick="exportData()" class="btn-secondary">Export JSON</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Import Data (Restore)</label>
+                    <p class="help-text">Upload a previously exported backup file</p>
+                    <input type="file" id="importFile" accept=".json">
+                    <button onclick="importData()" class="btn-secondary">Import JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Artwork Modal -->
+    <div id="artworkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Artwork</h2>
+                <button onclick="closeArtworkModal()" class="btn-close">&times;</button>
+            </div>
+            
+            <form id="artworkForm" class="modal-body">
+                <div class="form-group">
+                    <label>Title *</label>
+                    <input type="text" id="artworkTitle" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Medium *</label>
+                        <input type="text" id="artworkMedium" value="Acrylic on canvas" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Size (e.g. 60 × 80 cm) *</label>
+                        <input type="text" id="artworkSize" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Year *</label>
+                        <input type="number" id="artworkYear" value="2025" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select id="artworkStatus" required>
+                            <option value="available">Available</option>
+                            <option value="sold">Sold</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Price</label>
+                    <input type="text" id="artworkPrice" value="POA" placeholder="POA or specific price">
+                    <p class="help-text">POA = Price On Application</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Image File *</label>
+                    <input type="file" id="artworkImage" accept="image/*">
+                    <p class="help-text">Recommended: 1200-1600px, under 500KB. Will be saved as base64.</p>
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+                
+                <input type="hidden" id="artworkId">
+                
+                <div class="modal-actions">
+                    <button type="button" onclick="closeArtworkModal()" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Artwork</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>
