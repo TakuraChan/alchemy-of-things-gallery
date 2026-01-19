@@ -1,88 +1,77 @@
-# Λ◦T – Alchemy of Things Gallery
+# Λ◦T - Restrained Website
 
-Original acrylic works by Takura. Exploring emotion through spatial experience.
-
-## 🌐 Live Site
-
-- **Primary:** [alchemyofthings.com](https://alchemyofthings.com)
-- **Secondary:** [alchemyofthings.co.za](https://alchemyofthings.co.za)
-
-## 🎨 About
-
-This is the source code for the Alchemy of Things art gallery website. It showcases original acrylic paintings with a focus on red focal points against blue and white natural voids.
-
-**Features:**
-- 🌍 Multilingual support (English, French, German)
-- 📱 Fully responsive design
-- 🔐 Password-protected admin panel
-- ✉️ Contact form with Netlify integration
-- 🚀 Fast loading and optimized images
-
-## 🛠️ Technology Stack
-
-- **Frontend:** Pure HTML, CSS, JavaScript (no frameworks)
-- **Hosting:** Netlify
-- **Deployment:** Automatic via Git push
-- **Forms:** Netlify Forms
-- **Admin:** Browser-based localStorage CMS
-
-## 📁 Project Structure
-
-```
-alchemy-of-things-gallery/
-├── index.html              # Main gallery page
-├── styles.css              # Styling
-├── script.js               # Interactions & translations
-├── admin.html              # Admin panel
-├── admin-styles.css        # Admin styling
-├── admin-script.js         # Admin functionality
-├── netlify.toml            # Netlify configuration
-├── images/                 # Artwork images
-│   ├── artwork-1.svg       # Placeholder 1
-│   ├── artwork-2.svg       # Placeholder 2
-│   └── ...
-└── docs/                   # Documentation
-    ├── README.md
-    ├── ADMIN_GUIDE.md
-    └── ...
-```
-
-## 🚀 Deployment
-
-This site automatically deploys to Netlify when you push to the main branch.
-
-**To deploy changes:**
-```bash
-git add .
-git commit -m "Your change description"
-git push origin main
-```
-
-Netlify will build and deploy automatically (usually within 30-60 seconds).
-
-## 🔐 Admin Panel
-
-Access the admin panel at: [alchemyofthings.com/admin.html](https://alchemyofthings.com/admin.html)
-
-**Default password:** `alchemy2025` (change immediately!)
-
-**Admin features:**
-- Add/edit/delete artworks
-- Edit about section
-- Backup & restore data
-- Change admin password
-
-## 📧 Contact
-
-- **Email:** enquiries@alchemyofthings.com
-- **WhatsApp:** +27 67 441 4688
-
-## 📝 License
-
-All artwork images and content © 2025 Takura. All rights reserved.
-
-Website code is for portfolio/personal use only.
+A quiet, intentional space for finished work.
 
 ---
 
-Built with care and minimal impedance ⚗️
+## Deploy
+
+1. Upload these files to GitHub: `TakuraChan/alchemy-of-things-gallery`
+2. Connect to Netlify (already configured)
+3. Replace placeholder images with actual work
+4. Push → Goes live
+
+---
+
+## Files
+
+```
+index.html          Landing
+works.html          Works index
+work-01.html        Individual works (1-6)
+contact.html        Contact
+styles.css          Styles
+netlify.toml        Config
+images/             Artworks (replace placeholders)
+```
+
+---
+
+## Principles
+
+- Depth over reach
+- Restraint over abundance  
+- Ambiguity over explanation
+- Presence over promotion
+- Authority without spectacle
+
+**Read:** `PHILOSOPHY.md` for complete implementation guide.
+
+---
+
+## Update Content
+
+**To change work titles/metadata:**
+- Edit `work-01.html` through `work-06.html`
+- Update title, year, dimensions, status
+- Push to GitHub
+
+**To replace images:**
+- Replace files in `/images/` folder
+- Keep same filenames or update HTML
+- Push to GitHub
+
+**To add/remove works:**
+- Update `works.html` (index list)
+- Create/remove `work-XX.html` pages
+- Update navigation arrows
+- Push to GitHub
+
+---
+
+## What's Different
+
+This site **is not:**
+- A portfolio
+- A shop
+- A brand
+- A content platform
+
+This site **is:**
+- A container for resolved work
+- Available but not accessible
+- Present for those who find it
+
+---
+
+**The work exists whether or not it is purchased.**
