@@ -2,27 +2,987 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin — Alchemy of Things</title>
-    
-    <!-- Decap CMS (formerly Netlify CMS) -->
-    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-    
+    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* Custom admin styling to match site aesthetic */
-        [data-slate-editor] { 
-            -webkit-user-modify: read-write !important; 
+        :root {
+            --bg: #faf9f7;
+            --bg-card: #ffffff;
+            --text: #1a1a1a;
+            --text-muted: #6b6b6b;
+            --text-light: #999999;
+            --border: #e8e6e3;
+            --accent: #2c2c2c;
+            --success: #4a7c59;
+            --error: #c44536;
+            --font: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
         }
-        
-        body {
-            font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            font-family: var(--font);
+            font-weight: 300;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            font-family: var(--font);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            text-align: center;
+        }
+
+        .login-screen h1 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-screen p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .login-btn {
+            padding: 1rem 2.5rem;
+            border: 1px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .setup-screen {
+            max-width: 500px;
+            margin: 0 auto;
+            padding-top: 4rem;
+        }
+
+        .setup-screen h2 {
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .setup-screen p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .setup-screen ol {
+            margin-left: 1.5rem;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .setup-screen li {
+            margin-bottom: 0.5rem;
+        }
+
+        .setup-screen code {
+            background: var(--bg-card);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            font-family: var(--font);
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: var(--text);
+            border-bottom-color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            font-family: var(--font);
+            font-size: 1rem;
+            font-weight: 300;
+            color: var(--text);
+            transition: border-color 0.3s ease;
+            border-radius: 0;
+            -webkit-appearance: none;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--text);
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .form-checkbox input {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+
+        .form-checkbox span {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .image-upload {
+            position: relative;
+            border: 2px dashed var(--border);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-card);
+        }
+
+        .image-upload:hover {
+            border-color: var(--text-muted);
+        }
+
+        .image-upload.has-image {
+            border-style: solid;
+            padding: 0;
+        }
+
+        .image-upload input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .image-upload-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .image-upload-text strong {
+            color: var(--text);
+            font-weight: 400;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--text);
+            background: var(--text);
+            color: var(--bg);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: transparent;
+            color: var(--text);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .message.success {
+            background: #f0f7f2;
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .message.error {
+            background: #fdf4f3;
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .works-list {
+            margin-top: 2rem;
+        }
+
+        .works-list h3 {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: lowercase;
+            letter-spacing: 0.05em;
+        }
+
+        .work-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+            background: var(--bg-card);
+        }
+
+        .work-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--bg);
+        }
+
+        .work-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .work-title {
+            font-size: 0.95rem;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .work-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .work-delete {
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .work-delete:hover {
+            color: var(--error);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        .loading::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section-divider {
+            margin: 3rem 0;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-divider h3 {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab {
+                padding: 1rem;
+                white-space: nowrap;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <h1>Alchemy of Things</h1>
+        <p>Admin access required</p>
+        <button class="login-btn" onclick="login()">Enter</button>
+    </div>
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="container hidden">
+        <div class="setup-screen">
+            <h2>Setup Required</h2>
+            <p>To save works to your repository, enter your GitHub Personal Access Token.</p>
+            <ol>
+                <li>Go to <a href="https://github.com/settings/tokens/new?scopes=repo&description=Alchemy%20Admin" target="_blank">GitHub Token Settings</a></li>
+                <li>Set expiration as desired</li>
+                <li>Ensure <code>repo</code> is checked</li>
+                <li>Generate and copy the token</li>
+            </ol>
+            <div class="form-group">
+                <label class="form-label">GitHub Token</label>
+                <input type="password" id="github-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Repository (owner/repo)</label>
+                <input type="text" id="github-repo-input" class="form-input" placeholder="username/alchemy-of-things">
+            </div>
+            <button class="submit-btn" onclick="saveGitHubConfig()">Save Configuration</button>
+        </div>
+    </div>
+
+    <!-- Main Admin -->
+    <div id="admin-screen" class="container hidden">
+        <header class="header">
+            <h1>Admin</h1>
+            <div class="user-info">
+                <span id="user-email"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="paintings">Paintings</button>
+            <button class="tab" data-tab="photography">Photography</button>
+            <button class="tab" data-tab="settings">Settings</button>
+        </div>
+
+        <div id="message" class="message hidden"></div>
+
+        <!-- Paintings Tab -->
+        <div id="tab-paintings" class="tab-content">
+            <form id="painting-form">
+                <div class="form-group">
+                    <label class="form-label">Image</label>
+                    <div class="image-upload" id="painting-image-upload">
+                        <input type="file" accept="image/*" id="painting-image" onchange="handleImageUpload(this, 'painting')">
+                        <div class="image-upload-text">
+                            <strong>Tap to upload</strong><br>
+                            or drag and drop
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="painting-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Year</label>
+                    <input type="number" id="painting-year" class="form-input" value="2025" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Medium</label>
+                    <input type="text" id="painting-medium" class="form-input" value="Acrylic on canvas">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dimensions</label>
+                    <input type="text" id="painting-dimensions" class="form-input" placeholder="60 × 80 cm">
+                    <p class="form-hint">Use × for multiplication sign</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="painting-available" checked>
+                        <span>Available for acquisition</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="painting-submit">Add Painting</button>
+            </form>
+
+            <div class="works-list" id="paintings-list">
+                <h3>Existing Works</h3>
+                <div id="paintings-items"><div class="loading"></div></div>
+            </div>
+        </div>
+
+        <!-- Photography Tab -->
+        <div id="tab-photography" class="tab-content hidden">
+            <p class="form-hint" style="margin-bottom: 1.5rem;">
+                Secondary material. Only 3–5 elevated photographs maximum.
+            </p>
+
+            <form id="photography-form">
+                <div class="form-group">
+                    <label class="form-label">Image</label>
+                    <div class="image-upload" id="photography-image-upload">
+                        <input type="file" accept="image/*" id="photography-image" onchange="handleImageUpload(this, 'photography')">
+                        <div class="image-upload-text">
+                            <strong>Tap to upload</strong><br>
+                            or drag and drop
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="photography-title" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Year</label>
+                    <input type="number" id="photography-year" class="form-input" value="2025" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Medium</label>
+                    <input type="text" id="photography-medium" class="form-input" value="Archival pigment print">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dimensions</label>
+                    <input type="text" id="photography-dimensions" class="form-input" placeholder="40 × 30 cm">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Edition</label>
+                    <input type="text" id="photography-edition" class="form-input" placeholder="Edition of 5">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="photography-available" checked>
+                        <span>Available for acquisition</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="photography-submit">Add Photograph</button>
+            </form>
+
+            <div class="works-list">
+                <h3>Existing Works</h3>
+                <div id="photography-items"><div class="loading"></div></div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="tab-content hidden">
+            <form id="symbol-form">
+                <div class="form-group">
+                    <label class="form-label">Symbol</label>
+                    <div class="image-upload" id="symbol-image-upload">
+                        <input type="file" accept="image/svg+xml,image/png" id="symbol-image" onchange="handleImageUpload(this, 'symbol')">
+                        <div class="image-upload-text">
+                            <strong>Upload symbol</strong><br>
+                            SVG preferred
+                        </div>
+                    </div>
+                    <p class="form-hint">Your authorship symbol. Appears in navigation and footer.</p>
+                </div>
+
+                <button type="submit" class="submit-btn">Update Symbol</button>
+            </form>
+
+            <div class="section-divider">
+                <h3>GitHub Configuration</h3>
+                <div class="form-group">
+                    <label class="form-label">Repository</label>
+                    <input type="text" id="settings-repo" class="form-input" readonly>
+                </div>
+                <button class="logout-btn" onclick="clearGitHubConfig()" style="margin-top: 1rem;">Reset GitHub Config</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth0 SDK -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+
     <script>
-        // Initialize Decap CMS
-        CMS.init();
+        const AUTH0_CONFIG = {
+            domain: 'dev-0or17tvlovkdkwt6.us.auth0.com',
+            clientId: 'Wawyj8DhMBc40evEU5tB6Q4dqmEjQ3i8',
+            authorizationParams: {
+                redirect_uri: window.location.origin + '/admin/'
+            }
+        };
+
+        let auth0Client = null;
+        let currentUser = null;
+        let githubConfig = null;
+        let currentImageData = { painting: null, photography: null, symbol: null };
+
+        async function init() {
+            try {
+                auth0Client = await auth0.createAuth0Client(AUTH0_CONFIG);
+
+                if (window.location.search.includes('code=')) {
+                    await auth0Client.handleRedirectCallback();
+                    window.history.replaceState({}, document.title, '/admin/');
+                }
+
+                const isAuthenticated = await auth0Client.isAuthenticated();
+
+                if (isAuthenticated) {
+                    currentUser = await auth0Client.getUser();
+                    showAdminOrSetup();
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+        }
+
+        function showAdminOrSetup() {
+            document.getElementById('login-screen').classList.add('hidden');
+            githubConfig = JSON.parse(localStorage.getItem('alchemy_github_config'));
+            
+            if (!githubConfig || !githubConfig.token || !githubConfig.repo) {
+                document.getElementById('setup-screen').classList.remove('hidden');
+                document.getElementById('admin-screen').classList.add('hidden');
+            } else {
+                document.getElementById('setup-screen').classList.add('hidden');
+                document.getElementById('admin-screen').classList.remove('hidden');
+                document.getElementById('user-email').textContent = currentUser.email;
+                document.getElementById('settings-repo').value = githubConfig.repo;
+                loadWorks();
+            }
+        }
+
+        async function login() {
+            await auth0Client.loginWithRedirect();
+        }
+
+        async function logout() {
+            await auth0Client.logout({ logoutParams: { returnTo: window.location.origin } });
+        }
+
+        function saveGitHubConfig() {
+            const token = document.getElementById('github-token-input').value.trim();
+            const repo = document.getElementById('github-repo-input').value.trim();
+
+            if (!token || !repo) {
+                alert('Please enter both token and repository');
+                return;
+            }
+
+            githubConfig = { token, repo };
+            localStorage.setItem('alchemy_github_config', JSON.stringify(githubConfig));
+            showAdminOrSetup();
+        }
+
+        function clearGitHubConfig() {
+            if (confirm('Reset GitHub configuration?')) {
+                localStorage.removeItem('alchemy_github_config');
+                githubConfig = null;
+                showAdminOrSetup();
+            }
+        }
+
+        // Tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            });
+        });
+
+        // Image upload
+        function handleImageUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const container = document.getElementById(`${type}-image-upload`);
+                container.classList.add('has-image');
+                container.innerHTML = `
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, '${type}')">
+                    <img src="${e.target.result}" class="image-preview" alt="Preview">
+                `;
+                currentImageData[type] = {
+                    data: e.target.result.split(',')[1],
+                    name: file.name,
+                    type: file.type
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // GitHub API
+        async function githubRequest(endpoint, method = 'GET', body = null) {
+            const url = `https://api.github.com/repos/${githubConfig.repo}${endpoint}`;
+            const options = {
+                method,
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            };
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+            const response = await fetch(url, options);
+            if (!response.ok && response.status !== 404) {
+                throw new Error(`GitHub API error: ${response.status}`);
+            }
+            return response;
+        }
+
+        async function getFileContent(path) {
+            try {
+                const response = await githubRequest(`/contents/${path}`);
+                if (response.status === 404) return null;
+                return await response.json();
+            } catch { return null; }
+        }
+
+        async function createOrUpdateFile(path, content, message) {
+            const existing = await getFileContent(path);
+            const body = {
+                message,
+                content: btoa(unescape(encodeURIComponent(content))),
+                branch: 'main'
+            };
+            if (existing && existing.sha) body.sha = existing.sha;
+            await githubRequest(`/contents/${path}`, 'PUT', body);
+        }
+
+        async function uploadImage(imageData, folder) {
+            const ext = imageData.type.split('/')[1] || 'jpg';
+            const filename = `${Date.now()}.${ext}`;
+            const path = `images/${folder}/${filename}`;
+            
+            await githubRequest(`/contents/${path}`, 'PUT', {
+                message: `Add image: ${filename}`,
+                content: imageData.data,
+                branch: 'main'
+            });
+            return `/${path}`;
+        }
+
+        // Load works
+        async function loadWorks() {
+            await loadWorksList('paintings', 'paintings-items');
+            await loadWorksList('photography', 'photography-items');
+        }
+
+        async function loadWorksList(type, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="loading"></div>';
+            
+            try {
+                const response = await githubRequest(`/contents/data/${type}`);
+                if (response.status === 404) {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">No works yet.</p>';
+                    return;
+                }
+                
+                const files = await response.json();
+                if (!Array.isArray(files) || files.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">No works yet.</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                for (const file of files) {
+                    if (!file.name.endsWith('.json')) continue;
+                    try {
+                        const fileResponse = await githubRequest(`/contents/data/${type}/${file.name}`);
+                        const fileData = await fileResponse.json();
+                        const work = JSON.parse(atob(fileData.content));
+                        
+                        const item = document.createElement('div');
+                        item.className = 'work-item';
+                        item.innerHTML = `
+                            <img src="${work.image}" class="work-thumb" alt="${work.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22><rect fill=%22%23e8e6e3%22 width=%2260%22 height=%2260%22/></svg>'">
+                            <div class="work-info">
+                                <div class="work-title">${work.title}</div>
+                                <div class="work-meta">${work.year} · ${work.available ? 'Available' : 'Sold'}</div>
+                            </div>
+                            <button class="work-delete" onclick="deleteWork('${type}', '${file.name}', '${fileData.sha}')">Delete</button>
+                        `;
+                        container.appendChild(item);
+                    } catch (e) { console.error('Error loading work:', e); }
+                }
+            } catch (error) {
+                console.error('Error loading works:', error);
+                container.innerHTML = '<p style="color: var(--error); font-size: 0.9rem;">Error loading works.</p>';
+            }
+        }
+
+        async function deleteWork(type, filename, sha) {
+            if (!confirm('Delete this work?')) return;
+            try {
+                await githubRequest(`/contents/data/${type}/${filename}`, 'DELETE', {
+                    message: `Delete ${filename}`,
+                    sha: sha,
+                    branch: 'main'
+                });
+                showMessage('Work deleted.', 'success');
+                loadWorks();
+            } catch (error) {
+                showMessage('Error deleting work.', 'error');
+            }
+        }
+
+        // Form submissions
+        document.getElementById('painting-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveWork('painting');
+        });
+
+        document.getElementById('photography-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveWork('photography');
+        });
+
+        document.getElementById('symbol-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveSymbol();
+        });
+
+        async function saveWork(type) {
+            const submitBtn = document.getElementById(`${type}-submit`);
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                if (!currentImageData[type]) throw new Error('Please upload an image');
+
+                const title = document.getElementById(`${type}-title`).value.trim();
+                const year = parseInt(document.getElementById(`${type}-year`).value);
+                const medium = document.getElementById(`${type}-medium`).value.trim();
+                const dimensions = document.getElementById(`${type}-dimensions`).value.trim();
+                const available = document.getElementById(`${type}-available`).checked;
+
+                if (!title) throw new Error('Please enter a title');
+
+                const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const folder = type === 'painting' ? 'paintings' : 'photography';
+                const imagePath = await uploadImage(currentImageData[type], folder);
+
+                const work = { id, title, year, medium, dimensions, image: imagePath, available };
+
+                if (type === 'photography') {
+                    const edition = document.getElementById('photography-edition').value.trim();
+                    if (edition) work.edition = edition;
+                }
+
+                await createOrUpdateFile(`data/${folder}/${id}.json`, JSON.stringify(work, null, 2), `Add ${type}: ${title}`);
+
+                showMessage(`${title} saved successfully.`, 'success');
+                
+                document.getElementById(`${type}-form`).reset();
+                const container = document.getElementById(`${type}-image-upload`);
+                container.classList.remove('has-image');
+                container.innerHTML = `
+                    <input type="file" accept="image/*" onchange="handleImageUpload(this, '${type}')">
+                    <div class="image-upload-text"><strong>Tap to upload</strong><br>or drag and drop</div>
+                `;
+                currentImageData[type] = null;
+                loadWorks();
+
+            } catch (error) {
+                showMessage(error.message || 'Error saving work.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = type === 'painting' ? 'Add Painting' : 'Add Photograph';
+            }
+        }
+
+        async function saveSymbol() {
+            const submitBtn = document.querySelector('#symbol-form .submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            try {
+                if (!currentImageData.symbol) throw new Error('Please upload a symbol');
+
+                const existing = await getFileContent('images/symbol.svg');
+                
+                await githubRequest('/contents/images/symbol.svg', 'PUT', {
+                    message: 'Update symbol',
+                    content: currentImageData.symbol.data,
+                    sha: existing?.sha,
+                    branch: 'main'
+                });
+
+                showMessage('Symbol updated.', 'success');
+                currentImageData.symbol = null;
+
+            } catch (error) {
+                showMessage(error.message || 'Error saving symbol.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Symbol';
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 5000);
+        }
+
+        init();
     </script>
 </body>
 </html>
