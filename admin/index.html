@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Alchemy of Things</title>
+    
+    <!-- Decap CMS (formerly Netlify CMS) -->
+    <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    
+    <style>
+        /* Custom admin styling to match site aesthetic */
+        [data-slate-editor] { 
+            -webkit-user-modify: read-write !important; 
+        }
+        
+        body {
+            font-family: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Initialize Decap CMS
+        CMS.init();
+    </script>
+</body>
+</html>

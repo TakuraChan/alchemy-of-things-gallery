@@ -1,0 +1,149 @@
+# Decap CMS Configuration
+# Documentation: https://decapcms.org/docs/
+
+backend:
+  name: git-gateway
+  branch: main
+
+# Media files storage
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+# Site settings
+site_url: https://alchemyofthings.com
+display_url: https://alchemyofthings.com
+logo_url: /images/symbol.svg
+
+# Slug configuration
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
+# Collections
+collections:
+  # Paintings (Primary Work)
+  - name: "paintings"
+    label: "Paintings"
+    label_singular: "Painting"
+    description: "Primary work. Paintings lead."
+    folder: "data/paintings"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} ({{year}})"
+    sortable_fields: ['title', 'year']
+    view_groups:
+      - label: Year
+        field: year
+      - label: Availability
+        field: available
+    fields:
+      - label: "ID"
+        name: "id"
+        widget: "string"
+        hint: "Unique identifier (auto-generated from title)"
+        pattern: ['^[a-z0-9-]+$', "Must be lowercase letters, numbers, and hyphens only"]
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "Title of the work"
+      - label: "Year"
+        name: "year"
+        widget: "number"
+        value_type: "int"
+        min: 1900
+        max: 2100
+      - label: "Medium"
+        name: "medium"
+        widget: "string"
+        default: "Acrylic on canvas"
+        hint: "e.g., Acrylic on canvas, Oil on linen"
+      - label: "Dimensions"
+        name: "dimensions"
+        widget: "string"
+        hint: "e.g., 60 × 80 cm"
+      - label: "Image"
+        name: "image"
+        widget: "image"
+        allow_multiple: false
+        hint: "High quality photograph of the work"
+      - label: "Available"
+        name: "available"
+        widget: "boolean"
+        default: true
+        hint: "Is this work available for acquisition?"
+
+  # Photography (Secondary Work)
+  - name: "photography"
+    label: "Photography"
+    label_singular: "Photograph"
+    description: "Secondary material. Only elevated works (3-5 maximum)."
+    folder: "data/photography"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} ({{year}})"
+    fields:
+      - label: "ID"
+        name: "id"
+        widget: "string"
+        pattern: ['^[a-z0-9-]+$', "Must be lowercase letters, numbers, and hyphens only"]
+      - label: "Title"
+        name: "title"
+        widget: "string"
+      - label: "Year"
+        name: "year"
+        widget: "number"
+        value_type: "int"
+        min: 1900
+        max: 2100
+      - label: "Medium"
+        name: "medium"
+        widget: "string"
+        default: "Archival pigment print"
+        hint: "e.g., Archival pigment print, Silver gelatin"
+      - label: "Dimensions"
+        name: "dimensions"
+        widget: "string"
+        hint: "e.g., 40 × 30 cm"
+      - label: "Edition"
+        name: "edition"
+        widget: "string"
+        hint: "e.g., Edition of 5"
+        required: false
+      - label: "Image"
+        name: "image"
+        widget: "image"
+        allow_multiple: false
+      - label: "Available"
+        name: "available"
+        widget: "boolean"
+        default: true
+
+  # Site Settings
+  - name: "settings"
+    label: "Settings"
+    description: "Site configuration"
+    files:
+      - name: "symbol"
+        label: "Symbol"
+        file: "data/settings.json"
+        fields:
+          - label: "Symbol"
+            name: "symbol"
+            widget: "image"
+            allow_multiple: false
+            hint: "Your authorship symbol (SVG preferred). Appears in navigation, footer, and favicon."
+          - label: "Artist Name"
+            name: "artistName"
+            widget: "string"
+            default: "Takura Changwa"
+          - label: "Contact Email"
+            name: "contactEmail"
+            widget: "string"
+            default: "inquiry@alchemyofthings.com"

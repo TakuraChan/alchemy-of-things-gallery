@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alchemy of Things</title>
-    <meta name="description" content="A container for serious work.">
+    <title>Photography — Alchemy of Things</title>
+    <meta name="description" content="Elevated photographs.">
     <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
     <nav class="nav">
@@ -25,8 +24,13 @@
     </nav>
 
     <main class="main">
-        <section class="works-container" id="paintings">
-            <!-- Works are loaded dynamically from JSON -->
+        <section class="photography-section">
+            <p class="photography-note">
+                Photographs elevated from perception to authored work.
+            </p>
+            <div class="photography-grid" id="photography">
+                <!-- Works loaded dynamically -->
+            </div>
         </section>
     </main>
 
@@ -35,17 +39,5 @@
     </footer>
 
     <script src="/js/main.js"></script>
-    <script>
-        // Netlify Identity redirect after login
-        if (window.netlifyIdentity) {
-            window.netlifyIdentity.on("init", user => {
-                if (!user) {
-                    window.netlifyIdentity.on("login", () => {
-                        document.location.href = "/admin/";
-                    });
-                }
-            });
-        }
-    </script>
 </body>
 </html>
