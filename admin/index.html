@@ -150,12 +150,12 @@
 
     <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
     <script>
-const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc4OevEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:location.origin+'/admin/index.html'}};
+const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc4OevEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:location.origin+'/admin/'}};
 let auth0,user,cfg,img={painting:null,photo:null,symbol:null};
 
 async function init(){
     auth0=await window.auth0.createAuth0Client(AUTH0);
-    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/index.html')}
+    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/')}
     if(await auth0.isAuthenticated()){user=await auth0.getUser();route()}else{show('login')}
 }
 
@@ -168,7 +168,7 @@ function route(){
 function show(id){['login','setup','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id))}
 
 async function doLogin(){await auth0.loginWithRedirect()}
-async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin + '/admin/index.html'}})}
+async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin}})}
 
 function saveConfig(){
     const t=document.getElementById('gh-token').value.trim(),r=document.getElementById('gh-repo').value.trim();
