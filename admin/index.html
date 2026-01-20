@@ -168,7 +168,7 @@ function route(){
 function show(id){['login','setup','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id))}
 
 async function doLogin(){await auth0.loginWithRedirect()}
-async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin}})}
+async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin + '/admin/index.html'}})}
 
 function saveConfig(){
     const t=document.getElementById('gh-token').value.trim(),r=document.getElementById('gh-repo').value.trim();
