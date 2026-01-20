@@ -2,165 +2,282 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Admin — Alchemy of Things</title>
-    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400&display=swap" rel="stylesheet">
     <style>
-        :root{--bg:#faf9f7;--bg-card:#fff;--text:#1a1a1a;--text-muted:#6b6b6b;--text-light:#999;--border:#e8e6e3;--success:#4a7c59;--error:#c44536;--font:'Jost',-apple-system,BlinkMacSystemFont,sans-serif}*{box-sizing:border-box;margin:0;padding:0}html,body{font-family:var(--font);font-weight:300;font-size:16px;line-height:1.6;color:var(--text);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}.container{max-width:600px;margin:0 auto;padding:2rem 1.5rem}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}.header h1{font-size:1.25rem;font-weight:400}.user-info{display:flex;align-items:center;gap:1rem;font-size:.85rem;color:var(--text-muted)}.logout-btn{padding:.5rem 1rem;border:1px solid var(--border);background:0 0;font-family:var(--font);font-size:.8rem;color:var(--text-muted);cursor:pointer;transition:all .3s ease}.logout-btn:hover{border-color:var(--text);color:var(--text)}.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center}.login-screen h1{font-size:1.5rem;font-weight:300;margin-bottom:.5rem}.login-screen p{color:var(--text-muted);margin-bottom:2rem;font-size:.9rem}.login-btn{padding:1rem 2.5rem;border:1px solid var(--text);background:var(--text);color:var(--bg);font-family:var(--font);font-size:.9rem;cursor:pointer;transition:all .3s ease}.login-btn:hover{background:0 0;color:var(--text)}.setup-screen{max-width:500px;margin:0 auto;padding-top:4rem}.setup-screen h2{font-size:1.25rem;font-weight:400;margin-bottom:1rem}.setup-screen p{color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem}.setup-screen ol{margin-left:1.5rem;margin-bottom:2rem;color:var(--text-muted);font-size:.9rem}.setup-screen li{margin-bottom:.5rem}.setup-screen code{background:var(--bg-card);padding:.2rem .4rem;border-radius:3px;font-size:.85rem}.tabs{display:flex;margin-bottom:2rem;border-bottom:1px solid var(--border)}.tab{padding:1rem 1.5rem;border:none;background:0 0;font-family:var(--font);font-size:.9rem;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .3s ease}.tab:hover{color:var(--text)}.tab.active{color:var(--text);border-bottom-color:var(--text)}.form-group{margin-bottom:1.5rem}.form-label{display:block;font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem}.form-input,.form-textarea{width:100%;padding:.875rem 1rem;border:1px solid var(--border);background:var(--bg-card);font-family:var(--font);font-size:1rem;font-weight:300;color:var(--text);transition:border-color .3s ease;border-radius:0;-webkit-appearance:none}.form-input:focus,.form-textarea:focus{outline:0;border-color:var(--text)}.form-hint{font-size:.8rem;color:var(--text-light);margin-top:.5rem}.form-checkbox{display:flex;align-items:center;gap:.75rem;cursor:pointer}.form-checkbox input{width:1.25rem;height:1.25rem;cursor:pointer}.form-checkbox span{font-size:.9rem;color:var(--text)}.image-upload{position:relative;border:2px dashed var(--border);padding:2rem;text-align:center;cursor:pointer;transition:all .3s ease;background:var(--bg-card)}.image-upload:hover{border-color:var(--text-muted)}.image-upload.has-image{border-style:solid;padding:0}.image-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}.image-upload-text{color:var(--text-muted);font-size:.9rem}.image-upload-text strong{color:var(--text);font-weight:400}.image-preview{width:100%;max-height:400px;object-fit:contain;display:block}.submit-btn{width:100%;padding:1rem;border:1px solid var(--text);background:var(--text);color:var(--bg);font-family:var(--font);font-size:.9rem;cursor:pointer;transition:all .3s ease;margin-top:1rem}.submit-btn:hover:not(:disabled){background:0 0;color:var(--text)}.submit-btn:disabled{opacity:.5;cursor:not-allowed}.message{padding:1rem;margin-bottom:1.5rem;font-size:.9rem}.message.success{background:#f0f7f2;border:1px solid var(--success);color:var(--success)}.message.error{background:#fdf4f3;border:1px solid var(--error);color:var(--error)}.works-list{margin-top:2rem}.works-list h3{font-size:.9rem;font-weight:400;color:var(--text-muted);margin-bottom:1rem;text-transform:lowercase}.work-item{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border);margin-bottom:.5rem;background:var(--bg-card)}.work-thumb{width:60px;height:60px;object-fit:cover;flex-shrink:0;background:var(--bg)}.work-info{flex:1;min-width:0}.work-title{font-size:.95rem;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.work-meta{font-size:.8rem;color:var(--text-muted)}.work-delete{padding:.5rem;border:none;background:0 0;color:var(--text-light);cursor:pointer;font-size:.8rem}.work-delete:hover{color:var(--error)}.loading{display:flex;justify-content:center;padding:3rem}.loading::after{content:'';width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.hidden{display:none!important}.section-divider{margin:3rem 0;padding-top:2rem;border-top:1px solid var(--border)}.section-divider h3{font-size:1rem;font-weight:400;margin-bottom:1rem}@media (max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}.tab{padding:1rem;white-space:nowrap}}
+        :root{--bg:#faf9f7;--card:#fff;--text:#1a1a1a;--muted:#6b6b6b;--light:#999;--border:#e8e6e3;--ok:#4a7c59;--err:#c44536}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--text);min-height:100vh}
+        .container{max-width:600px;margin:0 auto;padding:2rem 1.5rem}
+        .login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center}
+        .login h1{font-size:1.5rem;font-weight:300;margin-bottom:.5rem}
+        .login p{color:var(--muted);margin-bottom:2rem}
+        .btn{padding:1rem 2.5rem;border:1px solid var(--text);background:var(--text);color:var(--bg);font-family:inherit;cursor:pointer}
+        .btn:hover{background:transparent;color:var(--text)}
+        .btn:disabled{opacity:.5;cursor:not-allowed}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+        .header h1{font-size:1.25rem;font-weight:400}
+        .logout{padding:.5rem 1rem;border:1px solid var(--border);background:0 0;font-family:inherit;font-size:.8rem;color:var(--muted);cursor:pointer}
+        .logout:hover{border-color:var(--text);color:var(--text)}
+        .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:2rem}
+        .tab{padding:1rem 1.5rem;border:none;background:0 0;font-family:inherit;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+        .tab:hover{color:var(--text)}
+        .tab.active{color:var(--text);border-bottom-color:var(--text)}
+        .hidden{display:none!important}
+        .field{margin-bottom:1.5rem}
+        .field label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.5rem}
+        .field input,.field textarea{width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem}
+        .field input:focus,.field textarea:focus{outline:0;border-color:var(--text)}
+        .check{display:flex;align-items:center;gap:.75rem}
+        .check input{width:1.25rem;height:1.25rem}
+        .upload{border:2px dashed var(--border);padding:2rem;text-align:center;cursor:pointer;background:var(--card);position:relative}
+        .upload:hover{border-color:var(--muted)}
+        .upload.has{border-style:solid;padding:0}
+        .upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
+        .upload img{width:100%;max-height:300px;object-fit:contain}
+        .submit{width:100%;padding:1rem;margin-top:1rem}
+        .msg{padding:1rem;margin-bottom:1.5rem;font-size:.9rem}
+        .msg.ok{background:#f0f7f2;border:1px solid var(--ok);color:var(--ok)}
+        .msg.err{background:#fdf4f3;border:1px solid var(--err);color:var(--err)}
+        .list{margin-top:2rem}
+        .list h3{font-size:.9rem;font-weight:400;color:var(--muted);margin-bottom:1rem}
+        .item{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border);margin-bottom:.5rem;background:var(--card)}
+        .item img{width:60px;height:60px;object-fit:cover}
+        .item-info{flex:1;min-width:0}
+        .item-title{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .item-meta{font-size:.8rem;color:var(--muted)}
+        .item-del{padding:.5rem;border:none;background:0 0;color:var(--light);cursor:pointer}
+        .item-del:hover{color:var(--err)}
+        .loading{display:flex;justify-content:center;padding:3rem}
+        .loading::after{content:'';width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .setup{max-width:500px;margin:0 auto;padding-top:4rem}
+        .setup h2{font-size:1.25rem;font-weight:400;margin-bottom:1rem}
+        .setup p{color:var(--muted);margin-bottom:1.5rem}
+        .setup ol{margin:0 0 2rem 1.5rem;color:var(--muted)}
+        .setup li{margin-bottom:.5rem}
+        .setup code{background:var(--card);padding:.2rem .4rem;font-size:.85rem}
+        .divider{margin:3rem 0;padding-top:2rem;border-top:1px solid var(--border)}
+        .divider h3{font-size:1rem;font-weight:400;margin-bottom:1rem}
+        @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
     </style>
 </head>
 <body>
-    <div id="login-screen" class="login-screen">
+    <div id="login" class="login">
         <h1>Alchemy of Things</h1>
         <p>Admin access required</p>
-        <button class="login-btn" onclick="login()">Enter</button>
+        <button class="btn" onclick="doLogin()">Enter</button>
     </div>
 
-    <div id="setup-screen" class="container hidden">
-        <div class="setup-screen">
+    <div id="setup" class="container hidden">
+        <div class="setup">
             <h2>GitHub Setup</h2>
-            <p>Connect to your repository to save artworks.</p>
+            <p>Connect to save artworks directly to your repository.</p>
             <ol>
-                <li>Go to <a href="https://github.com/settings/tokens/new?scopes=repo&description=Alchemy%20Admin" target="_blank">GitHub Token Settings</a></li>
+                <li><a href="https://github.com/settings/tokens/new?scopes=repo&description=Alchemy" target="_blank">Create GitHub token</a></li>
                 <li>Set expiration (90 days)</li>
                 <li>Ensure <code>repo</code> is checked</li>
-                <li>Generate and copy token</li>
+                <li>Copy token below</li>
             </ol>
-            <div class="form-group">
-                <label class="form-label">GitHub Token</label>
-                <input type="password" id="github-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Repository</label>
-                <input type="text" id="github-repo-input" class="form-input" value="TakuraChan/alchemy-of-things-gallery">
-            </div>
-            <button class="submit-btn" onclick="saveGitHubConfig()">Save Configuration</button>
+            <div class="field"><label>GitHub Token</label><input type="password" id="gh-token" placeholder="ghp_xxxx"></div>
+            <div class="field"><label>Repository</label><input type="text" id="gh-repo" value="TakuraChan/alchemy-of-things-gallery"></div>
+            <button class="btn submit" onclick="saveConfig()">Save</button>
         </div>
     </div>
 
-    <div id="admin-screen" class="container hidden">
+    <div id="admin" class="container hidden">
         <header class="header">
             <h1>Admin</h1>
-            <div class="user-info">
-                <span id="user-email"></span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
-            </div>
+            <div><span id="user"></span> <button class="logout" onclick="doLogout()">Logout</button></div>
         </header>
 
         <div class="tabs">
-            <button class="tab active" data-tab="paintings">Paintings</button>
-            <button class="tab" data-tab="photography">Photography</button>
-            <button class="tab" data-tab="settings">Settings</button>
+            <button class="tab active" onclick="showTab('paintings')">Paintings</button>
+            <button class="tab" onclick="showTab('photography')">Photography</button>
+            <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
 
-        <div id="message" class="message hidden"></div>
+        <div id="msg" class="msg hidden"></div>
 
-        <div id="tab-paintings" class="tab-content">
-            <form id="painting-form">
-                <div class="form-group">
-                    <label class="form-label">Image</label>
-                    <div class="image-upload" id="painting-image-upload">
-                        <input type="file" accept="image/*" id="painting-image" onchange="handleImageUpload(this,'painting')">
-                        <div class="image-upload-text"><strong>Tap to upload</strong><br>or drag and drop</div>
-                    </div>
+        <div id="paintings" class="tab-content">
+            <form id="painting-form" onsubmit="return saveWork(event,'painting')">
+                <div class="field"><label>Image</label>
+                    <div class="upload" id="painting-upload"><input type="file" accept="image/*" onchange="preview(this,'painting')"><span>Tap to upload</span></div>
                 </div>
-                <div class="form-group"><label class="form-label">Title</label><input type="text" id="painting-title" class="form-input" required></div>
-                <div class="form-group"><label class="form-label">Year</label><input type="number" id="painting-year" class="form-input" value="2025" required></div>
-                <div class="form-group"><label class="form-label">Medium</label><input type="text" id="painting-medium" class="form-input" value="Acrylic on canvas"></div>
-                <div class="form-group"><label class="form-label">Dimensions</label><input type="text" id="painting-dimensions" class="form-input" placeholder="60 × 80 cm"></div>
-                <div class="form-group"><label class="form-label">Price</label><input type="text" id="painting-price" class="form-input" placeholder="POA"></div>
-                <div class="form-group"><label class="form-checkbox"><input type="checkbox" id="painting-available" checked><span>Available</span></label></div>
-                <button type="submit" class="submit-btn" id="painting-submit">Add Painting</button>
+                <div class="field"><label>Title</label><input type="text" id="painting-title" required></div>
+                <div class="field"><label>Year</label><input type="number" id="painting-year" value="2025"></div>
+                <div class="field"><label>Medium</label><input type="text" id="painting-medium" value="Acrylic on canvas"></div>
+                <div class="field"><label>Dimensions</label><input type="text" id="painting-dimensions" placeholder="60 × 80 cm"></div>
+                <div class="field"><label>Price</label><input type="text" id="painting-price" placeholder="POA"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="painting-available" checked><span>Available</span></label></div>
+                <button type="submit" class="btn submit" id="painting-btn">Add Painting</button>
             </form>
-            <div class="works-list"><h3>existing works</h3><div id="paintings-items"><div class="loading"></div></div></div>
+            <div class="list"><h3>Existing Works</h3><div id="painting-list"><div class="loading"></div></div></div>
         </div>
 
-        <div id="tab-photography" class="tab-content hidden">
-            <p class="form-hint" style="margin-bottom:1.5rem">Secondary material. 3–5 maximum.</p>
-            <form id="photography-form">
-                <div class="form-group">
-                    <label class="form-label">Image</label>
-                    <div class="image-upload" id="photography-image-upload">
-                        <input type="file" accept="image/*" id="photography-image" onchange="handleImageUpload(this,'photography')">
-                        <div class="image-upload-text"><strong>Tap to upload</strong><br>or drag and drop</div>
-                    </div>
+        <div id="photography" class="tab-content hidden">
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">3-5 elevated photographs maximum.</p>
+            <form id="photo-form" onsubmit="return saveWork(event,'photography')">
+                <div class="field"><label>Image</label>
+                    <div class="upload" id="photo-upload"><input type="file" accept="image/*" onchange="preview(this,'photo')"><span>Tap to upload</span></div>
                 </div>
-                <div class="form-group"><label class="form-label">Title</label><input type="text" id="photography-title" class="form-input" required></div>
-                <div class="form-group"><label class="form-label">Year</label><input type="number" id="photography-year" class="form-input" value="2025" required></div>
-                <div class="form-group"><label class="form-label">Medium</label><input type="text" id="photography-medium" class="form-input" value="Archival pigment print"></div>
-                <div class="form-group"><label class="form-label">Dimensions</label><input type="text" id="photography-dimensions" class="form-input" placeholder="40 × 30 cm"></div>
-                <div class="form-group"><label class="form-label">Edition</label><input type="text" id="photography-edition" class="form-input" placeholder="Edition of 5"></div>
-                <div class="form-group"><label class="form-checkbox"><input type="checkbox" id="photography-available" checked><span>Available</span></label></div>
-                <button type="submit" class="submit-btn" id="photography-submit">Add Photograph</button>
+                <div class="field"><label>Title</label><input type="text" id="photo-title" required></div>
+                <div class="field"><label>Year</label><input type="number" id="photo-year" value="2025"></div>
+                <div class="field"><label>Medium</label><input type="text" id="photo-medium" value="Archival pigment print"></div>
+                <div class="field"><label>Dimensions</label><input type="text" id="photo-dimensions" placeholder="40 × 30 cm"></div>
+                <div class="field"><label>Edition</label><input type="text" id="photo-edition" placeholder="Edition of 5"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="photo-available" checked><span>Available</span></label></div>
+                <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
-            <div class="works-list"><h3>existing works</h3><div id="photography-items"><div class="loading"></div></div></div>
+            <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
         </div>
 
-        <div id="tab-settings" class="tab-content hidden">
-            <form id="symbol-form">
-                <div class="form-group">
-                    <label class="form-label">Symbol</label>
-                    <div class="image-upload" id="symbol-image-upload">
-                        <input type="file" accept="image/svg+xml,image/png" id="symbol-image" onchange="handleImageUpload(this,'symbol')">
-                        <div class="image-upload-text"><strong>Upload symbol</strong><br>SVG preferred</div>
-                    </div>
+        <div id="settings" class="tab-content hidden">
+            <form onsubmit="return saveSymbol(event)">
+                <div class="field"><label>Symbol</label>
+                    <div class="upload" id="symbol-upload"><input type="file" accept="image/svg+xml,image/png" onchange="preview(this,'symbol')"><span>Upload SVG</span></div>
                 </div>
-                <button type="submit" class="submit-btn">Update Symbol</button>
+                <button type="submit" class="btn submit">Update Symbol</button>
             </form>
-            <div class="section-divider">
-                <h3>GitHub Config</h3>
-                <div class="form-group"><label class="form-label">Repository</label><input type="text" id="settings-repo" class="form-input" readonly></div>
-                <button class="logout-btn" onclick="clearGitHubConfig()" style="margin-top:1rem">Reset Config</button>
+            <div class="divider">
+                <h3>GitHub</h3>
+                <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
+                <button class="logout" onclick="resetConfig()">Reset Config</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
     <script>
-const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc40evEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:window.location.origin+'/admin/'}};
-let auth0Client=null,currentUser=null,githubConfig=null,currentImageData={painting:null,photography:null,symbol:null};
+const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc4OevEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:location.origin+'/admin/'}};
+let auth0,user,cfg,img={painting:null,photo:null,symbol:null};
 
-async function init(){try{auth0Client=await auth0.createAuth0Client(AUTH0);if(window.location.search.includes('code=')){await auth0Client.handleRedirectCallback();window.history.replaceState({},'','/admin/')}if(await auth0Client.isAuthenticated()){currentUser=await auth0Client.getUser();showAdminOrSetup()}else{showLogin()}}catch(e){console.error(e);showLogin()}}
+async function init(){
+    auth0=await window.auth0.createAuth0Client(AUTH0);
+    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/')}
+    if(await auth0.isAuthenticated()){user=await auth0.getUser();route()}else{show('login')}
+}
 
-function showLogin(){document.getElementById('login-screen').classList.remove('hidden');document.getElementById('setup-screen').classList.add('hidden');document.getElementById('admin-screen').classList.add('hidden')}
+function route(){
+    cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
+    if(!cfg||!cfg.token){show('setup')}
+    else{show('admin');document.getElementById('user').textContent=user.email;document.getElementById('cfg-repo').value=cfg.repo;loadAll()}
+}
 
-function showAdminOrSetup(){document.getElementById('login-screen').classList.add('hidden');githubConfig=JSON.parse(localStorage.getItem('alchemy_github_config'));if(!githubConfig||!githubConfig.token){document.getElementById('setup-screen').classList.remove('hidden');document.getElementById('admin-screen').classList.add('hidden')}else{document.getElementById('setup-screen').classList.add('hidden');document.getElementById('admin-screen').classList.remove('hidden');document.getElementById('user-email').textContent=currentUser.email;document.getElementById('settings-repo').value=githubConfig.repo;loadWorks()}}
+function show(id){['login','setup','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id))}
 
-async function login(){await auth0Client.loginWithRedirect()}
-async function logout(){await auth0Client.logout({logoutParams:{returnTo:window.location.origin}})}
+async function doLogin(){await auth0.loginWithRedirect()}
+async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin}})}
 
-function saveGitHubConfig(){const t=document.getElementById('github-token-input').value.trim(),r=document.getElementById('github-repo-input').value.trim();if(!t||!r){alert('Enter both fields');return}githubConfig={token:t,repo:r};localStorage.setItem('alchemy_github_config',JSON.stringify(githubConfig));showAdminOrSetup()}
+function saveConfig(){
+    const t=document.getElementById('gh-token').value.trim(),r=document.getElementById('gh-repo').value.trim();
+    if(!t||!r)return alert('Fill both fields');
+    cfg={token:t,repo:r};localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));route();
+}
 
-function clearGitHubConfig(){if(confirm('Reset?')){localStorage.removeItem('alchemy_github_config');githubConfig=null;showAdminOrSetup()}}
+function resetConfig(){if(confirm('Reset?')){localStorage.removeItem('alchemy_cfg');cfg=null;route()}}
 
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{const n=t.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));document.getElementById('tab-'+n).classList.remove('hidden')}));
+function showTab(t){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase().includes(t)));
+    document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden'));
+    document.getElementById(t).classList.remove('hidden');
+}
 
-function handleImageUpload(i,t){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const c=document.getElementById(t+'-image-upload');c.classList.add('has-image');c.innerHTML='<input type="file" accept="image/*" onchange="handleImageUpload(this,\''+t+'\')"><img src="'+e.target.result+'" class="image-preview">';currentImageData[t]={data:e.target.result.split(',')[1],type:f.type}};r.readAsDataURL(f)}
+function preview(input,type){
+    const f=input.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{
+        const c=document.getElementById(type+'-upload');
+        c.classList.add('has');
+        c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+e.target.result+'">';
+        img[type]={data:e.target.result.split(',')[1],type:f.type};
+    };
+    r.readAsDataURL(f);
+}
 
-async function ghReq(ep,m,b){const u='https://api.github.com/repos/'+githubConfig.repo+ep,o={method:m||'GET',headers:{Authorization:'token '+githubConfig.token,Accept:'application/vnd.github.v3+json'}};if(b){o.headers['Content-Type']='application/json';o.body=JSON.stringify(b)}const r=await fetch(u,o);if(!r.ok&&r.status!==404)throw new Error('GitHub error: '+r.status);return r}
+async function gh(path,method,body){
+    const res=await fetch('https://api.github.com/repos/'+cfg.repo+path,{
+        method:method||'GET',
+        headers:{Authorization:'token '+cfg.token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+        body:body?JSON.stringify(body):undefined
+    });
+    if(!res.ok&&res.status!==404)throw new Error('GitHub error');
+    return res;
+}
 
-async function getFile(p){try{const r=await ghReq('/contents/'+p);if(r.status===404)return null;return await r.json()}catch(e){return null}}
+async function getFile(p){try{const r=await gh('/contents/'+p);return r.status===404?null:await r.json()}catch{return null}}
 
-async function saveFile(p,c,m){const e=await getFile(p),b={message:m,content:btoa(unescape(encodeURIComponent(c))),branch:'main'};if(e&&e.sha)b.sha=e.sha;await ghReq('/contents/'+p,'PUT',b)}
+async function saveFile(p,content,msg){
+    const e=await getFile(p);
+    await gh('/contents/'+p,'PUT',{message:msg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
+}
 
-async function uploadImg(d,f){const x=d.type.split('/')[1]||'jpg',n=Date.now()+'.'+x,p='images/'+f+'/'+n;await ghReq('/contents/'+p,'PUT',{message:'Add '+n,content:d.data,branch:'main'});return '/'+p}
+async function uploadImg(data,folder){
+    const ext=data.type.split('/')[1]||'jpg',name=Date.now()+'.'+ext,path='images/'+folder+'/'+name;
+    await gh('/contents/'+path,'PUT',{message:'Add '+name,content:data.data,branch:'main'});
+    return '/'+path;
+}
 
-async function loadWorks(){await loadList('paintings','paintings-items');await loadList('photography','photography-items')}
+async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list')}
 
-async function loadList(t,c){const el=document.getElementById(c);el.innerHTML='<div class="loading"></div>';try{const r=await ghReq('/contents/data/'+t);if(r.status===404){el.innerHTML='<p style="color:var(--text-muted)">No works yet.</p>';return}const files=await r.json();if(!Array.isArray(files)||!files.length){el.innerHTML='<p style="color:var(--text-muted)">No works yet.</p>';return}el.innerHTML='';for(const f of files){if(!f.name.endsWith('.json'))continue;try{const fr=await ghReq('/contents/data/'+t+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content)),it=document.createElement('div');it.className='work-item';it.innerHTML='<img src="'+w.image+'" class="work-thumb" onerror="this.style.background=\'var(--border)\'"><div class="work-info"><div class="work-title">'+w.title+'</div><div class="work-meta">'+w.year+' · '+(w.available?'Available':'Sold')+'</div></div><button class="work-delete" onclick="delWork(\''+t+'\',\''+f.name+'\',\''+fd.sha+'\')">Delete</button>';el.appendChild(it)}catch(e){console.error(e)}}}catch(e){el.innerHTML='<p style="color:var(--error)">Error loading.</p>'}}
+async function loadList(folder,containerId){
+    const c=document.getElementById(containerId);c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await gh('/contents/data/'+folder);
+        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
+        const files=await r.json();
+        if(!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
+        c.innerHTML='';
+        for(const f of files){
+            if(!f.name.endsWith('.json'))continue;
+            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
+            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
+        }
+    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+}
 
-async function delWork(t,f,s){if(!confirm('Delete?'))return;try{await ghReq('/contents/data/'+t+'/'+f,'DELETE',{message:'Delete '+f,sha:s,branch:'main'});msg('Deleted.','success');loadWorks()}catch(e){msg('Error.','error')}}
+async function delWork(folder,file,sha){
+    if(!confirm('Delete?'))return;
+    try{await gh('/contents/data/'+folder+'/'+file,'DELETE',{message:'Delete',sha,branch:'main'});msg('Deleted','ok');loadAll()}
+    catch{msg('Error','err')}
+}
 
-document.getElementById('painting-form').addEventListener('submit',async e=>{e.preventDefault();await saveWork('painting')});
-document.getElementById('photography-form').addEventListener('submit',async e=>{e.preventDefault();await saveWork('photography')});
-document.getElementById('symbol-form').addEventListener('submit',async e=>{e.preventDefault();await saveSymbol()});
+async function saveWork(e,type){
+    e.preventDefault();
+    const prefix=type==='painting'?'painting':'photo',folder=type==='painting'?'paintings':'photography';
+    const btn=document.getElementById(prefix+'-btn');btn.disabled=true;btn.textContent='Saving...';
+    try{
+        if(!img[prefix])throw new Error('Upload image');
+        const title=document.getElementById(prefix+'-title').value.trim();
+        if(!title)throw new Error('Enter title');
+        const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        const imgPath=await uploadImg(img[prefix],folder);
+        const work={id,title,year:+document.getElementById(prefix+'-year').value,medium:document.getElementById(prefix+'-medium').value,dimensions:document.getElementById(prefix+'-dimensions').value,image:imgPath,available:document.getElementById(prefix+'-available').checked};
+        if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
+        if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
+        await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
+        msg(title+' saved','ok');
+        document.getElementById(prefix+'-form').reset();
+        const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
+        img[prefix]=null;loadAll();
+    }catch(err){msg(err.message||'Error','err')}
+    btn.disabled=false;btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
+    return false;
+}
 
-async function saveWork(t){const btn=document.getElementById(t+'-submit');btn.disabled=true;btn.textContent='Saving...';try{if(!currentImageData[t])throw new Error('Upload image');const title=document.getElementById(t+'-title').value.trim();if(!title)throw new Error('Enter title');const year=parseInt(document.getElementById(t+'-year').value),medium=document.getElementById(t+'-medium').value.trim(),dims=document.getElementById(t+'-dimensions').value.trim(),avail=document.getElementById(t+'-available').checked,id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''),folder=t==='painting'?'paintings':'photography',img=await uploadImg(currentImageData[t],folder),work={id,title,year,medium,dimensions:dims,image:img,available:avail};if(t==='painting'){const p=document.getElementById('painting-price').value.trim();if(p)work.price=p}if(t==='photography'){const ed=document.getElementById('photography-edition').value.trim();if(ed)work.edition=ed}await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);msg(title+' saved.','success');document.getElementById(t+'-form').reset();const c=document.getElementById(t+'-image-upload');c.classList.remove('has-image');c.innerHTML='<input type="file" accept="image/*" onchange="handleImageUpload(this,\''+t+'\')"><div class="image-upload-text"><strong>Tap to upload</strong><br>or drag and drop</div>';currentImageData[t]=null;loadWorks()}catch(e){msg(e.message,'error')}finally{btn.disabled=false;btn.textContent=t==='painting'?'Add Painting':'Add Photograph'}}
+async function saveSymbol(e){
+    e.preventDefault();
+    if(!img.symbol)return msg('Upload symbol','err');
+    try{
+        const ex=await getFile('images/symbol.svg');
+        await gh('/contents/images/symbol.svg','PUT',{message:'Update symbol',content:img.symbol.data,sha:ex?.sha,branch:'main'});
+        msg('Symbol updated','ok');img.symbol=null;
+    }catch{msg('Error','err')}
+    return false;
+}
 
-async function saveSymbol(){const btn=document.querySelector('#symbol-form .submit-btn');btn.disabled=true;btn.textContent='Saving...';try{if(!currentImageData.symbol)throw new Error('Upload symbol');const e=await getFile('images/symbol.svg');await ghReq('/contents/images/symbol.svg','PUT',{message:'Update symbol',content:currentImageData.symbol.data,sha:e?e.sha:undefined,branch:'main'});msg('Symbol updated.','success');currentImageData.symbol=null}catch(e){msg(e.message,'error')}finally{btn.disabled=false;btn.textContent='Update Symbol'}}
-
-function msg(t,c){const m=document.getElementById('message');m.textContent=t;m.className='message '+c;m.classList.remove('hidden');setTimeout(()=>m.classList.add('hidden'),5000)}
+function msg(t,type){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+type;setTimeout(()=>m.classList.add('hidden'),4000)}
 
 init();
     </script>
