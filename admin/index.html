@@ -155,7 +155,7 @@ let auth0,user,cfg,img={painting:null,photo:null,symbol:null};
 
 async function init(){
     auth0=await window.auth0.createAuth0Client(AUTH0);
-    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/')}
+    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/index.html')}
     if(await auth0.isAuthenticated()){user=await auth0.getUser();route()}else{show('login')}
 }
 
