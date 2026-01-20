@@ -4,40 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photography — Alchemy of Things</title>
-    <meta name="description" content="Elevated photographs.">
     <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <nav class="nav">
-        <a href="/" class="nav-symbol" aria-label="Home">
-            <img src="/images/symbol.svg" alt="" class="symbol" onerror="this.style.display='none'">
-        </a>
+        <a href="/"><img src="/images/symbol.svg" alt="" class="symbol"></a>
         <div class="nav-links">
             <a href="/">Paintings</a>
             <a href="/photography.html">Photography</a>
             <a href="/about.html">About</a>
         </div>
     </nav>
-
     <main class="main">
-        <section class="photography-section">
-            <p class="photography-note">
-                Photographs elevated from perception to authored work.
-            </p>
-            <div class="photography-grid" id="photography">
-                <!-- Works loaded dynamically -->
-            </div>
+        <section class="works">
+            <p class="section-note">Photographs elevated from perception to authored work.</p>
+            <div id="works"></div>
         </section>
     </main>
-
-    <footer class="footer">
-        <img src="/images/symbol.svg" alt="" class="symbol-footer" onerror="this.style.display='none'">
-    </footer>
-
+    <footer class="footer"><img src="/images/symbol.svg" alt="" class="symbol-footer"></footer>
     <script src="/js/main.js"></script>
+    <script>loadWorks('photography');</script>
 </body>
 </html>

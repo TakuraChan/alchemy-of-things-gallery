@@ -1,12 +1,8 @@
 {
   "name": "alchemy-of-things",
   "version": "1.0.0",
-  "description": "A container for serious work.",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.js",
-    "dev": "npx serve . -l 3000"
-  },
-  "author": "Takura Changwa",
-  "license": "UNLICENSED"
+    "build": "node scripts/build.js"
+  }
 }
