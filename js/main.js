@@ -18,6 +18,28 @@ async function loadWorks(type){
                 </a>
             </article>
         `).join('');
+
+        // Add navigation arrows for desktop
+        if(window.innerWidth>768){
+            const nav=document.createElement('div');
+            nav.className='gallery-nav';
+            nav.innerHTML='<button class="gallery-arrow gallery-arrow-left" aria-label="Previous">‹</button><button class="gallery-arrow gallery-arrow-right" aria-label="Next">›</button>';
+            document.querySelector('.main').appendChild(nav);
+
+            const left=nav.querySelector('.gallery-arrow-left'),right=nav.querySelector('.gallery-arrow-right');
+            left.addEventListener('click',()=>{const w=c.scrollLeft;c.scrollTo({left:w-c.clientWidth,behavior:'smooth'})});
+            right.addEventListener('click',()=>{const w=c.scrollLeft;c.scrollTo({left:w+c.clientWidth,behavior:'smooth'})});
+
+            // Update arrow visibility
+            const updateArrows=()=>{
+                left.style.opacity=c.scrollLeft<=10?'0':'1';
+                left.style.pointerEvents=c.scrollLeft<=10?'none':'auto';
+                right.style.opacity=c.scrollLeft>=c.scrollWidth-c.clientWidth-10?'0':'1';
+                right.style.pointerEvents=c.scrollLeft>=c.scrollWidth-c.clientWidth-10?'none':'auto';
+            };
+            c.addEventListener('scroll',updateArrows);
+            updateArrows();
+        }
     }catch{c.innerHTML='<p class="empty">Error loading works.</p>'}
 }
 
