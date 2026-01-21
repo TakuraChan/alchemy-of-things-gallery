@@ -3,7 +3,7 @@ async function loadWorks(type){
     try{
         const r=await fetch(path),works=await r.json();
         if(!works.length){c.innerHTML='<p class="empty">No works yet.</p>';return}
-        works.sort((a,b)=>b.year-a.year);
+        works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
         c.innerHTML=works.map((w,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}" class="work-link">
