@@ -8,14 +8,14 @@ async function loadWorks(type){
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}" class="work-link">
                     <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
-                    <div class="work-meta">
-                        <span class="work-title">${w.title}</span>
-                        <span>${w.year}</span>
-                        <span>${w.medium}</span>
-                        <span>${w.dimensions}</span>
-                        <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
-                    </div>
                 </a>
+                <div class="work-meta">
+                    <span class="work-title">${w.title}</span>
+                    <span>${w.year}</span>
+                    <span>${w.medium}</span>
+                    <span>${w.dimensions}</span>
+                    <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
+                </div>
             </article>
         `).join('');
 
