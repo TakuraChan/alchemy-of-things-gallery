@@ -237,11 +237,14 @@ async function gh(path,method,body){
     return res;
 }
 
+function utf8_to_b64(str){return btoa(unescape(encodeURIComponent(str)))}
+function b64_to_utf8(str){return decodeURIComponent(escape(atob(str)))}
+
 async function getFile(p){try{const r=await gh('/contents/'+p);return r.status===404?null:await r.json()}catch{return null}}
 
 async function saveFile(p,content,msg){
     const e=await getFile(p);
-    await gh('/contents/'+p,'PUT',{message:msg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
+    await gh('/contents/'+p,'PUT',{message:msg,content:utf8_to_b64(content),sha:e?.sha,branch:'main'});
 }
 
 async function uploadImg(data,folder){
@@ -264,7 +267,7 @@ async function loadList(folder,containerId){
         const works=[];
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
-            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
+            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(b64_to_utf8(fd.content));
             works.push({...w,filename:f.name,sha:fd.sha});
         }
 
@@ -298,7 +301,7 @@ async function moveWork(folder,filename,currentOrder,direction){
         const works=[];
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
-            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
+            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(b64_to_utf8(fd.content));
             works.push({...w,filename:f.name,sha:fd.sha});
         }
         works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
@@ -342,7 +345,7 @@ async function editWork(folder,filename){
     try{
         const fr=await gh('/contents/data/'+folder+'/'+filename);
         const fd=await fr.json();
-        const w=JSON.parse(atob(fd.content));
+        const w=JSON.parse(b64_to_utf8(fd.content));
         const prefix=folder==='paintings'?'painting':'photo';
 
         // Populate form
@@ -402,7 +405,7 @@ async function saveWork(e,type){
             // Keep existing image
             const fr=await gh('/contents/data/'+folder+'/'+editId);
             const fd=await fr.json();
-            const existingWork=JSON.parse(atob(fd.content));
+            const existingWork=JSON.parse(b64_to_utf8(fd.content));
             imgPath=existingWork.image;
         }
 
@@ -447,7 +450,7 @@ async function loadContent(){
         const r=await gh('/contents/data/content.json');
         if(r.status===404)return;
         const fd=await r.json();
-        const content=JSON.parse(atob(fd.content));
+        const content=JSON.parse(b64_to_utf8(fd.content));
 
         document.getElementById('content-name').value=content.about?.name||'';
         document.getElementById('content-line1').value=content.about?.line1||'';
