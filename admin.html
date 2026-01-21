@@ -95,6 +95,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('paintings')">Paintings</button>
             <button class="tab" onclick="showTab('photography')">Photography</button>
+            <button class="tab" onclick="showTab('content')">Content</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
 
@@ -102,6 +103,8 @@
 
         <div id="paintings" class="tab-content">
             <form id="painting-form" onsubmit="return saveWork(event,'painting')">
+                <input type="hidden" id="painting-edit-id">
+                <input type="hidden" id="painting-edit-sha">
                 <div class="field"><label>Image</label>
                     <div class="upload" id="painting-upload"><input type="file" accept="image/*" onchange="preview(this,'painting')"><span>Tap to upload</span></div>
                 </div>
@@ -119,6 +122,8 @@
         <div id="photography" class="tab-content hidden">
             <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">3-5 elevated photographs maximum.</p>
             <form id="photo-form" onsubmit="return saveWork(event,'photography')">
+                <input type="hidden" id="photo-edit-id">
+                <input type="hidden" id="photo-edit-sha">
                 <div class="field"><label>Image</label>
                     <div class="upload" id="photo-upload"><input type="file" accept="image/*" onchange="preview(this,'photo')"><span>Tap to upload</span></div>
                 </div>
@@ -131,6 +136,27 @@
                 <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
             <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
+        </div>
+
+        <div id="content" class="tab-content hidden">
+            <form onsubmit="return saveContent(event)">
+                <h3 style="font-size:1rem;font-weight:400;margin-bottom:1.5rem">About Page</h3>
+                <div class="field"><label>Name</label><input type="text" id="content-name" placeholder="Your name"></div>
+                <div class="field"><label>Line 1</label><input type="text" id="content-line1" placeholder="e.g. Architect. Johannesburg."></div>
+                <div class="field"><label>Line 2</label><input type="text" id="content-line2" placeholder="e.g. Work may be viewed by arrangement."></div>
+
+                <div class="divider">
+                    <h3>Photography Page</h3>
+                    <div class="field"><label>Description</label><input type="text" id="content-photo-desc" placeholder="Short description for photography section"></div>
+                </div>
+
+                <div class="divider">
+                    <h3>Contact</h3>
+                    <div class="field"><label>Email Address</label><input type="email" id="content-email" placeholder="your@email.com"></div>
+                </div>
+
+                <button type="submit" class="btn submit">Save Content</button>
+            </form>
         </div>
 
         <div id="settings" class="tab-content hidden">
@@ -219,7 +245,7 @@ async function uploadImg(data,folder){
     return '/'+path;
 }
 
-async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list')}
+async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list');await loadContent()}
 
 async function loadList(folder,containerId){
     const c=document.getElementById(containerId);c.innerHTML='<div class="loading"></div>';
@@ -232,7 +258,7 @@ async function loadList(folder,containerId){
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
             const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
-            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
+            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" style="margin-right:.5rem" onclick="editWork('${folder}','${f.name}')">Edit</button><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
         }
     }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
 }
@@ -243,22 +269,87 @@ async function delWork(folder,file,sha){
     catch{msg('Error','err')}
 }
 
+async function editWork(folder,filename){
+    try{
+        const fr=await gh('/contents/data/'+folder+'/'+filename);
+        const fd=await fr.json();
+        const w=JSON.parse(atob(fd.content));
+        const prefix=folder==='paintings'?'painting':'photo';
+
+        // Populate form
+        document.getElementById(prefix+'-title').value=w.title;
+        document.getElementById(prefix+'-year').value=w.year;
+        document.getElementById(prefix+'-medium').value=w.medium;
+        document.getElementById(prefix+'-dimensions').value=w.dimensions||'';
+        document.getElementById(prefix+'-available').checked=w.available;
+        document.getElementById(prefix+'-edit-id').value=filename;
+        document.getElementById(prefix+'-edit-sha').value=fd.sha;
+
+        if(folder==='paintings'){
+            document.getElementById('painting-price').value=w.price||'';
+        }else{
+            document.getElementById('photo-edition').value=w.edition||'';
+        }
+
+        // Show image preview
+        if(w.image){
+            const u=document.getElementById(prefix+'-upload');
+            u.classList.add('has');
+            u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><img src="'+w.image+'">';
+        }
+
+        // Change button text
+        document.getElementById(prefix+'-btn').textContent='Update '+(folder==='paintings'?'Painting':'Photograph');
+
+        // Switch to appropriate tab
+        showTab(folder);
+
+        // Scroll to top
+        window.scrollTo(0,0);
+    }catch(err){msg('Error loading work','err')}
+}
+
 async function saveWork(e,type){
     e.preventDefault();
     const prefix=type==='painting'?'painting':'photo',folder=type==='painting'?'paintings':'photography';
     const btn=document.getElementById(prefix+'-btn');btn.disabled=true;btn.textContent='Saving...';
     try{
-        if(!img[prefix])throw new Error('Upload image');
+        const editId=document.getElementById(prefix+'-edit-id').value;
+        const editSha=document.getElementById(prefix+'-edit-sha').value;
+        const isEdit=!!editId;
+
+        // For new works, require image. For edits, image is optional
+        if(!isEdit&&!img[prefix])throw new Error('Upload image');
+
         const title=document.getElementById(prefix+'-title').value.trim();
         if(!title)throw new Error('Enter title');
         const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-        const imgPath=await uploadImg(img[prefix],folder);
+
+        let imgPath;
+        if(img[prefix]){
+            imgPath=await uploadImg(img[prefix],folder);
+        }else if(isEdit){
+            // Keep existing image
+            const fr=await gh('/contents/data/'+folder+'/'+editId);
+            const fd=await fr.json();
+            const existingWork=JSON.parse(atob(fd.content));
+            imgPath=existingWork.image;
+        }
+
         const work={id,title,year:+document.getElementById(prefix+'-year').value,medium:document.getElementById(prefix+'-medium').value,dimensions:document.getElementById(prefix+'-dimensions').value,image:imgPath,available:document.getElementById(prefix+'-available').checked};
         if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
         if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
-        await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
+
+        // If editing and filename changed, delete old file
+        if(isEdit&&editId!==id+'.json'){
+            await gh('/contents/data/'+folder+'/'+editId,'DELETE',{message:'Remove old',sha:editSha,branch:'main'});
+        }
+
+        await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),(isEdit?'Update ':'Add ')+title);
         msg(title+' saved','ok');
         document.getElementById(prefix+'-form').reset();
+        document.getElementById(prefix+'-edit-id').value='';
+        document.getElementById(prefix+'-edit-sha').value='';
         const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
         img[prefix]=null;loadAll();
     }catch(err){msg(err.message||'Error','err')}
@@ -274,6 +365,44 @@ async function saveSymbol(e){
         await gh('/contents/images/symbol.svg','PUT',{message:'Update symbol',content:img.symbol.data,sha:ex?.sha,branch:'main'});
         msg('Symbol updated','ok');img.symbol=null;
     }catch{msg('Error','err')}
+    return false;
+}
+
+async function loadContent(){
+    try{
+        const r=await gh('/contents/data/content.json');
+        if(r.status===404)return;
+        const fd=await r.json();
+        const content=JSON.parse(atob(fd.content));
+
+        document.getElementById('content-name').value=content.about?.name||'';
+        document.getElementById('content-line1').value=content.about?.line1||'';
+        document.getElementById('content-line2').value=content.about?.line2||'';
+        document.getElementById('content-photo-desc').value=content.photography?.description||'';
+        document.getElementById('content-email').value=content.contact?.email||'';
+    }catch{}
+}
+
+async function saveContent(e){
+    e.preventDefault();
+    try{
+        const content={
+            about:{
+                name:document.getElementById('content-name').value.trim(),
+                line1:document.getElementById('content-line1').value.trim(),
+                line2:document.getElementById('content-line2').value.trim()
+            },
+            photography:{
+                description:document.getElementById('content-photo-desc').value.trim()
+            },
+            contact:{
+                email:document.getElementById('content-email').value.trim()
+            }
+        };
+
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update content');
+        msg('Content saved','ok');
+    }catch(err){msg('Error saving content','err')}
     return false;
 }
 
