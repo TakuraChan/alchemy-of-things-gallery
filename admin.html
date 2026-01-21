@@ -47,6 +47,9 @@
         .item-info{flex:1;min-width:0}
         .item-title{font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .item-meta{font-size:.8rem;color:var(--muted)}
+        .item-actions{display:flex;gap:.5rem;margin-left:auto}
+        .item-order{padding:.5rem .75rem;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:1rem}
+        .item-order:hover:not(:disabled){background:var(--bg);border-color:var(--text)}
         .item-del{padding:.5rem;border:none;background:0 0;color:var(--light);cursor:pointer}
         .item-del:hover{color:var(--err)}
         .loading{display:flex;justify-content:center;padding:3rem}
@@ -256,13 +259,77 @@ async function loadList(folder,containerId){
         if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
         const files=await r.json();
         if(!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
-        c.innerHTML='';
+
+        // Load all works
+        const works=[];
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
             const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
-            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" style="margin-right:.5rem" onclick="editWork('${folder}','${f.name}')">Edit</button><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
+            works.push({...w,filename:f.name,sha:fd.sha});
         }
+
+        // Sort by order
+        works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
+
+        c.innerHTML='';
+        works.forEach((w,i)=>{
+            c.innerHTML+=`<div class="item">
+                <img src="${w.image}" onerror="this.style.background='var(--border)'">
+                <div class="item-info">
+                    <div class="item-title">${w.title}</div>
+                    <div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div>
+                </div>
+                <div class="item-actions">
+                    ${i>0?`<button class="item-order" onclick="moveWork('${folder}','${w.filename}',${w.order||999},-1)" title="Move up">↑</button>`:'<button class="item-order" disabled style="opacity:.3">↑</button>'}
+                    ${i<works.length-1?`<button class="item-order" onclick="moveWork('${folder}','${w.filename}',${w.order||999},1)" title="Move down">↓</button>`:'<button class="item-order" disabled style="opacity:.3">↓</button>'}
+                    <button class="item-del" onclick="editWork('${folder}','${w.filename}')">Edit</button>
+                    <button class="item-del" onclick="delWork('${folder}','${w.filename}','${w.sha}')">Delete</button>
+                </div>
+            </div>`;
+        });
     }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+}
+
+async function moveWork(folder,filename,currentOrder,direction){
+    try{
+        // Get all works
+        const r=await gh('/contents/data/'+folder);
+        const files=await r.json();
+        const works=[];
+        for(const f of files){
+            if(!f.name.endsWith('.json'))continue;
+            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
+            works.push({...w,filename:f.name,sha:fd.sha});
+        }
+        works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
+
+        const idx=works.findIndex(w=>w.filename===filename);
+        if(idx===-1)return;
+
+        const targetIdx=idx+direction;
+        if(targetIdx<0||targetIdx>=works.length)return;
+
+        // Swap orders
+        const work1=works[idx];
+        const work2=works[targetIdx];
+        const order1=work1.order||idx+1;
+        const order2=work2.order||targetIdx+1;
+
+        work1.order=order2;
+        work2.order=order1;
+
+        // Save both works
+        const saveWork1={...work1};
+        const saveWork2={...work2};
+        delete saveWork1.filename;delete saveWork1.sha;
+        delete saveWork2.filename;delete saveWork2.sha;
+
+        await saveFile('data/'+folder+'/'+filename,JSON.stringify(saveWork1,null,2),'Update order',work1.sha);
+        await saveFile('data/'+folder+'/'+work2.filename,JSON.stringify(saveWork2,null,2),'Update order',work2.sha);
+
+        msg('Order updated','ok');
+        setTimeout(()=>loadAll(),1000);
+    }catch(err){msg('Error reordering','err')}
 }
 
 async function delWork(folder,file,sha){
