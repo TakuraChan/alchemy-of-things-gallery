@@ -109,6 +109,7 @@
                     <div class="upload" id="painting-upload"><input type="file" accept="image/*" onchange="preview(this,'painting')"><span>Tap to upload</span></div>
                 </div>
                 <div class="field"><label>Title</label><input type="text" id="painting-title" required></div>
+                <div class="field"><label>Display Order</label><input type="number" id="painting-order" placeholder="1, 2, 3..." min="1"></div>
                 <div class="field"><label>Year</label><input type="number" id="painting-year" value="2025"></div>
                 <div class="field"><label>Medium</label><input type="text" id="painting-medium" value="Acrylic on canvas"></div>
                 <div class="field"><label>Dimensions</label><input type="text" id="painting-dimensions" placeholder="60 × 80 cm"></div>
@@ -128,6 +129,7 @@
                     <div class="upload" id="photo-upload"><input type="file" accept="image/*" onchange="preview(this,'photo')"><span>Tap to upload</span></div>
                 </div>
                 <div class="field"><label>Title</label><input type="text" id="photo-title" required></div>
+                <div class="field"><label>Display Order</label><input type="number" id="photo-order" placeholder="1, 2, 3..." min="1"></div>
                 <div class="field"><label>Year</label><input type="number" id="photo-year" value="2025"></div>
                 <div class="field"><label>Medium</label><input type="text" id="photo-medium" value="Archival pigment print"></div>
                 <div class="field"><label>Dimensions</label><input type="text" id="photo-dimensions" placeholder="40 × 30 cm"></div>
@@ -278,6 +280,7 @@ async function editWork(folder,filename){
 
         // Populate form
         document.getElementById(prefix+'-title').value=w.title;
+        document.getElementById(prefix+'-order').value=w.order||'';
         document.getElementById(prefix+'-year').value=w.year;
         document.getElementById(prefix+'-medium').value=w.medium;
         document.getElementById(prefix+'-dimensions').value=w.dimensions||'';
@@ -337,6 +340,8 @@ async function saveWork(e,type){
         }
 
         const work={id,title,year:+document.getElementById(prefix+'-year').value,medium:document.getElementById(prefix+'-medium').value,dimensions:document.getElementById(prefix+'-dimensions').value,image:imgPath,available:document.getElementById(prefix+'-available').checked};
+        const orderVal=document.getElementById(prefix+'-order').value;
+        if(orderVal)work.order=+orderVal;
         if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
         if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
 
@@ -351,7 +356,9 @@ async function saveWork(e,type){
         document.getElementById(prefix+'-edit-id').value='';
         document.getElementById(prefix+'-edit-sha').value='';
         const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
-        img[prefix]=null;loadAll();
+        img[prefix]=null;
+        btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
+        setTimeout(()=>loadAll(),1000);
     }catch(err){msg(err.message||'Error','err')}
     btn.disabled=false;btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
     return false;

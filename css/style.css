@@ -25,9 +25,9 @@ a:hover{opacity:.6}
 .gallery-arrow:hover{color:var(--text)}
 .gallery-arrow-left{left:2rem}
 .gallery-arrow-right{right:2rem}
-.single-work{max-width:1000px;margin:0 auto}
-.single-work img{width:100%;max-height:75vh;object-fit:contain;margin-bottom:2rem}
-.single-work-meta{display:flex;justify-content:space-between;align-items:flex-start;padding-top:1.5rem;border-top:1px solid var(--border)}
+.single-work{max-width:1000px;margin:0 auto;padding:2rem;display:flex;flex-direction:column;height:calc(100vh - 60px);justify-content:center}
+.single-work img{width:100%;max-height:55vh;object-fit:contain;margin-bottom:1.5rem}
+.single-work-meta{display:flex;justify-content:space-between;align-items:flex-start;padding-top:1rem;border-top:1px solid var(--border);flex-shrink:0}
 .single-work h1{font-family:var(--font-display);font-size:1.5rem;font-style:italic;font-weight:400;margin-bottom:.5rem}
 .single-work p{font-size:.9rem;color:var(--muted)}
 .back-link{display:inline-block;margin-bottom:2rem;font-size:.85rem;color:var(--muted)}
