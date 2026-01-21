@@ -19,12 +19,30 @@
     </nav>
     <main class="main">
         <section class="about">
-            <p class="about-name">Takura Changwa</p>
-            <p>Architect. Johannesburg.</p>
-            <p>Work may be viewed by arrangement.</p>
-            <p><a href="mailto:inquiry@alchemyofthings.com">inquiry@alchemyofthings.com</a></p>
+            <p class="about-name" id="about-name">Takura Changwa</p>
+            <p id="about-line1">Architect. Johannesburg.</p>
+            <p id="about-line2">Work may be viewed by arrangement.</p>
+            <p><a href="mailto:inquiry@alchemyofthings.com" id="about-email">inquiry@alchemyofthings.com</a></p>
         </section>
     </main>
     <footer class="footer"><img src="/images/symbol.svg" alt="" class="symbol-footer"></footer>
+    <script>
+        // Load content from JSON
+        fetch('/data/content.json')
+            .then(r=>r.json())
+            .then(c=>{
+                if(c.about){
+                    if(c.about.name)document.getElementById('about-name').textContent=c.about.name;
+                    if(c.about.line1)document.getElementById('about-line1').textContent=c.about.line1;
+                    if(c.about.line2)document.getElementById('about-line2').textContent=c.about.line2;
+                }
+                if(c.contact?.email){
+                    const e=document.getElementById('about-email');
+                    e.textContent=c.contact.email;
+                    e.href='mailto:'+c.contact.email;
+                }
+            })
+            .catch(()=>{});
+    </script>
 </body>
 </html>
