@@ -1,11 +1,40 @@
 [
   {
+    "id": "lost-in-release",
+    "title": "lost in release",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "30 x 40 cm",
+    "image": "/images/paintings/1769000443285.jpeg",
+    "available": true
+  },
+  {
+    "id": "primitive",
+    "title": "primitive",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "30 x 40 cm",
+    "image": "/images/paintings/1768994496539.jpeg",
+    "available": true
+  },
+  {
     "id": "the-space-between",
-    "title": "The space between",
+    "collectionId": "collection-1",
+    "title": "éÂthe space between",
     "year": 2025,
     "medium": "Acrylic on canvas",
     "dimensions": "40 x 30 cm",
     "image": "/images/paintings/1768913613677.jpeg",
-    "available": true
+    "available": true,
+    "order": 1
+  },
+  {
+    "id": "third-moon-1-of-2",
+    "title": "third moon (1 of 2)",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "20 x 28 cm",
+    "image": "/images/paintings/1768994802029.jpeg",
+    "available": false
   }
 ]
