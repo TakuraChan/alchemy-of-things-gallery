@@ -45,10 +45,18 @@ async function loadWorks(type){
 
 async function loadCollections(type){
     const c=document.getElementById('works');
-    const path=type==='paintings'?'/data/collections.json':'/data/observations.json';
-    const label=type==='paintings'?'Collection':'Observation';
+    // Determine collections file based on type
+    let collectionsFile;
+    if(type==='paintings'){
+        collectionsFile='/data/collections.json';
+    }else if(type==='photography'){
+        collectionsFile='/data/observations.json';
+    }else{
+        collectionsFile='/data/'+type+'-collections.json';
+    }
+
     try{
-        const r=await fetch(path),collections=await r.json();
+        const r=await fetch(collectionsFile),collections=await r.json();
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
         // Sort by order and show all active + next inactive
@@ -72,11 +80,31 @@ async function loadCollection(){
     const id=p.get('id'),type=p.get('type')||'paintings';
     if(!id){c.innerHTML='<p class="empty">Collection not found.</p>';return}
 
-    const back=type==='paintings'?'/':'/photography.html';
-    const backText=type==='paintings'?'Paintings':'Photography';
+    // Determine back link and text
+    let back,backText;
+    if(type==='paintings'){
+        back='/';
+        backText='Paintings';
+    }else if(type==='photography'){
+        back='/photography.html';
+        backText='Photography';
+    }else{
+        back='/'+type+'.html';
+        // Capitalize first letter
+        backText=type.charAt(0).toUpperCase()+type.slice(1);
+    }
 
     try{
-        const worksPath=type==='paintings'?'/data/works.json':'/data/photography.json';
+        // Determine works file
+        let worksPath;
+        if(type==='paintings'){
+            worksPath='/data/works.json';
+        }else if(type==='photography'){
+            worksPath='/data/photography.json';
+        }else{
+            worksPath='/data/'+type+'.json';
+        }
+
         const r=await fetch(worksPath),works=await r.json();
         const collectionWorks=works.filter(w=>w.collectionId===id);
 
@@ -130,10 +158,28 @@ async function loadSingleWork(){
     const id=p.get('id'),type=p.get('type')||'paintings',collectionId=p.get('collection');
     if(!id){c.innerHTML='<p class="empty">Work not found.</p>';return}
 
-    const back=collectionId?`/collection.html?id=${collectionId}&type=${type}`:(type==='paintings'?'/':'/photography.html');
-    const backText=type==='paintings'?'Paintings':'Photography';
+    // Determine back link
+    let backBase;
+    if(type==='paintings'){
+        backBase='/';
+    }else if(type==='photography'){
+        backBase='/photography.html';
+    }else{
+        backBase='/'+type+'.html';
+    }
 
-    const path=type==='paintings'?'/data/works.json':'/data/photography.json';
+    const back=collectionId?`/collection.html?id=${collectionId}&type=${type}`:backBase;
+    const backText=type.charAt(0).toUpperCase()+type.slice(1);
+
+    // Determine works file
+    let path;
+    if(type==='paintings'){
+        path='/data/works.json';
+    }else if(type==='photography'){
+        path='/data/photography.json';
+    }else{
+        path='/data/'+type+'.json';
+    }
     try{
         const r=await fetch(path),works=await r.json(),w=works.find(x=>x.id===id);
         if(!w){c.innerHTML='<p class="empty">Work not found.</p>';return}

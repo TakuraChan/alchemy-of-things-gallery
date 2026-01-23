@@ -100,6 +100,7 @@
             <button class="tab" onclick="showTab('collections')">Collections</button>
             <button class="tab" onclick="showTab('photography')">Photography</button>
             <button class="tab" onclick="showTab('observations')">Observations</button>
+            <button class="tab" onclick="showTab('categories')">Categories</button>
             <button class="tab" onclick="showTab('content')">Content</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
@@ -167,6 +168,18 @@
                 <button type="submit" class="btn submit" id="observation-btn">Add Observation</button>
             </form>
             <div class="list"><h3>Existing Observations</h3><div id="observation-list"><div class="loading"></div></div></div>
+        </div>
+
+        <div id="categories" class="tab-content hidden">
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Add menu items. Each category gets its own collections system. Toggle visibility to show/hide in navigation.</p>
+            <form id="category-form" onsubmit="return saveCategory(event)">
+                <input type="hidden" id="category-edit-id">
+                <div class="field"><label>Name</label><input type="text" id="category-name" placeholder="e.g. Sculpture" required></div>
+                <div class="field"><label>Collection Label</label><input type="text" id="category-label" placeholder="e.g. Collection or Series" required></div>
+                <div class="field"><label class="check"><input type="checkbox" id="category-visible" checked><span>Visible in navigation</span></label></div>
+                <button type="submit" class="btn submit" id="category-btn">Add Category</button>
+            </form>
+            <div class="list"><h3>All Categories</h3><div id="category-list"><div class="loading"></div></div></div>
         </div>
 
         <div id="content" class="tab-content hidden">
@@ -285,6 +298,7 @@ async function loadAll(){
         loadList('photography','photo-list'),
         loadCollectionsList('collections','collection-list'),
         loadCollectionsList('observations','observation-list'),
+        loadCategoryList(),
         loadContent()
     ]);
     await populateCollectionDropdowns();
@@ -694,6 +708,184 @@ async function populateCollectionDropdowns(){
             select.innerHTML='<option value="">None</option>'+observations.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
         }
     }catch{}
+}
+
+async function loadCategoryList(){
+    const c=document.getElementById('category-list');c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await gh('/contents/data/categories.json');
+        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No categories yet.</p>';return}
+        const fd=await r.json();
+        const categories=JSON.parse(b64_to_utf8(fd.content));
+        if(!categories.length){c.innerHTML='<p style="color:var(--muted)">No categories yet.</p>';return}
+
+        categories.sort((a,b)=>a.order-b.order);
+
+        c.innerHTML='';
+        categories.forEach((cat,i)=>{
+            c.innerHTML+=`<div class="item">
+                <div class="item-info">
+                    <div class="item-title">${cat.name}</div>
+                    <div class="item-meta">Order: ${cat.order} · ${cat.visible?'Visible':'Hidden'} · Label: ${cat.collectionLabel}</div>
+                </div>
+                <div class="item-actions">
+                    ${i>0?`<button class="item-order" onclick="moveCategory(${i},-1)" title="Move up">↑</button>`:'<button class="item-order" disabled style="opacity:.3">↑</button>'}
+                    ${i<categories.length-1?`<button class="item-order" onclick="moveCategory(${i},1)" title="Move down">↓</button>`:'<button class="item-order" disabled style="opacity:.3">↓</button>'}
+                    <button class="item-del" onclick="editCategory(${i})">Edit</button>
+                    <button class="item-del" onclick="delCategory(${i})">Delete</button>
+                </div>
+            </div>`;
+        });
+    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+}
+
+async function saveCategory(e){
+    e.preventDefault();
+    const btn=document.getElementById('category-btn');btn.disabled=true;btn.textContent='Saving...';
+    try{
+        const editIdx=document.getElementById('category-edit-id').value;
+        const isEdit=editIdx!=='';
+
+        // Load existing categories
+        let categories=[];
+        const r=await gh('/contents/data/categories.json');
+        if(r.status!==404){
+            const fd=await r.json();
+            categories=JSON.parse(b64_to_utf8(fd.content));
+        }
+
+        const name=document.getElementById('category-name').value.trim();
+        if(!name)throw new Error('Enter name');
+        const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        const label=document.getElementById('category-label').value.trim();
+
+        const category={
+            id:isEdit?categories[+editIdx].id:id,
+            name,
+            order:isEdit?categories[+editIdx].order:categories.length+1,
+            visible:document.getElementById('category-visible').checked,
+            collectionLabel:label,
+            file:isEdit?categories[+editIdx].file:(id+'.html')
+        };
+
+        if(isEdit){
+            categories[+editIdx]=category;
+        }else{
+            categories.push(category);
+            // Create initial data structures for new category
+            await createCategoryStructure(category);
+        }
+
+        await saveFile('data/categories.json',JSON.stringify(categories,null,2),(isEdit?'Update ':'Add ')+name);
+        msg(name+' saved','ok');
+        document.getElementById('category-form').reset();
+        document.getElementById('category-edit-id').value='';
+        btn.textContent='Add Category';
+        setTimeout(()=>loadAll(),1000);
+    }catch(err){msg(err.message||'Error','err')}
+    btn.disabled=false;btn.textContent='Add Category';
+    return false;
+}
+
+async function createCategoryStructure(category){
+    // Create collections file
+    await saveFile('data/'+category.id+'-collections.json',JSON.stringify([],null,2),'Create '+category.name+' collections');
+    // Create works.json file
+    await saveFile('data/'+category.id+'.json',JSON.stringify([],null,2),'Create '+category.name+' works');
+    // Create HTML page
+    const html=`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="description" content="Works by Takura, between observation, emotion, and form.">
+    <title>${category.name} — Alchemy of Things</title>
+    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
+    <meta property="og:title" content="${category.name} — Alchemy of Things">
+    <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">
+    <meta property="og:image" content="/images/symbol.svg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-links"></div>
+    </nav>
+    <main class="main"><section class="works" id="works"></section></main>
+    <footer class="footer">
+        <div class="footer-content">
+            <img src="/images/symbol.svg" alt="" class="symbol-footer">
+            <p class="footer-text">alchemy of things</p>
+        </div>
+    </footer>
+    <script src="/js/nav.js"></script>
+    <script src="/js/main.js"></script>
+    <script>loadCollections('${category.id}');</script>
+</body>
+</html>`;
+    await saveFile(category.file,html,'Create '+category.name+' page');
+}
+
+async function moveCategory(idx,direction){
+    try{
+        const r=await gh('/contents/data/categories.json');
+        const fd=await r.json();
+        const categories=JSON.parse(b64_to_utf8(fd.content));
+        categories.sort((a,b)=>a.order-b.order);
+
+        const targetIdx=idx+direction;
+        if(targetIdx<0||targetIdx>=categories.length)return;
+
+        // Swap orders
+        const order1=categories[idx].order;
+        const order2=categories[targetIdx].order;
+        categories[idx].order=order2;
+        categories[targetIdx].order=order1;
+
+        await saveFile('data/categories.json',JSON.stringify(categories,null,2),'Reorder categories',fd.sha);
+        msg('Order updated','ok');
+        setTimeout(()=>loadAll(),1000);
+    }catch{msg('Error reordering','err')}
+}
+
+async function editCategory(idx){
+    try{
+        const r=await gh('/contents/data/categories.json');
+        const fd=await r.json();
+        const categories=JSON.parse(b64_to_utf8(fd.content));
+        categories.sort((a,b)=>a.order-b.order);
+
+        const cat=categories[idx];
+
+        document.getElementById('category-name').value=cat.name;
+        document.getElementById('category-label').value=cat.collectionLabel;
+        document.getElementById('category-visible').checked=cat.visible;
+        document.getElementById('category-edit-id').value=idx;
+        document.getElementById('category-btn').textContent='Update Category';
+
+        showTab('categories');
+        window.scrollTo(0,0);
+    }catch{msg('Error loading','err')}
+}
+
+async function delCategory(idx){
+    if(!confirm('Delete category? This will NOT delete the HTML page or data files.'))return;
+    try{
+        const r=await gh('/contents/data/categories.json');
+        const fd=await r.json();
+        const categories=JSON.parse(b64_to_utf8(fd.content));
+        categories.sort((a,b)=>a.order-b.order);
+        categories.splice(idx,1);
+
+        await saveFile('data/categories.json',JSON.stringify(categories,null,2),'Delete category',fd.sha);
+        msg('Deleted','ok');
+        setTimeout(()=>loadAll(),1000);
+    }catch{msg('Error','err')}
 }
 
 function msg(t,type){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+type;setTimeout(()=>m.classList.add('hidden'),4000)}

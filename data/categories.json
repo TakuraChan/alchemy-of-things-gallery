@@ -1,0 +1,18 @@
+[
+  {
+    "id": "paintings",
+    "name": "Paintings",
+    "order": 1,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "index.html"
+  },
+  {
+    "id": "photography",
+    "name": "Photography",
+    "order": 2,
+    "visible": true,
+    "collectionLabel": "Observation",
+    "file": "photography.html"
+  }
+]
