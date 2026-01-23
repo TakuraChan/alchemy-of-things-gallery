@@ -46,24 +46,42 @@ async function loadWorks(type){
 async function loadCollections(type){
     const c=document.getElementById('works');
     // Determine collections file based on type
-    let collectionsFile;
+    let collectionsFile,worksFile;
     if(type==='paintings'){
         collectionsFile='/data/collections.json';
+        worksFile='/data/works.json';
     }else if(type==='photography'){
         collectionsFile='/data/observations.json';
+        worksFile='/data/photography.json';
     }else{
         collectionsFile='/data/'+type+'-collections.json';
+        worksFile='/data/'+type+'.json';
     }
 
     try{
         const r=await fetch(collectionsFile),collections=await r.json();
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
-        // Sort by order and show all active + next inactive
+        // Check if any works exist in any collection
+        let hasWorksInCollections=false;
+        try{
+            const wr=await fetch(worksFile),works=await wr.json();
+            hasWorksInCollections=works.some(w=>w.collectionId);
+        }catch{}
+
+        // Sort by order
         collections.sort((a,b)=>a.order-b.order);
-        const active=collections.filter(c=>c.active);
-        const nextInactive=collections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
-        const visible=nextInactive?[...active,nextInactive]:active;
+
+        // If no works in any collection, only show first collection
+        // Otherwise show all active + next inactive
+        let visible;
+        if(!hasWorksInCollections){
+            visible=[collections[0]];
+        }else{
+            const active=collections.filter(c=>c.active);
+            const nextInactive=collections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
+            visible=nextInactive?[...active,nextInactive]:active;
+        }
 
         c.innerHTML=visible.map((col,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">

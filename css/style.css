@@ -71,8 +71,8 @@ a:hover{opacity:.6}
     .symbol{margin-right:2rem}
     .nav-links{gap:1.5rem;font-size:.75rem}
     .main{padding:7rem 1.5rem 4rem;margin-top:0}
-    .about{text-align:left}
-    .section-note{position:static;text-align:left;margin-bottom:3rem;padding:0;font-size:.8rem}
+    .about{text-align:center}
+    .section-note{position:static;text-align:center;margin-bottom:3rem;padding:0;font-size:.8rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
     .work-link{display:block;width:auto;height:auto}
