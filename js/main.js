@@ -209,23 +209,7 @@ async function loadCollection(){
 
         collectionWorks.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
 
-        // On mobile, reorder: title → description → image
-        const isMobile=window.innerWidth<=768;
-
-        c.innerHTML=collectionWorks.map((w,i)=>isMobile?`
-            <article class="work-item" style="animation-delay:${i*.1}s">
-                <div class="work-meta">
-                    <span class="work-title">${w.title}</span>
-                    <span>${w.year}</span>
-                    <span>${w.medium}</span>
-                    <span>${w.dimensions}</span>
-                    <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
-                </div>
-                <a href="/work.html?id=${w.id}&type=${type}&collection=${id}" class="work-link">
-                    <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
-                </a>
-            </article>
-        `:`
+        c.innerHTML=collectionWorks.map((w,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}&collection=${id}" class="work-link">
                     <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
@@ -299,8 +283,18 @@ async function loadSingleWork(){
         const r=await fetch(path),works=await r.json(),w=works.find(x=>x.id===id);
         if(!w){c.innerHTML='<p class="empty">Work not found.</p>';return}
         document.title=w.title+' — Alchemy of Things';
+        // Hide header and footer on mobile
+        if(window.innerWidth<=768){
+            document.querySelector('.nav').style.display='none';
+            document.querySelector('.footer').style.display='none';
+            document.querySelector('.main').style.marginTop='0';
+            document.querySelector('.main').style.marginBottom='0';
+            document.querySelector('.main').style.height='100vh';
+            document.querySelector('.main').style.padding='1.5rem';
+        }
+
         c.innerHTML=`
-            <a href="${back}" class="back-link">${backText}</a>
+            <a href="${back}" class="back-link mobile-back-arrow">← Back</a>
             <img src="${w.image}" alt="${w.title}">
             <div class="single-work-meta">
                 <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p><p>${w.available?'Available':'Sold'}</p></div>
