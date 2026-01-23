@@ -148,7 +148,7 @@
         </div>
 
         <div id="collections" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize paintings into collections. Only active + next collection are visible.</p>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize paintings into collections. All active collections + next inactive are visible.</p>
             <form id="collection-form" onsubmit="return saveCollection(event,'collections')">
                 <input type="hidden" id="collection-edit-id">
                 <div class="field"><label>Name</label><input type="text" id="collection-name" placeholder="Collection 1" required></div>
@@ -159,7 +159,7 @@
         </div>
 
         <div id="observations" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize photographs into observations. Only active + next observation are visible.</p>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize photographs into observations. All active observations + next inactive are visible.</p>
             <form id="observation-form" onsubmit="return saveCollection(event,'observations')">
                 <input type="hidden" id="observation-edit-id">
                 <div class="field"><label>Name</label><input type="text" id="observation-name" placeholder="Observation 1" required></div>

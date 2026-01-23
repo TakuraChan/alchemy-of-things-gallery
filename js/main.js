@@ -51,10 +51,11 @@ async function loadCollections(type){
         const r=await fetch(path),collections=await r.json();
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
-        // Sort by order and show only active + next (max 2)
+        // Sort by order and show all active + next inactive
         collections.sort((a,b)=>a.order-b.order);
-        const activeIdx=collections.findIndex(c=>c.active);
-        const visible=activeIdx>=0?collections.slice(activeIdx,activeIdx+2):collections.slice(0,2);
+        const active=collections.filter(c=>c.active);
+        const nextInactive=collections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
+        const visible=nextInactive?[...active,nextInactive]:active;
 
         c.innerHTML=visible.map((col,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
