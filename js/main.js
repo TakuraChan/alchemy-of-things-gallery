@@ -104,9 +104,22 @@ async function loadCollections(type){
                         entry.target.classList.add('collection-centered');
                     }
                 });
-            },{threshold:[0.5],rootMargin:'-45% 0px'});
+            },{threshold:[0.5],rootMargin:'-20% 0px'});
 
             items.forEach(item=>observer.observe(item));
+
+            // Scroll to the latest active collection by default
+            const activeCollections=visible.filter(col=>col.active);
+            if(activeCollections.length>0){
+                const latestActive=activeCollections[activeCollections.length-1];
+                const idx=visible.findIndex(col=>col.id===latestActive.id);
+                if(idx>=0){
+                    setTimeout(()=>{
+                        items[idx].scrollIntoView({block:'center',behavior:'smooth'});
+                        items[idx].classList.add('collection-centered');
+                    },100);
+                }
+            }
         }else if(visible.length===1){
             // If only one collection, make it centered by default
             c.querySelector('.work-item')?.classList.add('collection-centered');
@@ -149,8 +162,19 @@ async function loadCollection(){
 
         if(!collectionWorks.length){
             // Empty collection - show "soon" message
-            c.innerHTML=`<div class="collection-soon"><p>New work arriving soon</p><a href="${back}" class="back-link">${backText}</a></div>`;
+            let comingSoonText='New work arriving soon';
+            try{
+                const cr=await fetch('/data/content.json');
+                const content=await cr.json();
+                if(content.general?.comingSoon)comingSoonText=content.general.comingSoon;
+            }catch{}
+            c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p><a href="${back}" class="back-link">${backText}</a></div>`;
             return;
+        }
+
+        // Add class for mobile horizontal scrolling
+        if(window.innerWidth<=768){
+            c.classList.add('collection-artworks-view');
         }
 
         collectionWorks.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
@@ -231,5 +255,25 @@ async function loadSingleWork(){
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;
+
+        // Add zoom functionality for desktop
+        if(window.innerWidth>768){
+            const img=c.querySelector('img');
+            const exitBtn=document.createElement('button');
+            exitBtn.className='zoom-exit';
+            exitBtn.innerHTML='×';
+            exitBtn.setAttribute('aria-label','Exit zoom');
+            document.querySelector('.main').appendChild(exitBtn);
+
+            img.addEventListener('click',()=>{
+                img.classList.toggle('zoomed');
+                exitBtn.classList.toggle('visible');
+            });
+
+            exitBtn.addEventListener('click',()=>{
+                img.classList.remove('zoomed');
+                exitBtn.classList.remove('visible');
+            });
+        }
     }catch{c.innerHTML='<p class="empty">Error loading work.</p>'}
 }

@@ -199,6 +199,11 @@
                     <div class="field"><label>Email Address</label><input type="email" id="content-email" placeholder="your@email.com"></div>
                 </div>
 
+                <div class="divider">
+                    <h3>General</h3>
+                    <div class="field"><label>Coming Soon Message</label><input type="text" id="content-coming-soon" placeholder="New work arriving soon"></div>
+                </div>
+
                 <button type="submit" class="btn submit">Save Content</button>
             </form>
         </div>
@@ -522,6 +527,7 @@ async function loadContent(){
         document.getElementById('content-line2').value=content.about?.line2||'';
         document.getElementById('content-photo-desc').value=content.photography?.description||'';
         document.getElementById('content-email').value=content.contact?.email||'';
+        document.getElementById('content-coming-soon').value=content.general?.comingSoon||'';
     }catch{}
 }
 
@@ -539,6 +545,9 @@ async function saveContent(e){
             },
             contact:{
                 email:document.getElementById('content-email').value.trim()
+            },
+            general:{
+                comingSoon:document.getElementById('content-coming-soon').value.trim()
             }
         };
 
