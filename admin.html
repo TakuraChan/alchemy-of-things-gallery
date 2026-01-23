@@ -797,47 +797,10 @@ async function saveCategory(e){
 }
 
 async function createCategoryStructure(category){
-    // Create collections file
     await saveFile('data/'+category.id+'-collections.json',JSON.stringify([],null,2),'Create '+category.name+' collections');
-    // Create works.json file
     await saveFile('data/'+category.id+'.json',JSON.stringify([],null,2),'Create '+category.name+' works');
-    // Create HTML page
-    const html='<!DOCTYPE html>\n'+
-'<html lang="en">\n'+
-'<head>\n'+
-'    <meta charset="UTF-8">\n'+
-'    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n'+
-'    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n'+
-'    <meta http-equiv="Pragma" content="no-cache">\n'+
-'    <meta http-equiv="Expires" content="0">\n'+
-'    <meta name="description" content="Works by Takura, between observation, emotion, and form.">\n'+
-'    <title>'+category.name+' — Alchemy of Things</title>\n'+
-'    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">\n'+
-'    <meta property="og:title" content="'+category.name+' — Alchemy of Things">\n'+
-'    <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">\n'+
-'    <meta property="og:image" content="/images/symbol.svg">\n'+
-'    <meta property="og:type" content="website">\n'+
-'    <meta name="twitter:card" content="summary">\n'+
-'    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">\n'+
-'    <link rel="stylesheet" href="/css/style.css">\n'+
-'</head>\n'+
-'<body>\n'+
-'    <nav class="nav">\n'+
-'        <div class="nav-links"></div>\n'+
-'    </nav>\n'+
-'    <main class="main"><section class="works" id="works"></section></main>\n'+
-'    <footer class="footer">\n'+
-'        <div class="footer-content">\n'+
-'            <img src="/images/symbol.svg" alt="" class="symbol-footer">\n'+
-'            <p class="footer-text">alchemy of things</p>\n'+
-'        </div>\n'+
-'    </footer>\n'+
-'    <script src="/js/nav.js"></script>\n'+
-'    <script src="/js/main.js"></script>\n'+
-'    <script>loadCollections(\''+category.id+'\');</script>\n'+
-'</body>\n'+
-'</html>';
-    await saveFile(category.file,html,'Create '+category.name+' page');
+    const parts=['<!DOCTYPE html>','<html lang="en">','<head>','    <meta charset="UTF-8">','    <meta name="viewport" content="width=device-width, initial-scale=1.0">','    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">','    <meta http-equiv="Pragma" content="no-cache">','    <meta http-equiv="Expires" content="0">','    <meta name="description" content="Works by Takura, between observation, emotion, and form.">','    <title>'+category.name+' — Alchemy of Things</title>','    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">','    <meta property="og:title" content="'+category.name+' — Alchemy of Things">','    <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">','    <meta property="og:image" content="/images/symbol.svg">','    <meta property="og:type" content="website">','    <meta name="twitter:card" content="summary">','    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">','    <link rel="stylesheet" href="/css/style.css">','</head>','<body>','    <nav class="nav">','        <div class="nav-links"></div>','    </nav>','    <main class="main"><section class="works" id="works"></section></main>','    <footer class="footer">','        <div class="footer-content">','            <img src="/images/symbol.svg" alt="" class="symbol-footer">','            <p class="footer-text">alchemy of things</p>','        </div>','    </footer>','    <script src="/js/nav.js"></script>','    <script src="/js/main.js"></script>','    <script>loadCollections("'+category.id+'");</script>','</body>','</html>'];
+    await saveFile(category.file,parts.join('\n'),'Create '+category.name+' page');
 }
 
 async function moveCategory(idx,direction){
