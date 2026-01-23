@@ -11,10 +11,6 @@ async function loadWorks(type){
                 </a>
                 <div class="work-meta">
                     <span class="work-title">${w.title}</span>
-                    <span>${w.year}</span>
-                    <span>${w.medium}</span>
-                    <span>${w.dimensions}</span>
-                    <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
                 </div>
             </article>
         `).join('');
@@ -216,10 +212,6 @@ async function loadCollection(){
                 </a>
                 <div class="work-meta">
                     <span class="work-title">${w.title}</span>
-                    <span>${w.year}</span>
-                    <span>${w.medium}</span>
-                    <span>${w.dimensions}</span>
-                    <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
                 </div>
             </article>
         `).join('');
