@@ -153,6 +153,11 @@ async function loadCollection(){
             return;
         }
 
+        // Add class for mobile horizontal scrolling
+        if(window.innerWidth<=768){
+            c.classList.add('collection-artworks-view');
+        }
+
         collectionWorks.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
         c.innerHTML=collectionWorks.map((w,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
@@ -231,5 +236,25 @@ async function loadSingleWork(){
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;
+
+        // Add zoom functionality for desktop
+        if(window.innerWidth>768){
+            const img=c.querySelector('img');
+            const exitBtn=document.createElement('button');
+            exitBtn.className='zoom-exit';
+            exitBtn.innerHTML='×';
+            exitBtn.setAttribute('aria-label','Exit zoom');
+            document.querySelector('.main').appendChild(exitBtn);
+
+            img.addEventListener('click',()=>{
+                img.classList.toggle('zoomed');
+                exitBtn.classList.toggle('visible');
+            });
+
+            exitBtn.addEventListener('click',()=>{
+                img.classList.remove('zoomed');
+                exitBtn.classList.remove('visible');
+            });
+        }
     }catch{c.innerHTML='<p class="empty">Error loading work.</p>'}
 }
