@@ -1,0 +1,14 @@
+[
+  {
+    "id": "collection-1",
+    "name": "Collection 1",
+    "order": 1,
+    "active": true
+  },
+  {
+    "id": "collection-2",
+    "name": "Collection 2",
+    "order": 2,
+    "active": false
+  }
+]
