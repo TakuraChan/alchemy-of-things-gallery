@@ -124,6 +124,36 @@ async function loadCollections(type){
             // If only one collection, make it centered by default
             c.querySelector('.work-item')?.classList.add('collection-centered');
         }
+
+        // Handle intro text fade on mobile
+        if(window.innerWidth<=768){
+            const sectionNote=document.querySelector('.section-note');
+            if(sectionNote&&sectionNote.textContent.trim()){
+                // Hide collections initially
+                c.style.opacity='0';
+
+                // Show and animate intro text
+                sectionNote.style.opacity='0';
+                sectionNote.style.display='block';
+
+                setTimeout(()=>{
+                    sectionNote.style.transition='opacity 0.6s ease';
+                    sectionNote.style.opacity='1';
+                },50);
+
+                // Fade out intro text after 2.5 seconds
+                setTimeout(()=>{
+                    sectionNote.style.opacity='0';
+                },2600);
+
+                // Remove intro text and show collections after fade out
+                setTimeout(()=>{
+                    sectionNote.style.display='none';
+                    c.style.transition='opacity 0.6s ease';
+                    c.style.opacity='1';
+                },3200);
+            }
+        }
     }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
 }
 
@@ -178,7 +208,24 @@ async function loadCollection(){
         }
 
         collectionWorks.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
-        c.innerHTML=collectionWorks.map((w,i)=>`
+
+        // On mobile, reorder: title → description → image
+        const isMobile=window.innerWidth<=768;
+
+        c.innerHTML=collectionWorks.map((w,i)=>isMobile?`
+            <article class="work-item" style="animation-delay:${i*.1}s">
+                <div class="work-meta">
+                    <span class="work-title">${w.title}</span>
+                    <span>${w.year}</span>
+                    <span>${w.medium}</span>
+                    <span>${w.dimensions}</span>
+                    <span class="work-availability ${w.available?'available':''}">${w.available?'Available':'Sold'}</span>
+                </div>
+                <a href="/work.html?id=${w.id}&type=${type}&collection=${id}" class="work-link">
+                    <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
+                </a>
+            </article>
+        `:`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}&collection=${id}" class="work-link">
                     <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">

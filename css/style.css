@@ -80,7 +80,7 @@ a:hover{opacity:.6}
     .main{padding:0 1.5rem;margin-top:60px;margin-bottom:80px;overflow-y:auto;height:calc(100vh - 140px)}
     .footer{position:fixed;bottom:0;left:0;right:0;padding:1.5rem;background:var(--bg);z-index:90}
     .about{text-align:center;padding-top:4vh}
-    .section-note{position:static;text-align:center;margin-bottom:3rem;padding:0;font-size:.8rem}
+    .section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1rem;padding:2rem;width:80%;max-width:400px;z-index:100;display:none}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .works.collections-view{overflow-y:visible}
     .works.collections-view .work-item{height:auto;min-height:40vh;margin-bottom:4rem}
@@ -89,11 +89,11 @@ a:hover{opacity:.6}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
     .work-link{display:block;width:auto;height:auto}
     .work-image{max-width:100%;max-height:none;width:100%;height:auto;margin-bottom:1rem}
-    .works.collection-artworks-view .work-image{max-width:90%;max-height:50vh;width:auto;height:auto;object-fit:contain;margin-bottom:1.5rem}
+    .works.collection-artworks-view .work-image{max-width:90%;max-height:50vh;width:auto;height:auto;object-fit:contain;margin-bottom:1.5rem;margin-top:1.5rem}
     .work-meta{flex-direction:column;gap:.4rem;justify-content:flex-start;font-size:.8rem}
     .work-title{text-align:left;font-size:1.1rem;margin-bottom:.8rem}
-    .works.collection-artworks-view .work-meta{gap:.6rem;align-items:center;text-align:center}
-    .works.collection-artworks-view .work-title{margin-bottom:1rem;text-align:center}
+    .works.collection-artworks-view .work-meta{gap:.5rem;align-items:center;text-align:center;justify-content:center}
+    .works.collection-artworks-view .work-title{margin-bottom:.8rem;text-align:center}
     .collection-title{opacity:1}
     .collection-soon{min-height:50vh}
     .single-work{height:auto;padding:1.5rem 0}
