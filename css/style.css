@@ -104,5 +104,7 @@ a:hover{opacity:.6}
     .single-work-meta{flex-direction:column;gap:1.5rem}
     .inquire-btn{width:100%;text-align:center}
     .gallery-arrow{font-size:2rem;width:40px;height:40px}
+    .gallery-arrow-left{left:0.5rem}
+    .gallery-arrow-right{right:0.5rem}
     .zoom-exit{display:none!important}
 }
