@@ -193,26 +193,31 @@ async function loadCollection(){
             </article>
         `).join('');
 
-        // Add navigation arrows for desktop
-        if(window.innerWidth>768){
-            const nav=document.createElement('div');
-            nav.className='gallery-nav';
-            nav.innerHTML='<button class="gallery-arrow gallery-arrow-left" aria-label="Previous">‹</button><button class="gallery-arrow gallery-arrow-right" aria-label="Next">›</button>';
-            document.querySelector('.main').appendChild(nav);
+        // Add navigation arrows
+        const nav=document.createElement('div');
+        nav.className='gallery-nav';
+        nav.innerHTML='<button class="gallery-arrow gallery-arrow-left" aria-label="Previous">‹</button><button class="gallery-arrow gallery-arrow-right" aria-label="Next">›</button>';
+        document.querySelector('.main').appendChild(nav);
 
-            const left=nav.querySelector('.gallery-arrow-left'),right=nav.querySelector('.gallery-arrow-right');
-            left.addEventListener('click',()=>{const w=c.scrollLeft;c.scrollTo({left:w-c.clientWidth,behavior:'smooth'})});
-            right.addEventListener('click',()=>{const w=c.scrollLeft;c.scrollTo({left:w+c.clientWidth,behavior:'smooth'})});
+        const left=nav.querySelector('.gallery-arrow-left'),right=nav.querySelector('.gallery-arrow-right');
+        const items=Array.from(c.querySelectorAll('.work-item'));
+        let currentIndex=0;
 
-            const updateArrows=()=>{
-                left.style.opacity=c.scrollLeft<=10?'0':'1';
-                left.style.pointerEvents=c.scrollLeft<=10?'none':'auto';
-                right.style.opacity=c.scrollLeft>=c.scrollWidth-c.clientWidth-10?'0':'1';
-                right.style.pointerEvents=c.scrollLeft>=c.scrollWidth-c.clientWidth-10?'none':'auto';
-            };
-            c.addEventListener('scroll',updateArrows);
-            updateArrows();
-        }
+        const showItem=(index)=>{
+            items.forEach((item,i)=>{
+                item.style.display=i===index?'flex':'none';
+            });
+            left.style.opacity=index<=0?'0':'1';
+            left.style.pointerEvents=index<=0?'none':'auto';
+            right.style.opacity=index>=items.length-1?'0':'1';
+            right.style.pointerEvents=index>=items.length-1?'none':'auto';
+            currentIndex=index;
+        };
+
+        left.addEventListener('click',()=>{if(currentIndex>0)showItem(currentIndex-1)});
+        right.addEventListener('click',()=>{if(currentIndex<items.length-1)showItem(currentIndex+1)});
+
+        showItem(0);
     }catch{c.innerHTML='<p class="empty">Error loading collection.</p>'}
 }
 

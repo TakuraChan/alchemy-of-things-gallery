@@ -84,17 +84,16 @@ a:hover{opacity:.6}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .works.collections-view{overflow-y:visible}
     .works.collections-view .work-item{height:auto;min-height:40vh;margin-bottom:4rem}
-    .works.collection-artworks-view{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;height:auto;min-height:60vh;scrollbar-width:none;-ms-overflow-style:none;padding:0 2rem}
-    .works.collection-artworks-view::-webkit-scrollbar{display:none}
-    .works.collection-artworks-view .work-item{min-width:calc(100% - 4rem);flex-shrink:0;margin-bottom:2rem;padding:0;margin-right:4rem}
+    .works.collection-artworks-view{display:flex;height:calc(100vh - 140px);position:relative}
+    .works.collection-artworks-view .work-item{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem 0;margin:0}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
     .work-link{display:block;width:auto;height:auto}
     .work-image{max-width:100%;max-height:none;width:100%;height:auto;margin-bottom:1rem}
-    .works.collection-artworks-view .work-image{max-height:60vh;width:auto;object-fit:contain}
+    .works.collection-artworks-view .work-image{max-width:90%;max-height:50vh;width:auto;height:auto;object-fit:contain;margin-bottom:1.5rem}
     .work-meta{flex-direction:column;gap:.4rem;justify-content:flex-start;font-size:.8rem}
     .work-title{text-align:left;font-size:1.1rem;margin-bottom:.8rem}
-    .works.collection-artworks-view .work-meta{gap:.6rem}
-    .works.collection-artworks-view .work-title{margin-bottom:1rem}
+    .works.collection-artworks-view .work-meta{gap:.6rem;align-items:center;text-align:center}
+    .works.collection-artworks-view .work-title{margin-bottom:1rem;text-align:center}
     .collection-title{opacity:1}
     .collection-soon{min-height:50vh}
     .single-work{height:auto;padding:1.5rem 0}
@@ -102,6 +101,6 @@ a:hover{opacity:.6}
     .single-work img:hover{transform:none}
     .single-work-meta{flex-direction:column;gap:1.5rem}
     .inquire-btn{width:100%;text-align:center}
-    .gallery-nav{display:none}
+    .gallery-arrow{font-size:2rem;width:40px;height:40px}
     .zoom-exit{display:none!important}
 }
