@@ -83,6 +83,9 @@ async function loadCollections(type){
             visible=nextInactive?[...active,nextInactive]:active;
         }
 
+        // Add collections view class
+        c.classList.add('collections-view');
+
         c.innerHTML=visible.map((col,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
@@ -90,6 +93,24 @@ async function loadCollections(type){
                 </a>
             </article>
         `).join('');
+
+        // Set up intersection observer to highlight centered collection
+        if(window.IntersectionObserver&&visible.length>1){
+            const items=c.querySelectorAll('.work-item');
+            const observer=new IntersectionObserver((entries)=>{
+                entries.forEach(entry=>{
+                    if(entry.isIntersecting&&entry.intersectionRatio>0.5){
+                        items.forEach(item=>item.classList.remove('collection-centered'));
+                        entry.target.classList.add('collection-centered');
+                    }
+                });
+            },{threshold:[0.5],rootMargin:'-45% 0px'});
+
+            items.forEach(item=>observer.observe(item));
+        }else if(visible.length===1){
+            // If only one collection, make it centered by default
+            c.querySelector('.work-item')?.classList.add('collection-centered');
+        }
     }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
 }
 
