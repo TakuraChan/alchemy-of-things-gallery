@@ -121,36 +121,34 @@ async function loadCollections(type){
             c.querySelector('.work-item')?.classList.add('collection-centered');
         }
 
-        // Handle intro text/image fade on mobile
-        if(window.innerWidth<=768){
-            const sectionNote=document.querySelector('.section-note');
-            const hasText=sectionNote&&sectionNote.textContent.trim();
-            const hasImage=sectionNote&&sectionNote.querySelector('img[src]:not([src=""])');
-            if(hasText||hasImage){
-                // Hide collections initially
-                c.style.opacity='0';
+        // Handle intro text/image fade (desktop and mobile)
+        const sectionNote=document.querySelector('.section-note');
+        const hasText=sectionNote&&sectionNote.textContent.trim();
+        const hasImage=sectionNote&&sectionNote.querySelector('img[src]:not([src=""])');
+        if(hasText||hasImage){
+            // Hide collections initially
+            c.style.opacity='0';
 
-                // Show and animate intro content
+            // Show and animate intro content
+            sectionNote.style.opacity='0';
+            sectionNote.style.display='flex';
+
+            setTimeout(()=>{
+                sectionNote.style.transition='opacity 0.8s ease';
+                sectionNote.style.opacity='1';
+            },100);
+
+            // Fade out intro content after 3 seconds
+            setTimeout(()=>{
                 sectionNote.style.opacity='0';
-                sectionNote.style.display='flex';
+            },3100);
 
-                setTimeout(()=>{
-                    sectionNote.style.transition='opacity 0.6s ease';
-                    sectionNote.style.opacity='1';
-                },50);
-
-                // Fade out intro content after 2.5 seconds
-                setTimeout(()=>{
-                    sectionNote.style.opacity='0';
-                },2600);
-
-                // Remove intro content and show collections after fade out
-                setTimeout(()=>{
-                    sectionNote.style.display='none';
-                    c.style.transition='opacity 0.6s ease';
-                    c.style.opacity='1';
-                },3200);
-            }
+            // Remove intro content and show collections after fade out (slower)
+            setTimeout(()=>{
+                sectionNote.style.display='none';
+                c.style.transition='opacity 1s ease';
+                c.style.opacity='1';
+            },4100);
         }
     }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
 }
