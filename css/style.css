@@ -13,7 +13,8 @@ a:hover{opacity:.6}
 .works{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;height:calc(100vh - 60px);scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}
 .works::-webkit-scrollbar{display:none}
 .works.collections-view{flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:y mandatory}
-.section-note{position:absolute;top:80px;left:0;right:0;text-align:center;font-size:.85rem;color:var(--light);font-style:italic;z-index:10;padding:0 2rem}
+.section-note{position:absolute;top:80px;left:0;right:0;text-align:center;font-size:.85rem;color:var(--light);font-style:italic;z-index:10;padding:0 2rem;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
+.section-note img{max-width:300px;width:90%;height:auto;margin-top:1rem;opacity:.8}
 .work-item{min-width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;scroll-snap-align:start;padding:2rem;opacity:0;animation:fadeUp .6s ease forwards}
 .collections-view .work-item{min-width:auto;height:60vh;scroll-snap-align:center}
 @keyframes fadeUp{to{opacity:1}}
@@ -82,7 +83,8 @@ a:hover{opacity:.6}
     .symbol-footer{display:none}
     .footer-text{font-size:.75rem}
     .about{text-align:center;padding-top:4vh}
-    .section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1rem;padding:2rem;width:80%;max-width:400px;z-index:100;display:none}
+    .section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1rem;padding:2rem;width:80%;max-width:400px;z-index:100;display:none;flex-direction:column;align-items:center;gap:1.5rem}
+    .section-note img{max-width:200px;width:80%;margin-top:0.5rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .works.collections-view{overflow-y:visible}
     .works.collections-view .work-item{height:auto;min-height:40vh;margin-bottom:4rem}
