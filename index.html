@@ -93,20 +93,6 @@
                 setTimeout(()=>{works.style.opacity='1'},50);
             },600);
         });
-
-        // Symbol click returns to landing page
-        setTimeout(()=>{
-            const symbolLink=document.querySelector('.nav-links a[href="/"]');
-            if(symbolLink){
-                symbolLink.addEventListener('click',(e)=>{
-                    if(window.location.pathname==='/'||window.location.pathname==='/index.html'){
-                        e.preventDefault();
-                        sessionStorage.removeItem('hasVisited');
-                        location.reload();
-                    }
-                });
-            }
-        },100);
     </script>
 </body>
 </html>
