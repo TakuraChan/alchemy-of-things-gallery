@@ -82,50 +82,66 @@ async function loadCollections(type){
         // Add collections view class
         c.classList.add('collections-view');
 
-        c.innerHTML=visible.map((col,i)=>`
-            <article class="work-item" style="animation-delay:${i*.1}s">
-                <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
-                    <div class="collection-title">${col.name}</div>
-                </a>
-            </article>
-        `).join('');
+        // Check if intro text exists
+        const sectionNote=document.querySelector('.section-note');
+        const hasIntro=sectionNote&&sectionNote.textContent.trim();
 
-        // Set up intersection observer to highlight centered collection
-        if(window.IntersectionObserver&&visible.length>1){
-            const items=c.querySelectorAll('.work-item');
-            const observer=new IntersectionObserver((entries)=>{
-                entries.forEach(entry=>{
-                    if(entry.isIntersecting&&entry.intersectionRatio>0.5){
-                        items.forEach(item=>item.classList.remove('collection-centered'));
-                        entry.target.classList.add('collection-centered');
+        // Delay rendering if intro text exists
+        const renderCollections=()=>{
+            c.innerHTML=visible.map((col,i)=>`
+                <article class="work-item" style="animation-delay:${i*.1}s">
+                    <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
+                        <div class="collection-title">${col.name}</div>
+                    </a>
+                </article>
+            `).join('');
+            setupCollectionObserver();
+        };
+
+        if(hasIntro){
+            // Wait for intro to finish before rendering
+            setTimeout(renderCollections,4100);
+        }else{
+            // No intro, render immediately
+            renderCollections();
+            c.style.opacity='1';
+        }
+
+        function setupCollectionObserver(){
+            // Set up intersection observer to highlight centered collection
+            if(window.IntersectionObserver&&visible.length>1){
+                const items=c.querySelectorAll('.work-item');
+                const observer=new IntersectionObserver((entries)=>{
+                    entries.forEach(entry=>{
+                        if(entry.isIntersecting&&entry.intersectionRatio>0.5){
+                            items.forEach(item=>item.classList.remove('collection-centered'));
+                            entry.target.classList.add('collection-centered');
+                        }
+                    });
+                },{threshold:[0.5],rootMargin:'-20% 0px'});
+
+                items.forEach(item=>observer.observe(item));
+
+                // Scroll to the latest active collection by default
+                const activeCollections=visible.filter(col=>col.active);
+                if(activeCollections.length>0){
+                    const latestActive=activeCollections[activeCollections.length-1];
+                    const idx=visible.findIndex(col=>col.id===latestActive.id);
+                    if(idx>=0){
+                        setTimeout(()=>{
+                            items[idx].scrollIntoView({block:'center',behavior:'smooth'});
+                            items[idx].classList.add('collection-centered');
+                        },100);
                     }
-                });
-            },{threshold:[0.5],rootMargin:'-20% 0px'});
-
-            items.forEach(item=>observer.observe(item));
-
-            // Scroll to the latest active collection by default
-            const activeCollections=visible.filter(col=>col.active);
-            if(activeCollections.length>0){
-                const latestActive=activeCollections[activeCollections.length-1];
-                const idx=visible.findIndex(col=>col.id===latestActive.id);
-                if(idx>=0){
-                    setTimeout(()=>{
-                        items[idx].scrollIntoView({block:'center',behavior:'smooth'});
-                        items[idx].classList.add('collection-centered');
-                    },100);
                 }
+            }else if(visible.length===1){
+                // If only one collection, make it centered by default
+                c.querySelector('.work-item')?.classList.add('collection-centered');
             }
-        }else if(visible.length===1){
-            // If only one collection, make it centered by default
-            c.querySelector('.work-item')?.classList.add('collection-centered');
         }
 
         // Handle intro text/image fade (desktop and mobile)
-        const sectionNote=document.querySelector('.section-note');
-        const hasText=sectionNote&&sectionNote.textContent.trim();
-        const hasImage=sectionNote&&sectionNote.querySelector('img[src]:not([src=""])');
-        if(hasText||hasImage){
+        if(hasIntro){
             // Hide collections initially
             c.style.opacity='0';
 
@@ -143,7 +159,7 @@ async function loadCollections(type){
                 sectionNote.style.opacity='0';
             },3100);
 
-            // Remove intro content and show collections after fade out (slower)
+            // Remove intro content after fade out
             setTimeout(()=>{
                 sectionNote.style.display='none';
                 c.style.transition='opacity 1s ease';
