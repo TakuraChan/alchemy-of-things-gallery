@@ -37,6 +37,9 @@ async function loadWorks(type){
             c.addEventListener('scroll',updateArrows);
             updateArrows();
         }
+
+        // Make works container visible
+        setTimeout(()=>{c.style.opacity='1'},50);
     }catch{c.innerHTML='<p class="empty">Error loading works.</p>'}
 }
 
@@ -259,6 +262,9 @@ async function loadCollection(){
         right.addEventListener('click',()=>{if(currentIndex<items.length-1)showItem(currentIndex+1)});
 
         showItem(0);
+
+        // Make works container visible
+        setTimeout(()=>{c.style.opacity='1'},50);
     }catch{c.innerHTML='<p class="empty">Error loading collection.</p>'}
 }
 
