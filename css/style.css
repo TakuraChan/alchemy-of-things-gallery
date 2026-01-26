@@ -85,8 +85,8 @@ a:hover{opacity:.6}
     .landing-symbol{width:30px;height:30px;top:2rem}
     .landing-image{max-width:90%;max-height:65vh}
     .landing-enter{bottom:3rem;padding:.9rem 2.5rem;font-size:.8rem}
-    .nav{padding:1rem 1.5rem;flex-direction:row;gap:0}
-    .symbol{margin-right:2rem;width:24px;height:24px}
+    .nav{padding:1rem 1.5rem;flex-direction:column;gap:.8rem}
+    .symbol{margin-right:0;width:24px;height:24px}
     .nav-links{gap:1.5rem;font-size:.75rem}
     .main{padding:0 1.5rem;margin-top:60px;margin-bottom:80px;overflow-y:auto;height:calc(100vh - 140px)}
     .footer{position:fixed;bottom:0;left:0;right:0;padding:1.5rem;background:var(--bg);z-index:90}
