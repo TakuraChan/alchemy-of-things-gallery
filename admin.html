@@ -588,6 +588,21 @@ async function loadContent(){
         // General settings (in settings tab)
         document.getElementById('content-email').value=content.contact?.email||'';
         document.getElementById('content-coming-soon').value=content.general?.comingSoon||'';
+
+        // Show existing landing image preview
+        if(content.paintings?.landingImage){
+            const u=document.getElementById('landing-upload');
+            u.classList.add('has');
+            u.innerHTML='';
+            const input=document.createElement('input');
+            input.type='file';
+            input.accept='image/*';
+            input.onchange=function(){preview(this,'landing')};
+            const imgEl=document.createElement('img');
+            imgEl.src=content.paintings.landingImage+'?_='+Date.now();
+            u.appendChild(input);
+            u.appendChild(imgEl);
+        }
     }catch{}
 }
 
@@ -603,12 +618,14 @@ async function saveLandingPage(e){
             content=JSON.parse(b64_to_utf8(fd.content));
             sha=fd.sha;
         }
-        const ext=img.landing.type.split('/')[1];
+        const ext=img.landing.type.split('/')[1]||'jpeg';
         const imgPath='/images/landing.'+ext;
-        await saveFile(imgPath.slice(1),img.landing.data,'Upload landing image',null,true);
+        // Upload image directly (don't use saveFile which double-encodes)
+        const existingImg=await getFile('images/landing.'+ext);
+        await gh('/contents/images/landing.'+ext,'PUT',{message:'Upload landing image',content:img.landing.data,sha:existingImg?.sha,branch:'main'});
         if(!content.paintings)content.paintings={};
         content.paintings.landingImage=imgPath;
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page',sha);
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page');
         msg('Landing page saved','ok');
         setTimeout(()=>location.reload(),1000);
     }catch(err){msg('Error saving: '+err.message,'err')}
