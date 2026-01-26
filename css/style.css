@@ -20,10 +20,10 @@ a:hover{opacity:.6}
 .works{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;height:calc(100vh - 80px);scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;opacity:0;transition:opacity .6s ease}
 .works::-webkit-scrollbar{display:none}
 .works.collections-view{flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:y mandatory}
-.section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1rem;color:var(--text);font-style:italic;z-index:110;padding:2rem;display:none;flex-direction:column;align-items:center;gap:1.5rem;font-family:var(--font-display);max-width:600px;line-height:1.6}
+.section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1.5rem;color:var(--text);font-style:italic;z-index:110;padding:2rem;display:none;flex-direction:column;align-items:center;gap:1.5rem;font-family:var(--font-display);max-width:600px;line-height:1.6}
 .section-note img{max-width:300px;width:90%;height:auto;margin-top:1rem;opacity:.8}
 .work-item{min-width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;scroll-snap-align:start;padding:2rem;opacity:0;animation:fadeUp .6s ease forwards}
-.collections-view .work-item{min-width:auto;height:60vh;scroll-snap-align:center}
+.collections-view .work-item{min-width:auto;height:40vh;scroll-snap-align:center}
 @keyframes fadeUp{to{opacity:1}}
 .work-link{display:block;cursor:pointer}
 .work-image{max-width:90%;max-height:calc(100vh - 200px);width:auto;height:auto;object-fit:contain;display:block;margin:0 auto 1.5rem}
@@ -31,8 +31,8 @@ a:hover{opacity:.6}
 .work-title{font-family:var(--font-display);font-size:1.25rem;font-style:italic;color:var(--text);flex-basis:100%;text-align:center}
 .work-availability.available::before{content:'';display:inline-block;width:6px;height:6px;background:#4a7c59;border-radius:50%;margin-right:.5rem;vertical-align:middle}
 .collection-link{display:flex;align-items:center;justify-content:center;width:100%;height:100%;transition:transform .3s ease}
-.collection-title{font-family:var(--font-display);font-size:2rem;font-style:italic;color:var(--text);text-align:center;transition:font-size .3s ease,opacity .3s ease,color .3s ease;opacity:.3;color:var(--light)}
-.work-item.collection-centered .collection-title{font-size:2.5rem;opacity:1;color:var(--text)}
+.collection-title{font-family:var(--font-display);font-size:1.2rem;font-style:italic;color:var(--text);text-align:center;transition:font-size .3s ease,opacity .3s ease,color .3s ease;opacity:.3;color:var(--light)}
+.work-item.collection-centered .collection-title{font-size:1.4rem;opacity:1;color:var(--text)}
 .collection-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;width:100%}
 .collection-soon p{font-size:1.5rem;color:var(--light);font-style:italic;margin-bottom:2rem;width:100%}
 .gallery-nav{position:fixed;top:50%;left:0;right:0;pointer-events:none;z-index:50}
@@ -92,7 +92,7 @@ a:hover{opacity:.6}
     .footer{position:fixed;bottom:0;left:0;right:0;padding:1.5rem;background:var(--bg);z-index:90}
     .footer-text{font-size:.75rem}
     .about{text-align:center;padding-top:4vh}
-    .section-note{font-size:.95rem;padding:1.5rem;width:85%;max-width:400px}
+    .section-note{font-size:1.2rem;padding:1.5rem;width:85%;max-width:400px}
     .section-note img{max-width:200px;width:80%;margin-top:0.5rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .works.collections-view{overflow-y:visible}
@@ -107,7 +107,7 @@ a:hover{opacity:.6}
     .work-title{text-align:center;font-size:1rem;margin-bottom:0}
     .works.collection-artworks-view .work-meta{gap:.5rem;align-items:center;text-align:center;justify-content:center}
     .works.collection-artworks-view .work-title{margin-bottom:0;text-align:center}
-    .collection-title{opacity:1;font-size:1.5rem}
+    .collection-title{opacity:1;font-size:1rem}
     .collection-soon{min-height:50vh}
     .single-work{height:auto;padding:1.5rem 0}
     .single-work img{cursor:default}
