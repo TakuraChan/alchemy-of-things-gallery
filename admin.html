@@ -252,7 +252,7 @@
     <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
     <script>
 const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc4OevEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:location.origin+'/admin/'}};
-let auth0,user,cfg,img={painting:null,photo:null,symbol:null};
+let auth0,user,cfg,img={painting:null,photo:null,symbol:null,landing:null};
 
 async function init(){
     auth0=await window.auth0.createAuth0Client(AUTH0);
@@ -612,21 +612,30 @@ async function saveLandingPage(e){
     try{
         const r=await gh('/contents/data/content.json');
         let content={about:{},paintings:{},photography:{},contact:{},general:{}};
-        let sha=null;
         if(r.status!==404){
             const fd=await r.json();
             content=JSON.parse(b64_to_utf8(fd.content));
-            sha=fd.sha;
         }
         const ext=img.landing.type.split('/')[1]||'jpeg';
         const imgPath='/images/landing.'+ext;
+        // Get existing landing image (might have different extension)
+        const oldPath=content.paintings?.landingImage;
+        let existingSha=null;
+        if(oldPath){
+            const oldFile=await getFile(oldPath.slice(1));
+            if(oldFile)existingSha=oldFile.sha;
+        }
+        // If uploading with different extension, also check for file with same extension
+        const sameExtFile=await getFile('images/landing.'+ext);
+        if(sameExtFile)existingSha=sameExtFile.sha;
         // Upload image directly (don't use saveFile which double-encodes)
-        const existingImg=await getFile('images/landing.'+ext);
-        await gh('/contents/images/landing.'+ext,'PUT',{message:'Upload landing image',content:img.landing.data,sha:existingImg?.sha,branch:'main'});
+        const uploadRes=await gh('/contents/images/landing.'+ext,'PUT',{message:'Upload landing image',content:img.landing.data,sha:existingSha,branch:'main'});
+        if(!uploadRes.ok)throw new Error('Image upload failed');
         if(!content.paintings)content.paintings={};
         content.paintings.landingImage=imgPath;
         await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page');
         msg('Landing page saved','ok');
+        img.landing=null;
         setTimeout(()=>location.reload(),1000);
     }catch(err){msg('Error saving: '+err.message,'err')}
     return false;
