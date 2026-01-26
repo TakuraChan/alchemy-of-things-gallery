@@ -96,18 +96,31 @@
         </header>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('paintings')">Paintings</button>
-            <button class="tab" onclick="showTab('collections')">Collections</button>
+            <button class="tab active" onclick="showTab('landing')">Landing Page</button>
+            <button class="tab" onclick="showTab('paintings')">Paintings</button>
             <button class="tab" onclick="showTab('photography')">Photography</button>
-            <button class="tab" onclick="showTab('observations')">Observations</button>
             <button class="tab" onclick="showTab('categories')">Categories</button>
-            <button class="tab" onclick="showTab('content')">Content</button>
+            <button class="tab" onclick="showTab('about')">About</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
 
         <div id="msg" class="msg hidden"></div>
 
-        <div id="paintings" class="tab-content">
+        <div id="landing" class="tab-content">
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Upload an image to show on site arrival. Visitors will see this with an "Enter" button before accessing the gallery.</p>
+            <form onsubmit="return saveLandingPage(event)">
+                <div class="field">
+                    <label>Landing Image</label>
+                    <div class="upload" id="landing-upload">
+                        <input type="file" accept="image/*" onchange="preview(this,'landing')">
+                        <span>Upload Image</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn submit">Save Landing Page</button>
+            </form>
+        </div>
+
+        <div id="paintings" class="tab-content hidden">
             <form id="painting-form" onsubmit="return saveWork(event,'painting')">
                 <input type="hidden" id="painting-edit-id">
                 <input type="hidden" id="painting-edit-sha">
@@ -125,6 +138,18 @@
                 <button type="submit" class="btn submit" id="painting-btn">Add Painting</button>
             </form>
             <div class="list"><h3>Existing Works</h3><div id="painting-list"><div class="loading"></div></div></div>
+
+            <div class="divider">
+                <h3>Collections</h3>
+                <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize paintings into collections. All active collections + next inactive are visible.</p>
+                <form id="collection-form" onsubmit="return saveCollection(event,'collections')">
+                    <input type="hidden" id="collection-edit-id">
+                    <div class="field"><label>Name</label><input type="text" id="collection-name" placeholder="Collection 1" required></div>
+                    <div class="field"><label class="check"><input type="checkbox" id="collection-active"><span>Active (currently showing)</span></label></div>
+                    <button type="submit" class="btn submit" id="collection-btn">Add Collection</button>
+                </form>
+                <div class="list"><h3>Existing Collections</h3><div id="collection-list"><div class="loading"></div></div></div>
+            </div>
         </div>
 
         <div id="photography" class="tab-content hidden">
@@ -146,28 +171,26 @@
                 <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
             <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
-        </div>
 
-        <div id="collections" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize paintings into collections. All active collections + next inactive are visible.</p>
-            <form id="collection-form" onsubmit="return saveCollection(event,'collections')">
-                <input type="hidden" id="collection-edit-id">
-                <div class="field"><label>Name</label><input type="text" id="collection-name" placeholder="Collection 1" required></div>
-                <div class="field"><label class="check"><input type="checkbox" id="collection-active"><span>Active (currently showing)</span></label></div>
-                <button type="submit" class="btn submit" id="collection-btn">Add Collection</button>
-            </form>
-            <div class="list"><h3>Existing Collections</h3><div id="collection-list"><div class="loading"></div></div></div>
-        </div>
+            <div class="divider">
+                <h3>Observations</h3>
+                <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize photographs into observations. All active observations + next inactive are visible.</p>
+                <form id="observation-form" onsubmit="return saveCollection(event,'observations')">
+                    <input type="hidden" id="observation-edit-id">
+                    <div class="field"><label>Name</label><input type="text" id="observation-name" placeholder="Observation 1" required></div>
+                    <div class="field"><label class="check"><input type="checkbox" id="observation-active"><span>Active (currently showing)</span></label></div>
+                    <button type="submit" class="btn submit" id="observation-btn">Add Observation</button>
+                </form>
+                <div class="list"><h3>Existing Observations</h3><div id="observation-list"><div class="loading"></div></div></div>
+            </div>
 
-        <div id="observations" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Organize photographs into observations. All active observations + next inactive are visible.</p>
-            <form id="observation-form" onsubmit="return saveCollection(event,'observations')">
-                <input type="hidden" id="observation-edit-id">
-                <div class="field"><label>Name</label><input type="text" id="observation-name" placeholder="Observation 1" required></div>
-                <div class="field"><label class="check"><input type="checkbox" id="observation-active"><span>Active (currently showing)</span></label></div>
-                <button type="submit" class="btn submit" id="observation-btn">Add Observation</button>
-            </form>
-            <div class="list"><h3>Existing Observations</h3><div id="observation-list"><div class="loading"></div></div></div>
+            <div class="divider">
+                <h3>Photography Description</h3>
+                <form onsubmit="return savePhotographySettings(event)">
+                    <div class="field"><label>Description</label><input type="text" id="content-photo-desc" placeholder="Short description for photography section"></div>
+                    <button type="submit" class="btn submit">Save Description</button>
+                </form>
+            </div>
         </div>
 
         <div id="categories" class="tab-content hidden">
@@ -182,44 +205,34 @@
             <div class="list"><h3>All Categories</h3><div id="category-list"><div class="loading"></div></div></div>
         </div>
 
-        <div id="content" class="tab-content hidden">
-            <form onsubmit="return saveContent(event)">
-                <h3 style="font-size:1rem;font-weight:400;margin-bottom:1.5rem">About Page</h3>
+        <div id="about" class="tab-content hidden">
+            <form onsubmit="return saveAboutContent(event)">
+                <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Content displayed on the About page.</p>
                 <div class="field"><label>Name</label><input type="text" id="content-name" placeholder="Your name"></div>
                 <div class="field"><label>Line 1</label><input type="text" id="content-line1" placeholder="e.g. Architect. Johannesburg."></div>
                 <div class="field"><label>Line 2</label><input type="text" id="content-line2" placeholder="e.g. Work may be viewed by arrangement."></div>
-
-                <div class="divider">
-                    <h3>Paintings Page</h3>
-                    <div class="field"><label>Landing Page Image URL</label><input type="text" id="content-paintings-img" placeholder="e.g. /images/landing.jpg (Leave empty to skip landing page)"></div>
-                </div>
-
-                <div class="divider">
-                    <h3>Photography Page</h3>
-                    <div class="field"><label>Description</label><input type="text" id="content-photo-desc" placeholder="Short description for photography section"></div>
-                </div>
-
-                <div class="divider">
-                    <h3>Contact</h3>
-                    <div class="field"><label>Email Address</label><input type="email" id="content-email" placeholder="your@email.com"></div>
-                </div>
-
-                <div class="divider">
-                    <h3>General</h3>
-                    <div class="field"><label>Coming Soon Message</label><input type="text" id="content-coming-soon" placeholder="New work arriving soon"></div>
-                </div>
-
-                <button type="submit" class="btn submit">Save Content</button>
+                <button type="submit" class="btn submit">Save About Page</button>
             </form>
         </div>
 
         <div id="settings" class="tab-content hidden">
-            <form onsubmit="return saveSymbol(event)">
-                <div class="field"><label>Symbol</label>
-                    <div class="upload" id="symbol-upload"><input type="file" accept="image/svg+xml,image/png" onchange="preview(this,'symbol')"><span>Upload SVG</span></div>
-                </div>
-                <button type="submit" class="btn submit">Update Symbol</button>
+            <form onsubmit="return saveGeneralSettings(event)">
+                <h3 style="font-size:1rem;font-weight:400;margin-bottom:1.5rem">General Settings</h3>
+                <div class="field"><label>Contact Email</label><input type="email" id="content-email" placeholder="your@email.com"></div>
+                <div class="field"><label>Coming Soon Message</label><input type="text" id="content-coming-soon" placeholder="New work arriving soon"></div>
+                <button type="submit" class="btn submit">Save Settings</button>
             </form>
+
+            <div class="divider">
+                <h3>Site Symbol</h3>
+                <form onsubmit="return saveSymbol(event)">
+                    <div class="field"><label>Symbol</label>
+                        <div class="upload" id="symbol-upload"><input type="file" accept="image/svg+xml,image/png" onchange="preview(this,'symbol')"><span>Upload SVG</span></div>
+                    </div>
+                    <button type="submit" class="btn submit">Update Symbol</button>
+                </form>
+            </div>
+
             <div class="divider">
                 <h3>GitHub</h3>
                 <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
@@ -527,43 +540,91 @@ async function loadContent(){
         const fd=await r.json();
         const content=JSON.parse(b64_to_utf8(fd.content));
 
+        // About page
         document.getElementById('content-name').value=content.about?.name||'';
         document.getElementById('content-line1').value=content.about?.line1||'';
         document.getElementById('content-line2').value=content.about?.line2||'';
-        document.getElementById('content-paintings-img').value=content.paintings?.image||'';
+
+        // Photography description (in photography tab)
         document.getElementById('content-photo-desc').value=content.photography?.description||'';
+
+        // General settings (in settings tab)
         document.getElementById('content-email').value=content.contact?.email||'';
         document.getElementById('content-coming-soon').value=content.general?.comingSoon||'';
     }catch{}
 }
 
-async function saveContent(e){
+async function saveLandingPage(e){
+    e.preventDefault();
+    if(!img.landing){msg('Upload image first','err');return false}
+    try{
+        const r=await gh('/contents/data/content.json');
+        let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        if(r.status!==404){
+            const fd=await r.json();
+            content=JSON.parse(b64_to_utf8(fd.content));
+        }
+        const imgPath='/images/landing'+img.landing.type.split('/')[1];
+        await saveFile(imgPath.slice(1),img.landing.data,'Upload landing image',null,true);
+        content.paintings.image=imgPath;
+        content.paintings.description='';
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page',r.status!==404?(await r.json()).sha:null);
+        msg('Landing page saved','ok');
+        setTimeout(()=>location.reload(),1000);
+    }catch(err){msg('Error saving','err')}
+    return false;
+}
+
+async function saveAboutContent(e){
     e.preventDefault();
     try{
-        const content={
-            about:{
-                name:document.getElementById('content-name').value.trim(),
-                line1:document.getElementById('content-line1').value.trim(),
-                line2:document.getElementById('content-line2').value.trim()
-            },
-            paintings:{
-                description:'',
-                image:document.getElementById('content-paintings-img').value.trim()
-            },
-            photography:{
-                description:document.getElementById('content-photo-desc').value.trim()
-            },
-            contact:{
-                email:document.getElementById('content-email').value.trim()
-            },
-            general:{
-                comingSoon:document.getElementById('content-coming-soon').value.trim()
-            }
+        const r=await gh('/contents/data/content.json');
+        let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        if(r.status!==404){
+            const fd=await r.json();
+            content=JSON.parse(b64_to_utf8(fd.content));
+        }
+        content.about={
+            name:document.getElementById('content-name').value.trim(),
+            line1:document.getElementById('content-line1').value.trim(),
+            line2:document.getElementById('content-line2').value.trim()
         };
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update about page',r.status!==404?(await r.json()).sha:null);
+        msg('About page saved','ok');
+    }catch(err){msg('Error saving','err')}
+    return false;
+}
 
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update content');
-        msg('Content saved','ok');
-    }catch(err){msg('Error saving content','err')}
+async function savePhotographySettings(e){
+    e.preventDefault();
+    try{
+        const r=await gh('/contents/data/content.json');
+        let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        if(r.status!==404){
+            const fd=await r.json();
+            content=JSON.parse(b64_to_utf8(fd.content));
+        }
+        content.photography.description=document.getElementById('content-photo-desc').value.trim();
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update photography settings',r.status!==404?(await r.json()).sha:null);
+        msg('Photography settings saved','ok');
+    }catch(err){msg('Error saving','err')}
+    return false;
+}
+
+async function saveGeneralSettings(e){
+    e.preventDefault();
+    try{
+        const r=await gh('/contents/data/content.json');
+        let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        if(r.status!==404){
+            const fd=await r.json();
+            content=JSON.parse(b64_to_utf8(fd.content));
+        }
+        content.contact.email=document.getElementById('content-email').value.trim();
+        content.general.comingSoon=document.getElementById('content-coming-soon').value.trim();
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update general settings',r.status!==404?(await r.json()).sha:null);
+        msg('Settings saved','ok');
+    }catch(err){msg('Error saving','err')}
     return false;
 }
 
