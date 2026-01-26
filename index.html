@@ -22,11 +22,12 @@
         <div class="nav-links"></div>
     </nav>
     <main class="main">
-        <div class="section-note" id="paintings-intro">
-            <p id="paintings-desc"></p>
-            <img id="paintings-img" src="" alt="" style="display:none;">
+        <div class="landing-page" id="landing">
+            <img src="/images/symbol.svg" alt="" class="landing-symbol">
+            <img id="landing-img" src="" alt="" class="landing-image">
+            <button class="landing-enter" id="enter-btn">Enter</button>
         </div>
-        <section class="works" id="works"></section>
+        <section class="works" id="works" style="display:none;"></section>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -37,21 +38,53 @@
     <script src="/js/nav.js"></script>
     <script src="/js/main.js"></script>
     <script>
-        loadCollections('paintings');
-        // Load paintings intro
+        // Load landing page image and setup enter button
         fetch('/data/content.json')
             .then(r=>r.json())
             .then(c=>{
-                if(c.paintings?.description){
-                    document.getElementById('paintings-desc').textContent=c.paintings.description;
-                    if(c.paintings?.image){
-                        const img=document.getElementById('paintings-img');
-                        img.src=c.paintings.image;
-                        img.style.display='block';
-                    }
+                const landing=document.getElementById('landing');
+                const works=document.getElementById('works');
+                const nav=document.querySelector('.nav');
+                const footer=document.querySelector('.footer');
+
+                // If landing image exists, show landing page
+                if(c.paintings?.image){
+                    document.getElementById('landing-img').src=c.paintings.image;
+
+                    // Hide nav and footer initially
+                    nav.style.display='none';
+                    footer.style.display='none';
+
+                    // Setup enter button
+                    document.getElementById('enter-btn').addEventListener('click',()=>{
+                        landing.style.opacity='0';
+                        setTimeout(()=>{
+                            landing.style.display='none';
+                            works.style.display='flex';
+                            nav.style.display='flex';
+                            footer.style.display='flex';
+                            setTimeout(()=>{
+                                works.style.opacity='1';
+                            },50);
+                        },600);
+                    });
+                }else{
+                    // No landing image, go straight to collections
+                    landing.style.display='none';
+                    works.style.display='flex';
+                    works.style.opacity='1';
                 }
+
+                // Load collections
+                loadCollections('paintings');
             })
-            .catch(()=>{});
+            .catch(()=>{
+                // On error, show collections
+                document.getElementById('landing').style.display='none';
+                document.getElementById('works').style.display='flex';
+                document.getElementById('works').style.opacity='1';
+                loadCollections('paintings');
+            });
     </script>
 </body>
 </html>
