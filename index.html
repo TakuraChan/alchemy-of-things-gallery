@@ -22,13 +22,13 @@
         <div class="nav-links"></div>
     </nav>
     <main class="main">
-        <div class="landing-page" id="landing" style="display:none;">
+        <div class="landing-page" id="landing">
             <img src="/images/symbol.svg" alt="" class="landing-symbol">
             <img id="landing-img" src="" alt="" class="landing-image">
             <button class="landing-enter" id="enter-btn">Enter</button>
         </div>
         <p class="section-note" id="paintings-desc"></p>
-        <section class="works" id="works"></section>
+        <section class="works" id="works" style="display:none;"></section>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -46,7 +46,20 @@
         const landingImg=document.getElementById('landing-img');
         const hasVisited=sessionStorage.getItem('hasVisited');
 
-        // Load content and setup page
+        // Check if user has visited before
+        if(hasVisited){
+            // Skip landing page - go straight to paintings
+            landing.style.display='none';
+            works.style.display='flex';
+            loadCollections('paintings');
+            setTimeout(()=>{works.style.opacity='1'},50);
+        }else{
+            // First visit - show landing page
+            nav.style.display='none';
+            footer.style.display='none';
+        }
+
+        // Load landing image
         fetch('/data/content.json')
             .then(r=>r.json())
             .then(c=>{
@@ -62,30 +75,9 @@
                 }else{
                     landingImg.style.display='none';
                 }
-
-                // Show landing page only on first visit
-                if(!hasVisited){
-                    landing.style.display='flex';
-                    nav.style.display='none';
-                    footer.style.display='none';
-                    works.style.opacity='0';
-                }else{
-                    // Regular visit - go straight to paintings
-                    landing.style.display='none';
-                    loadCollections('paintings');
-                    setTimeout(()=>{works.style.opacity='1'},50);
-                }
             })
             .catch(()=>{
-                // On error, go straight to paintings
-                if(!hasVisited){
-                    landing.style.display='flex';
-                    nav.style.display='none';
-                    footer.style.display='none';
-                }else{
-                    loadCollections('paintings');
-                    setTimeout(()=>{works.style.opacity='1'},50);
-                }
+                landingImg.style.display='none';
             });
 
         // Enter button click
