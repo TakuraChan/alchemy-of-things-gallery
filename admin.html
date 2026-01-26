@@ -150,6 +150,14 @@
                 </form>
                 <div class="list"><h3>Existing Collections</h3><div id="collection-list"><div class="loading"></div></div></div>
             </div>
+
+            <div class="divider">
+                <h3>Paintings Page Description</h3>
+                <form onsubmit="return savePaintingsSettings(event)">
+                    <div class="field"><label>Description</label><input type="text" id="content-paintings-desc" placeholder="Short description for paintings page"></div>
+                    <button type="submit" class="btn submit">Save Description</button>
+                </form>
+            </div>
         </div>
 
         <div id="photography" class="tab-content hidden">
@@ -545,6 +553,9 @@ async function loadContent(){
         document.getElementById('content-line1').value=content.about?.line1||'';
         document.getElementById('content-line2').value=content.about?.line2||'';
 
+        // Paintings description (in paintings tab)
+        document.getElementById('content-paintings-desc').value=content.paintings?.description||'';
+
         // Photography description (in photography tab)
         document.getElementById('content-photo-desc').value=content.photography?.description||'';
 
@@ -560,18 +571,21 @@ async function saveLandingPage(e){
     try{
         const r=await gh('/contents/data/content.json');
         let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        let sha=null;
         if(r.status!==404){
             const fd=await r.json();
             content=JSON.parse(b64_to_utf8(fd.content));
+            sha=fd.sha;
         }
-        const imgPath='/images/landing'+img.landing.type.split('/')[1];
+        const ext=img.landing.type.split('/')[1];
+        const imgPath='/images/landing.'+ext;
         await saveFile(imgPath.slice(1),img.landing.data,'Upload landing image',null,true);
-        content.paintings.image=imgPath;
-        content.paintings.description='';
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page',r.status!==404?(await r.json()).sha:null);
+        if(!content.paintings)content.paintings={};
+        content.paintings.landingImage=imgPath;
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update landing page',sha);
         msg('Landing page saved','ok');
         setTimeout(()=>location.reload(),1000);
-    }catch(err){msg('Error saving','err')}
+    }catch(err){msg('Error saving: '+err.message,'err')}
     return false;
 }
 
@@ -580,17 +594,38 @@ async function saveAboutContent(e){
     try{
         const r=await gh('/contents/data/content.json');
         let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        let sha=null;
         if(r.status!==404){
             const fd=await r.json();
             content=JSON.parse(b64_to_utf8(fd.content));
+            sha=fd.sha;
         }
         content.about={
             name:document.getElementById('content-name').value.trim(),
             line1:document.getElementById('content-line1').value.trim(),
             line2:document.getElementById('content-line2').value.trim()
         };
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update about page',r.status!==404?(await r.json()).sha:null);
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update about page',sha);
         msg('About page saved','ok');
+    }catch(err){msg('Error saving','err')}
+    return false;
+}
+
+async function savePaintingsSettings(e){
+    e.preventDefault();
+    try{
+        const r=await gh('/contents/data/content.json');
+        let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        let sha=null;
+        if(r.status!==404){
+            const fd=await r.json();
+            content=JSON.parse(b64_to_utf8(fd.content));
+            sha=fd.sha;
+        }
+        if(!content.paintings)content.paintings={};
+        content.paintings.description=document.getElementById('content-paintings-desc').value.trim();
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update paintings settings',sha);
+        msg('Paintings settings saved','ok');
     }catch(err){msg('Error saving','err')}
     return false;
 }
@@ -600,12 +635,15 @@ async function savePhotographySettings(e){
     try{
         const r=await gh('/contents/data/content.json');
         let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        let sha=null;
         if(r.status!==404){
             const fd=await r.json();
             content=JSON.parse(b64_to_utf8(fd.content));
+            sha=fd.sha;
         }
+        if(!content.photography)content.photography={};
         content.photography.description=document.getElementById('content-photo-desc').value.trim();
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update photography settings',r.status!==404?(await r.json()).sha:null);
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update photography settings',sha);
         msg('Photography settings saved','ok');
     }catch(err){msg('Error saving','err')}
     return false;
@@ -616,13 +654,17 @@ async function saveGeneralSettings(e){
     try{
         const r=await gh('/contents/data/content.json');
         let content={about:{},paintings:{},photography:{},contact:{},general:{}};
+        let sha=null;
         if(r.status!==404){
             const fd=await r.json();
             content=JSON.parse(b64_to_utf8(fd.content));
+            sha=fd.sha;
         }
+        if(!content.contact)content.contact={};
+        if(!content.general)content.general={};
         content.contact.email=document.getElementById('content-email').value.trim();
         content.general.comingSoon=document.getElementById('content-coming-soon').value.trim();
-        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update general settings',r.status!==404?(await r.json()).sha:null);
+        await saveFile('data/content.json',JSON.stringify(content,null,2),'Update general settings',sha);
         msg('Settings saved','ok');
     }catch(err){msg('Error saving','err')}
     return false;
