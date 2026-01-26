@@ -21,7 +21,13 @@
     <nav class="nav">
         <div class="nav-links"></div>
     </nav>
-    <main class="main"><section class="works" id="works"></section></main>
+    <main class="main">
+        <div class="section-note" id="paintings-intro">
+            <p id="paintings-desc"></p>
+            <img id="paintings-img" src="" alt="" style="display:none;">
+        </div>
+        <section class="works" id="works"></section>
+    </main>
     <footer class="footer">
         <div class="footer-content">
             <img src="/images/symbol.svg" alt="" class="symbol-footer">
@@ -30,6 +36,22 @@
     </footer>
     <script src="/js/nav.js"></script>
     <script src="/js/main.js"></script>
-    <script>loadCollections('paintings');</script>
+    <script>
+        loadCollections('paintings');
+        // Load paintings intro
+        fetch('/data/content.json')
+            .then(r=>r.json())
+            .then(c=>{
+                if(c.paintings?.description){
+                    document.getElementById('paintings-desc').textContent=c.paintings.description;
+                    if(c.paintings?.image){
+                        const img=document.getElementById('paintings-img');
+                        img.src=c.paintings.image;
+                        img.style.display='block';
+                    }
+                }
+            })
+            .catch(()=>{});
+    </script>
 </body>
 </html>

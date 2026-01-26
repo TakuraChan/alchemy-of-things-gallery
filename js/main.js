@@ -121,28 +121,30 @@ async function loadCollections(type){
             c.querySelector('.work-item')?.classList.add('collection-centered');
         }
 
-        // Handle intro text fade on mobile
+        // Handle intro text/image fade on mobile
         if(window.innerWidth<=768){
             const sectionNote=document.querySelector('.section-note');
-            if(sectionNote&&sectionNote.textContent.trim()){
+            const hasText=sectionNote&&sectionNote.textContent.trim();
+            const hasImage=sectionNote&&sectionNote.querySelector('img[src]:not([src=""])');
+            if(hasText||hasImage){
                 // Hide collections initially
                 c.style.opacity='0';
 
-                // Show and animate intro text
+                // Show and animate intro content
                 sectionNote.style.opacity='0';
-                sectionNote.style.display='block';
+                sectionNote.style.display='flex';
 
                 setTimeout(()=>{
                     sectionNote.style.transition='opacity 0.6s ease';
                     sectionNote.style.opacity='1';
                 },50);
 
-                // Fade out intro text after 2.5 seconds
+                // Fade out intro content after 2.5 seconds
                 setTimeout(()=>{
                     sectionNote.style.opacity='0';
                 },2600);
 
-                // Remove intro text and show collections after fade out
+                // Remove intro content and show collections after fade out
                 setTimeout(()=>{
                     sectionNote.style.display='none';
                     c.style.transition='opacity 0.6s ease';
