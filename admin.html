@@ -191,8 +191,7 @@
 
                 <div class="divider">
                     <h3>Paintings Page</h3>
-                    <div class="field"><label>Intro Text</label><input type="text" id="content-paintings-desc" placeholder="Introductory text for paintings page"></div>
-                    <div class="field"><label>Intro Image URL</label><input type="text" id="content-paintings-img" placeholder="e.g. /images/intro.jpg"></div>
+                    <div class="field"><label>Landing Page Image URL</label><input type="text" id="content-paintings-img" placeholder="e.g. /images/landing.jpg (Leave empty to skip landing page)"></div>
                 </div>
 
                 <div class="divider">
@@ -531,7 +530,6 @@ async function loadContent(){
         document.getElementById('content-name').value=content.about?.name||'';
         document.getElementById('content-line1').value=content.about?.line1||'';
         document.getElementById('content-line2').value=content.about?.line2||'';
-        document.getElementById('content-paintings-desc').value=content.paintings?.description||'';
         document.getElementById('content-paintings-img').value=content.paintings?.image||'';
         document.getElementById('content-photo-desc').value=content.photography?.description||'';
         document.getElementById('content-email').value=content.contact?.email||'';
@@ -549,7 +547,7 @@ async function saveContent(e){
                 line2:document.getElementById('content-line2').value.trim()
             },
             paintings:{
-                description:document.getElementById('content-paintings-desc').value.trim(),
+                description:'',
                 image:document.getElementById('content-paintings-img').value.trim()
             },
             photography:{
