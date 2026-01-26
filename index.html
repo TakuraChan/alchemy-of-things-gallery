@@ -38,56 +38,49 @@
     <script src="/js/nav.js"></script>
     <script src="/js/main.js"></script>
     <script>
-        // Load landing page image and setup enter button
+        // Load landing page and setup enter button
+        const landing=document.getElementById('landing');
+        const works=document.getElementById('works');
+        const nav=document.querySelector('.nav');
+        const footer=document.querySelector('.footer');
+        const landingImg=document.getElementById('landing-img');
+
+        // Always show landing page initially
+        nav.style.display='none';
+        footer.style.display='none';
+
+        // Try to load landing image if it exists
         fetch('/data/content.json')
             .then(r=>r.json())
             .then(c=>{
-                const landing=document.getElementById('landing');
-                const works=document.getElementById('works');
-                const nav=document.querySelector('.nav');
-                const footer=document.querySelector('.footer');
-
-                // If landing image exists, show landing page
-                if(c.paintings?.image){
-                    document.getElementById('landing-img').src=c.paintings.image;
-
-                    // Hide nav and footer initially
-                    nav.style.display='none';
-                    footer.style.display='none';
-
-                    // Setup enter button
-                    document.getElementById('enter-btn').addEventListener('click',()=>{
-                        landing.style.opacity='0';
-                        setTimeout(()=>{
-                            landing.style.display='none';
-                            works.style.display='flex';
-                            nav.style.display='flex';
-                            footer.style.display='flex';
-
-                            // Load collections AFTER entering
-                            loadCollections('paintings');
-
-                            setTimeout(()=>{
-                                works.style.opacity='1';
-                            },50);
-                        },600);
-                    });
+                if(c.paintings?.image && c.paintings.image.trim()){
+                    landingImg.src=c.paintings.image;
+                    landingImg.style.display='block';
                 }else{
-                    // No landing image, go straight to collections
-                    landing.style.display='none';
-                    works.style.display='flex';
-                    works.style.opacity='1';
-                    // Load collections immediately if no landing page
-                    loadCollections('paintings');
+                    landingImg.style.display='none';
                 }
             })
             .catch(()=>{
-                // On error, show collections
-                document.getElementById('landing').style.display='none';
-                document.getElementById('works').style.display='flex';
-                document.getElementById('works').style.opacity='1';
-                loadCollections('paintings');
+                landingImg.style.display='none';
             });
+
+        // Setup enter button
+        document.getElementById('enter-btn').addEventListener('click',()=>{
+            landing.style.opacity='0';
+            setTimeout(()=>{
+                landing.style.display='none';
+                works.style.display='flex';
+                nav.style.display='flex';
+                footer.style.display='flex';
+
+                // Load collections AFTER entering
+                loadCollections('paintings');
+
+                setTimeout(()=>{
+                    works.style.opacity='1';
+                },50);
+            },600);
+        });
     </script>
 </body>
 </html>
