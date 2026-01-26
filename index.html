@@ -22,12 +22,13 @@
         <div class="nav-links"></div>
     </nav>
     <main class="main">
-        <div class="landing-page" id="landing">
+        <div class="landing-page" id="landing" style="display:none;">
             <img src="/images/symbol.svg" alt="" class="landing-symbol">
             <img id="landing-img" src="" alt="" class="landing-image">
             <button class="landing-enter" id="enter-btn">Enter</button>
         </div>
-        <section class="works" id="works" style="display:none;"></section>
+        <p class="section-note" id="paintings-desc"></p>
+        <section class="works" id="works"></section>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -38,49 +39,82 @@
     <script src="/js/nav.js"></script>
     <script src="/js/main.js"></script>
     <script>
-        // Load landing page and setup enter button
         const landing=document.getElementById('landing');
         const works=document.getElementById('works');
         const nav=document.querySelector('.nav');
         const footer=document.querySelector('.footer');
         const landingImg=document.getElementById('landing-img');
+        const hasVisited=sessionStorage.getItem('hasVisited');
 
-        // Always show landing page initially
-        nav.style.display='none';
-        footer.style.display='none';
-
-        // Try to load landing image if it exists
+        // Load content and setup page
         fetch('/data/content.json')
             .then(r=>r.json())
             .then(c=>{
-                if(c.paintings?.image && c.paintings.image.trim()){
-                    landingImg.src=c.paintings.image;
+                // Set paintings description
+                if(c.paintings?.description){
+                    document.getElementById('paintings-desc').textContent=c.paintings.description;
+                }
+
+                // Load landing image if exists
+                if(c.paintings?.landingImage && c.paintings.landingImage.trim()){
+                    landingImg.src=c.paintings.landingImage;
                     landingImg.style.display='block';
                 }else{
                     landingImg.style.display='none';
                 }
+
+                // Show landing page only on first visit
+                if(!hasVisited){
+                    landing.style.display='flex';
+                    nav.style.display='none';
+                    footer.style.display='none';
+                    works.style.opacity='0';
+                }else{
+                    // Regular visit - go straight to paintings
+                    landing.style.display='none';
+                    loadCollections('paintings');
+                    setTimeout(()=>{works.style.opacity='1'},50);
+                }
             })
             .catch(()=>{
-                landingImg.style.display='none';
+                // On error, go straight to paintings
+                if(!hasVisited){
+                    landing.style.display='flex';
+                    nav.style.display='none';
+                    footer.style.display='none';
+                }else{
+                    loadCollections('paintings');
+                    setTimeout(()=>{works.style.opacity='1'},50);
+                }
             });
 
-        // Setup enter button
+        // Enter button click
         document.getElementById('enter-btn').addEventListener('click',()=>{
+            sessionStorage.setItem('hasVisited','true');
             landing.style.opacity='0';
             setTimeout(()=>{
                 landing.style.display='none';
                 works.style.display='flex';
                 nav.style.display='flex';
                 footer.style.display='flex';
-
-                // Load collections AFTER entering
                 loadCollections('paintings');
-
-                setTimeout(()=>{
-                    works.style.opacity='1';
-                },50);
+                setTimeout(()=>{works.style.opacity='1'},50);
             },600);
         });
+
+        // Symbol click returns to landing page
+        setTimeout(()=>{
+            const symbolLink=document.querySelector('.nav-links a[href="/"]');
+            if(symbolLink){
+                symbolLink.addEventListener('click',(e)=>{
+                    if(window.location.pathname==='/'||window.location.pathname==='/index.html'){
+                        e.preventDefault();
+                        sessionStorage.removeItem('hasVisited');
+                        location.reload();
+                    }
+                });
+            }
+        },100);
     </script>
 </body>
 </html>
