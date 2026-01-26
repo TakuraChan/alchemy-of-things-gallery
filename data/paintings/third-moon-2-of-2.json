@@ -1,9 +1,10 @@
 {
   "id": "third-moon-2-of-2",
-  "title": "third moon (2 of 2",
+  "title": "third moon (2 of 2)",
   "year": 2025,
   "medium": "Acrylic on canvas",
   "dimensions": "61 x 46 cm",
   "image": "/images/paintings/1769008137795.jpeg",
-  "available": true
+  "available": true,
+  "order": 5
 }
