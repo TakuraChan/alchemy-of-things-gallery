@@ -60,7 +60,7 @@
         }
 
         // Load landing image
-        fetch('/data/content.json')
+        fetch('/data/content.json?_='+ Date.now())
             .then(r=>r.json())
             .then(c=>{
                 // Set paintings description
@@ -68,9 +68,9 @@
                     document.getElementById('paintings-desc').textContent=c.paintings.description;
                 }
 
-                // Load landing image if exists
+                // Load landing image if exists (with cache-busting)
                 if(c.paintings?.landingImage && c.paintings.landingImage.trim()){
-                    landingImg.src=c.paintings.landingImage;
+                    landingImg.src=c.paintings.landingImage + '?_=' + Date.now();
                     landingImg.style.display='block';
                 }else{
                     landingImg.style.display='none';

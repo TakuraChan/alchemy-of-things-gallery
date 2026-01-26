@@ -4,10 +4,11 @@ async function loadWorks(type){
         const r=await fetch(path),works=await r.json();
         if(!works.length){c.innerHTML='<p class="empty">No works yet.</p>';return}
         works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
+        const cacheBust='?_='+Date.now();
         c.innerHTML=works.map((w,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}" class="work-link">
-                    <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
+                    <img src="${w.image}${cacheBust}" alt="${w.title}" class="work-image" loading="lazy" onerror="this.style.display='none'">
                 </a>
                 <div class="work-meta">
                     <span class="work-title">${w.title}</span>
@@ -221,10 +222,11 @@ async function loadCollection(){
 
         collectionWorks.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
 
+        const cacheBust='?_='+Date.now();
         c.innerHTML=collectionWorks.map((w,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/work.html?id=${w.id}&type=${type}&collection=${id}" class="work-link">
-                    <img src="${w.image}" alt="${w.title}" class="work-image" loading="lazy">
+                    <img src="${w.image}${cacheBust}" alt="${w.title}" class="work-image" loading="lazy" onerror="this.style.display='none'">
                 </a>
                 <div class="work-meta">
                     <span class="work-title">${w.title}</span>
@@ -301,9 +303,10 @@ async function loadSingleWork(){
             document.querySelector('.main').style.padding='1.5rem';
         }
 
+        const cacheBust='?_='+Date.now();
         c.innerHTML=`
             <a href="${back}" class="back-link mobile-back-arrow">← Back</a>
-            <img src="${w.image}" alt="${w.title}">
+            <img src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
             <div class="single-work-meta">
                 <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p><p>${w.available?'Available':'Sold'}</p></div>
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
