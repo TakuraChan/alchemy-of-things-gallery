@@ -1,3 +1,16 @@
+// Content cache to avoid redundant fetches
+let contentCache=null;
+async function getContent(){
+    if(contentCache)return contentCache;
+    try{
+        const r=await fetch('/data/content.json?_='+Date.now());
+        contentCache=await r.json();
+        return contentCache;
+    }catch{
+        return {about:{},paintings:{},photography:{},contact:{},general:{}};
+    }
+}
+
 async function loadWorks(type){
     const c=document.getElementById('works'),path=type==='paintings'?'/data/works.json':'/data/photography.json';
     try{
@@ -208,12 +221,8 @@ async function loadCollection(){
 
         if(!collectionWorks.length){
             // Empty collection - show "soon" message
-            let comingSoonText='New work arriving soon';
-            try{
-                const cr=await fetch('/data/content.json');
-                const content=await cr.json();
-                if(content.general?.comingSoon)comingSoonText=content.general.comingSoon;
-            }catch{}
+            const content=await getContent();
+            const comingSoonText=content.general?.comingSoon||'New work arriving soon';
             c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p><a href="${back}" class="back-link">${backText}</a></div>`;
             return;
         }
