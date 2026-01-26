@@ -261,7 +261,7 @@ async function init(){
 }
 
 function route(){
-    cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
+    cfg=JSON.parse(sessionStorage.getItem('alchemy_cfg'));
     if(!cfg||!cfg.token){show('setup')}
     else{show('admin');document.getElementById('user').textContent=user.email;document.getElementById('cfg-repo').value=cfg.repo;loadAll()}
 }
@@ -274,10 +274,10 @@ async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.or
 function saveConfig(){
     const t=document.getElementById('gh-token').value.trim(),r=document.getElementById('gh-repo').value.trim();
     if(!t||!r)return alert('Fill both fields');
-    cfg={token:t,repo:r};localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));route();
+    cfg={token:t,repo:r};sessionStorage.setItem('alchemy_cfg',JSON.stringify(cfg));route();
 }
 
-function resetConfig(){if(confirm('Reset?')){localStorage.removeItem('alchemy_cfg');cfg=null;route()}}
+function resetConfig(){if(confirm('Reset?')){sessionStorage.removeItem('alchemy_cfg');cfg=null;route()}}
 
 function showTab(t){
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase().includes(t)));
@@ -291,7 +291,15 @@ function preview(input,type){
     r.onload=e=>{
         const c=document.getElementById(type+'-upload');
         c.classList.add('has');
-        c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+e.target.result+'">';
+        c.innerHTML='';
+        const newInput=document.createElement('input');
+        newInput.type='file';
+        newInput.accept='image/*';
+        newInput.onchange=function(){preview(this,type)};
+        const newImg=document.createElement('img');
+        newImg.src=e.target.result;
+        c.appendChild(newInput);
+        c.appendChild(newImg);
         img[type]={data:e.target.result.split(',')[1],type:f.type};
     };
     r.readAsDataURL(f);
@@ -355,13 +363,15 @@ async function loadList(folder,containerId){
             }
         }catch{}
 
-        // Load all works
-        const works=[];
-        for(const f of files){
-            if(!f.name.endsWith('.json'))continue;
-            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(b64_to_utf8(fd.content));
-            works.push({...w,filename:f.name,sha:fd.sha});
-        }
+        // Load all works in parallel
+        const jsonFiles=files.filter(f=>f.name.endsWith('.json'));
+        const workPromises=jsonFiles.map(async f=>{
+            const fr=await gh('/contents/data/'+folder+'/'+f.name);
+            const fd=await fr.json();
+            const w=JSON.parse(b64_to_utf8(fd.content));
+            return {...w,filename:f.name,sha:fd.sha};
+        });
+        const works=await Promise.all(workPromises);
 
         // Sort by order
         works.sort((a,b)=>(a.order||999)-(b.order||999)||b.year-a.year);
@@ -462,7 +472,15 @@ async function editWork(folder,filename){
         if(w.image){
             const u=document.getElementById(prefix+'-upload');
             u.classList.add('has');
-            u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><img src="'+w.image+'">';
+            u.innerHTML='';
+            const input=document.createElement('input');
+            input.type='file';
+            input.accept='image/*';
+            input.onchange=function(){preview(this,prefix)};
+            const img=document.createElement('img');
+            img.src=w.image;
+            u.appendChild(input);
+            u.appendChild(img);
         }
 
         // Change button text
@@ -521,7 +539,15 @@ async function saveWork(e,type){
         document.getElementById(prefix+'-form').reset();
         document.getElementById(prefix+'-edit-id').value='';
         document.getElementById(prefix+'-edit-sha').value='';
-        const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
+        const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='';
+        const resetInput=document.createElement('input');
+        resetInput.type='file';
+        resetInput.accept='image/*';
+        resetInput.onchange=function(){preview(this,prefix)};
+        const resetSpan=document.createElement('span');
+        resetSpan.textContent='Tap to upload';
+        u.appendChild(resetInput);
+        u.appendChild(resetSpan);
         img[prefix]=null;
         btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
         setTimeout(()=>loadAll(),1000);

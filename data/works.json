@@ -1,24 +1,5 @@
 [
   {
-    "id": "lost-in-release",
-    "title": "lost in release",
-    "year": 2025,
-    "medium": "Acrylic on canvas",
-    "dimensions": "30 x 40 cm",
-    "image": "/images/paintings/1769007656465.jpeg",
-    "available": true
-  },
-  {
-    "id": "primitive",
-    "title": "primitive",
-    "year": 2025,
-    "medium": "Acrylic on canvas",
-    "dimensions": "30 x 40 cm",
-    "image": "/images/paintings/1768994496539.jpeg",
-    "available": true,
-    "order": 3
-  },
-  {
     "id": "the-space-between",
     "collectionId": "collection-1",
     "title": "間 . the space between",
@@ -30,6 +11,28 @@
     "order": 1
   },
   {
+    "id": "lost-in-release",
+    "title": "lost in release",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "30 x 40 cm",
+    "image": "/images/paintings/1769007656465.jpeg",
+    "available": true,
+    "collectionId": "collection-1",
+    "order": 2
+  },
+  {
+    "id": "primitive",
+    "title": "primitive",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "30 x 40 cm",
+    "image": "/images/paintings/1768994496539.jpeg",
+    "available": true,
+    "collectionId": "collection-2",
+    "order": 3
+  },
+  {
     "id": "third-moon-1-of-2",
     "title": "third moon (1 of 2)",
     "year": 2025,
@@ -37,15 +40,18 @@
     "dimensions": "20 x 28 cm",
     "image": "/images/paintings/1768994802029.jpeg",
     "available": false,
+    "collectionId": "collection-1",
     "order": 4
   },
   {
     "id": "third-moon-2-of-2",
-    "title": "third moon (2 of 2",
+    "title": "third moon (2 of 2)",
     "year": 2025,
     "medium": "Acrylic on canvas",
     "dimensions": "61 x 46 cm",
     "image": "/images/paintings/1769008137795.jpeg",
-    "available": true
+    "available": true,
+    "collectionId": "collection-1",
+    "order": 5
   }
 ]

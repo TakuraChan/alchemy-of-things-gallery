@@ -59,26 +59,23 @@
             footer.style.display='none';
         }
 
-        // Load landing image
-        fetch('/data/content.json?_='+ Date.now())
-            .then(r=>r.json())
-            .then(c=>{
-                // Set paintings description
-                if(c.paintings?.description){
-                    document.getElementById('paintings-desc').textContent=c.paintings.description;
-                }
+        // Load landing image and description using cached content
+        getContent().then(c=>{
+            // Set paintings description
+            if(c.paintings?.description){
+                document.getElementById('paintings-desc').textContent=c.paintings.description;
+            }
 
-                // Load landing image if exists (with cache-busting)
-                if(c.paintings?.landingImage && c.paintings.landingImage.trim()){
-                    landingImg.src=c.paintings.landingImage + '?_=' + Date.now();
-                    landingImg.style.display='block';
-                }else{
-                    landingImg.style.display='none';
-                }
-            })
-            .catch(()=>{
+            // Load landing image if exists (with cache-busting)
+            if(c.paintings?.landingImage && c.paintings.landingImage.trim()){
+                landingImg.src=c.paintings.landingImage + '?_=' + Date.now();
+                landingImg.style.display='block';
+            }else{
                 landingImg.style.display='none';
-            });
+            }
+        }).catch(()=>{
+            landingImg.style.display='none';
+        });
 
         // Enter button click
         document.getElementById('enter-btn').addEventListener('click',()=>{

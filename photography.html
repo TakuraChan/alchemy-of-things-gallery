@@ -35,13 +35,10 @@
     <script src="/js/main.js"></script>
     <script>
         loadCollections('photography');
-        // Load photography description
-        fetch('/data/content.json')
-            .then(r=>r.json())
-            .then(c=>{
-                if(c.photography?.description)document.getElementById('photo-desc').textContent=c.photography.description;
-            })
-            .catch(()=>{});
+        // Load photography description using cached content
+        getContent().then(c=>{
+            if(c.photography?.description)document.getElementById('photo-desc').textContent=c.photography.description;
+        }).catch(()=>{});
     </script>
 </body>
 </html>

@@ -36,11 +36,10 @@
         </div>
     </footer>
     <script src="/js/nav.js"></script>
+    <script src="/js/main.js"></script>
     <script>
-        // Load content from JSON
-        fetch('/data/content.json')
-            .then(r=>r.json())
-            .then(c=>{
+        // Load content from JSON using cached content
+        getContent().then(c=>{
                 if(c.about){
                     if(c.about.name)document.getElementById('about-name').textContent=c.about.name;
                     if(c.about.line1)document.getElementById('about-line1').textContent=c.about.line1;
