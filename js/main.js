@@ -222,7 +222,7 @@ async function loadCollection(){
         if(!collectionWorks.length){
             // Empty collection - show "soon" message
             const content=await getContent();
-            const comingSoonText=content.general?.comingSoon||'New work arriving soon';
+            const comingSoonText=content.general?.comingSoon||'new work coming soon';
             c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p><a href="${back}" class="back-link">${backText}</a></div>`;
             return;
         }
