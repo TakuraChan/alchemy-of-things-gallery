@@ -1,16 +1,5 @@
 [
   {
-    "id": "the-space-between",
-    "collectionId": "collection-1",
-    "title": "間 . the space between",
-    "year": 2025,
-    "medium": "Acrylic on canvas",
-    "dimensions": "40 x 30 cm",
-    "image": "/images/paintings/1768913613677.jpeg",
-    "available": true,
-    "order": 1
-  },
-  {
     "id": "lost-in-release",
     "title": "lost in release",
     "year": 2025,
@@ -31,6 +20,17 @@
     "available": true,
     "collectionId": "collection-2",
     "order": 3
+  },
+  {
+    "id": "the-space-between",
+    "collectionId": "collection-1",
+    "title": "間 . the space between",
+    "year": 2025,
+    "medium": "Acrylic on canvas",
+    "dimensions": "40 x 30 cm",
+    "image": "/images/paintings/1768913613677.jpeg",
+    "available": true,
+    "order": 1
   },
   {
     "id": "third-moon-1-of-2",
