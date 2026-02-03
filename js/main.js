@@ -305,7 +305,13 @@ async function loadSingleWork(){
         path='/data/'+type+'.json';
     }
     try{
-        const r=await fetch(path),works=await r.json(),w=works.find(x=>x.id===id);
+        const r=await fetch(path),works=await r.json();
+        let w=works.find(x=>x.id===id);
+        // Fallback: if not in aggregated file, try individual data file
+        if(!w){
+            const folder=type==='paintings'?'paintings':type==='photography'?'photography':type;
+            try{const ir=await fetch('/data/'+folder+'/'+id+'.json?_='+Date.now());if(ir.ok)w=await ir.json()}catch{}
+        }
         if(!w){c.innerHTML='<p class="empty">Work not found.</p>';return}
         document.title=w.title+' — Alchemy of Things';
         // Hide header and footer on mobile

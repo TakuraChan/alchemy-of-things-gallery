@@ -96,7 +96,7 @@ a:hover{opacity:.6}
     .section-note img{max-width:200px;width:80%;margin-top:0.5rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
     .works.collections-view{overflow-y:visible}
-    .works.collections-view .work-item{height:auto;min-height:40vh;margin-bottom:4rem}
+    .works.collections-view .work-item{height:auto;min-height:20vh;margin-bottom:1rem}
     .works.collection-artworks-view{display:flex;height:calc(100vh - 140px);position:relative}
     .works.collection-artworks-view .work-item{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1rem 1.5rem;margin:0}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
