@@ -837,7 +837,8 @@ async function editCollection(type,idx){
         document.getElementById(prefix+'-edit-id').value=idx;
         document.getElementById(prefix+'-btn').textContent='Update '+(type==='collections'?'Collection':'Observation');
 
-        showTab(type);
+        // Show correct parent tab (collections are in paintings tab, observations in photography tab)
+        showTab(type==='collections'?'paintings':'photography');
         window.scrollTo(0,0);
     }catch{msg('Error loading','err')}
 }
