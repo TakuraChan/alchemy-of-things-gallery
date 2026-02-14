@@ -325,11 +325,23 @@ async function loadSingleWork(){
         }
 
         const cacheBust='?_='+Date.now();
+        // Build edition info for photography
+        let editionInfo='';
+        if(type==='photography'){
+            const parts=[];
+            if(w.editionSize){
+                const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
+                parts.push(`${remaining} of ${w.editionSize} available`);
+            }
+            if(w.artistProof)parts.push('artist proof available');
+            if(w.signed!==false)parts.push('signed');
+            if(parts.length)editionInfo=`<p class="edition-info">${parts.join(' · ')}</p>`;
+        }
         c.innerHTML=`
             <a href="${back}" class="back-link mobile-back-arrow">← Back</a>
             <img src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
             <div class="single-work-meta">
-                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p><p>${w.available?'Available':'Sold'}</p></div>
+                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p>${editionInfo}<p>${w.available?'Available':'Sold'}</p></div>
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;

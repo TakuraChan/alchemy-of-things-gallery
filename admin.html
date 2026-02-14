@@ -174,7 +174,9 @@
                 <div class="field"><label>Year</label><input type="number" id="photo-year" value="2025"></div>
                 <div class="field"><label>Medium</label><input type="text" id="photo-medium" value="Archival pigment print"></div>
                 <div class="field"><label>Dimensions</label><input type="text" id="photo-dimensions" placeholder="40 × 30 cm"></div>
-                <div class="field"><label>Edition</label><input type="text" id="photo-edition" placeholder="Edition of 5"></div>
+                <div class="field"><label>Edition Size</label><input type="number" id="photo-edition-size" placeholder="5" min="1"></div>
+                <div class="field"><label>Edition Remaining</label><input type="number" id="photo-edition-remaining" placeholder="3" min="0"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="photo-artist-proof"><span>Artist proof available</span></label></div>
                 <div class="field"><label class="check"><input type="checkbox" id="photo-available" checked><span>Available</span></label></div>
                 <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
@@ -287,22 +289,71 @@ function showTab(t){
 
 function preview(input,type){
     const f=input.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=e=>{
-        const c=document.getElementById(type+'-upload');
-        c.classList.add('has');
+    const c=document.getElementById(type+'-upload');
+    c.classList.add('has');
+    c.innerHTML='<span style="color:var(--muted)">Compressing...</span>';
+
+    compressImage(f,2000,0.8).then(result=>{
         c.innerHTML='';
         const newInput=document.createElement('input');
         newInput.type='file';
         newInput.accept='image/*';
         newInput.onchange=function(){preview(this,type)};
         const newImg=document.createElement('img');
-        newImg.src=e.target.result;
+        newImg.src='data:image/jpeg;base64,'+result.data;
         c.appendChild(newInput);
         c.appendChild(newImg);
-        img[type]={data:e.target.result.split(',')[1],type:f.type};
-    };
-    r.readAsDataURL(f);
+        img[type]={data:result.data,type:'image/jpeg'};
+        // Show compression result
+        const saved=Math.round((1-result.size/f.size)*100);
+        if(saved>0)msg(`Compressed: ${Math.round(f.size/1024)}KB → ${Math.round(result.size/1024)}KB (${saved}% smaller)`,'ok');
+    }).catch(()=>{
+        // Fallback to original if compression fails
+        const r=new FileReader();
+        r.onload=e=>{
+            c.innerHTML='';
+            const newInput=document.createElement('input');
+            newInput.type='file';
+            newInput.accept='image/*';
+            newInput.onchange=function(){preview(this,type)};
+            const newImg=document.createElement('img');
+            newImg.src=e.target.result;
+            c.appendChild(newInput);
+            c.appendChild(newImg);
+            img[type]={data:e.target.result.split(',')[1],type:f.type};
+        };
+        r.readAsDataURL(f);
+    });
+}
+
+function compressImage(file,maxSize,quality){
+    return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                let w=img.width,h=img.height;
+                // Resize if larger than maxSize
+                if(w>maxSize||h>maxSize){
+                    if(w>h){h=Math.round(h*maxSize/w);w=maxSize}
+                    else{w=Math.round(w*maxSize/h);h=maxSize}
+                }
+                const canvas=document.createElement('canvas');
+                canvas.width=w;canvas.height=h;
+                const ctx=canvas.getContext('2d');
+                ctx.drawImage(img,0,0,w,h);
+                // Convert to JPEG with quality
+                const dataUrl=canvas.toDataURL('image/jpeg',quality);
+                const base64=dataUrl.split(',')[1];
+                const size=Math.round(base64.length*0.75);// Approximate byte size
+                resolve({data:base64,size});
+            };
+            img.onerror=reject;
+            img.src=e.target.result;
+        };
+        reader.onerror=reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function gh(path,method,body){
@@ -465,7 +516,9 @@ async function editWork(folder,filename){
         if(folder==='paintings'){
             document.getElementById('painting-price').value=w.price||'';
         }else{
-            document.getElementById('photo-edition').value=w.edition||'';
+            document.getElementById('photo-edition-size').value=w.editionSize||'';
+            document.getElementById('photo-edition-remaining').value=w.editionRemaining!==undefined?w.editionRemaining:'';
+            document.getElementById('photo-artist-proof').checked=w.artistProof||false;
         }
 
         // Show image preview
@@ -527,7 +580,14 @@ async function saveWork(e,type){
         const orderVal=document.getElementById(prefix+'-order').value;
         if(orderVal)work.order=+orderVal;
         if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
-        if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
+        if(type==='photography'){
+            const edSize=document.getElementById('photo-edition-size').value;
+            const edRemaining=document.getElementById('photo-edition-remaining').value;
+            if(edSize)work.editionSize=+edSize;
+            if(edRemaining!=='')work.editionRemaining=+edRemaining;
+            work.artistProof=document.getElementById('photo-artist-proof').checked;
+            work.signed=true;
+        }
 
         // If editing and filename changed, delete old file
         if(isEdit&&editId!==id+'.json'){
