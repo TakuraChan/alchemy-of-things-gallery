@@ -7,5 +7,8 @@
   "image": "/images/photography/1771077347853.jpeg",
   "available": true,
   "collectionId": "observation-1",
-  "edition": "Edition of 3"
+  "editionSize": 3,
+  "editionRemaining": 3,
+  "artistProof": true,
+  "signed": true
 }
