@@ -174,7 +174,9 @@
                 <div class="field"><label>Year</label><input type="number" id="photo-year" value="2025"></div>
                 <div class="field"><label>Medium</label><input type="text" id="photo-medium" value="Archival pigment print"></div>
                 <div class="field"><label>Dimensions</label><input type="text" id="photo-dimensions" placeholder="40 × 30 cm"></div>
-                <div class="field"><label>Edition</label><input type="text" id="photo-edition" placeholder="Edition of 5"></div>
+                <div class="field"><label>Edition Size</label><input type="number" id="photo-edition-size" placeholder="5" min="1"></div>
+                <div class="field"><label>Edition Remaining</label><input type="number" id="photo-edition-remaining" placeholder="3" min="0"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="photo-artist-proof"><span>Artist proof available</span></label></div>
                 <div class="field"><label class="check"><input type="checkbox" id="photo-available" checked><span>Available</span></label></div>
                 <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
@@ -465,7 +467,9 @@ async function editWork(folder,filename){
         if(folder==='paintings'){
             document.getElementById('painting-price').value=w.price||'';
         }else{
-            document.getElementById('photo-edition').value=w.edition||'';
+            document.getElementById('photo-edition-size').value=w.editionSize||'';
+            document.getElementById('photo-edition-remaining').value=w.editionRemaining!==undefined?w.editionRemaining:'';
+            document.getElementById('photo-artist-proof').checked=w.artistProof||false;
         }
 
         // Show image preview
@@ -527,7 +531,14 @@ async function saveWork(e,type){
         const orderVal=document.getElementById(prefix+'-order').value;
         if(orderVal)work.order=+orderVal;
         if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
-        if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
+        if(type==='photography'){
+            const edSize=document.getElementById('photo-edition-size').value;
+            const edRemaining=document.getElementById('photo-edition-remaining').value;
+            if(edSize)work.editionSize=+edSize;
+            if(edRemaining!=='')work.editionRemaining=+edRemaining;
+            work.artistProof=document.getElementById('photo-artist-proof').checked;
+            work.signed=true;
+        }
 
         // If editing and filename changed, delete old file
         if(isEdit&&editId!==id+'.json'){
