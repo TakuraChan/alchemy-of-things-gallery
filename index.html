@@ -27,8 +27,10 @@
             <img id="landing-img" src="" alt="" class="landing-image">
             <button class="landing-enter" id="enter-btn">Enter</button>
         </div>
-        <p class="section-note" id="paintings-desc"></p>
-        <section class="works" id="works" style="display:none;"></section>
+        <div class="hub-page" id="hub" style="display:none;">
+            <img src="/images/symbol.svg" alt="" class="hub-symbol">
+            <nav class="hub-nav" id="hub-nav"></nav>
+        </div>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -40,33 +42,44 @@
     <script src="/js/main.js"></script>
     <script>
         const landing=document.getElementById('landing');
-        const works=document.getElementById('works');
+        const hub=document.getElementById('hub');
         const nav=document.querySelector('.nav');
         const footer=document.querySelector('.footer');
         const landingImg=document.getElementById('landing-img');
         const hasVisited=sessionStorage.getItem('hasVisited');
 
+        // Build hub navigation from categories
+        async function buildHubNav(){
+            const hubNav=document.getElementById('hub-nav');
+            try{
+                const r=await fetch('/data/categories.json?_='+Date.now());
+                const categories=await r.json();
+                let links='';
+                categories.filter(c=>c.visible!==false).sort((a,b)=>a.order-b.order).forEach(c=>{
+                    const href=c.id==='paintings'?'/paintings.html':c.id==='photography'?'/photography.html':'/'+c.id+'.html';
+                    links+=`<a href="${href}">${c.name}</a>`;
+                });
+                links+='<a href="/about.html">About</a>';
+                hubNav.innerHTML=links;
+            }catch{
+                hubNav.innerHTML='<a href="/paintings.html">Paintings</a><a href="/photography.html">Photography</a><a href="/about.html">About</a>';
+            }
+        }
+
         // Check if user has visited before
         if(hasVisited){
-            // Skip landing page - go straight to paintings
+            // Skip landing page - go straight to hub
             landing.style.display='none';
-            works.style.display='flex';
-            loadCollections('paintings');
-            setTimeout(()=>{works.style.opacity='1'},50);
+            hub.style.display='flex';
+            buildHubNav();
         }else{
             // First visit - show landing page
             nav.style.display='none';
             footer.style.display='none';
         }
 
-        // Load landing image and description using cached content
+        // Load landing image
         getContent().then(c=>{
-            // Set paintings description
-            if(c.paintings?.description){
-                document.getElementById('paintings-desc').textContent=c.paintings.description;
-            }
-
-            // Load landing image if exists (with cache-busting)
             if(c.paintings?.landingImage && c.paintings.landingImage.trim()){
                 landingImg.src=c.paintings.landingImage + '?_=' + Date.now();
                 landingImg.style.display='block';
@@ -83,11 +96,8 @@
             landing.style.opacity='0';
             setTimeout(()=>{
                 landing.style.display='none';
-                works.style.display='flex';
-                nav.style.display='flex';
-                footer.style.display='flex';
-                loadCollections('paintings');
-                setTimeout(()=>{works.style.opacity='1'},50);
+                hub.style.display='flex';
+                buildHubNav();
             },600);
         });
     </script>
