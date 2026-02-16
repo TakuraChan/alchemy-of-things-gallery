@@ -100,12 +100,17 @@ async function loadCollections(type){
         const sectionNote=document.querySelector('.section-note');
         const hasIntro=sectionNote&&sectionNote.textContent.trim();
 
+        // Get coming soon text
+        const content=await getContent();
+        const comingSoonText=content.general?.comingSoon||'coming soon';
+
         // Delay rendering if intro text exists
         const renderCollections=()=>{
             c.innerHTML=visible.map((col,i)=>`
                 <article class="work-item" style="animation-delay:${i*.1}s">
                     <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
                         <div class="collection-title">${col.name}</div>
+                        ${!col.active?`<div class="collection-coming-soon">${comingSoonText}</div>`:''}
                     </a>
                 </article>
             `).join('');
@@ -324,21 +329,23 @@ async function loadSingleWork(){
         const cacheBust='?_='+Date.now();
         // Build edition info for photography
         let editionInfo='';
+        let showAvailability=true;
         if(type==='photography'){
             const parts=[];
             if(w.editionSize){
                 const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
                 parts.push(`${remaining} of ${w.editionSize} available`);
+                showAvailability=false;
             }
             if(w.artistProof)parts.push('artist proof available');
             if(w.signed!==false)parts.push('signed');
             if(parts.length)editionInfo=`<p class="edition-info">${parts.join(' · ')}</p>`;
         }
         c.innerHTML=`
-            <a href="${back}" class="back-link mobile-back-arrow">← Back</a>
+            <a href="${back}" class="back-link mobile-back-arrow">Back</a>
             <img src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
             <div class="single-work-meta">
-                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p>${editionInfo}<p>${w.available?'Available':'Sold'}</p></div>
+                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p>${editionInfo}${showAvailability?`<p>${w.available?'Available':'Sold'}</p>`:''}</div>
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;
