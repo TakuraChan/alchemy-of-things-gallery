@@ -24,11 +24,11 @@ a:hover{opacity:.6}
 .hub-nav a:hover{color:var(--text);opacity:1}
 .works{display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;height:calc(100vh - 80px);scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;opacity:0;transition:opacity .6s ease}
 .works::-webkit-scrollbar{display:none}
-.works.collections-view{flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:y mandatory}
+.works.collections-view{flex-direction:column;overflow-x:hidden;overflow-y:auto;scroll-snap-type:none;align-items:center;justify-content:center;gap:2rem}
 .section-note{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:1.5rem;color:var(--text);font-style:italic;z-index:110;padding:2rem;display:none;flex-direction:column;align-items:center;gap:1.5rem;font-family:var(--font-display);max-width:600px;line-height:1.6}
 .section-note img{max-width:300px;width:90%;height:auto;margin-top:1rem;opacity:.8}
 .work-item{min-width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;scroll-snap-align:start;padding:2rem;opacity:0;animation:fadeUp .6s ease forwards}
-.collections-view .work-item{min-width:auto;height:40vh;scroll-snap-align:center}
+.collections-view .work-item{min-width:auto;height:auto;scroll-snap-align:none}
 @keyframes fadeUp{to{opacity:1}}
 .work-link{display:block;cursor:pointer}
 .work-image{max-width:90%;max-height:calc(100vh - 200px);width:auto;height:auto;object-fit:contain;display:block;margin:0 auto 1.5rem}
@@ -100,8 +100,8 @@ a:hover{opacity:.6}
     .section-note{font-size:1.2rem;padding:1.5rem;width:85%;max-width:400px}
     .section-note img{max-width:200px;width:80%;margin-top:0.5rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
-    .works.collections-view{overflow-y:visible}
-    .works.collections-view .work-item{height:auto;min-height:20vh;margin-bottom:1rem}
+    .works.collections-view{overflow-y:visible;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem}
+    .works.collections-view .work-item{height:auto;min-height:auto;margin-bottom:0}
     .works.collection-artworks-view{display:flex;height:calc(100vh - 140px);position:relative}
     .works.collection-artworks-view .work-item{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1rem 1.5rem;margin:0}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
