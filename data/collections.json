@@ -3,12 +3,19 @@
     "id": "collection-1",
     "name": "13 moons",
     "order": 1,
-    "active": true
+    "active": false,
+    "visible": false
   },
   {
     "id": "collection-2",
     "name": "man",
     "order": 2,
+    "active": true
+  },
+  {
+    "id": "collection-3",
+    "name": "different breed",
+    "order": 3,
     "active": false
   }
 ]

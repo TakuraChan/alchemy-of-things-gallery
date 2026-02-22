@@ -82,16 +82,17 @@ async function loadCollections(type){
             hasWorksInCollections=works.some(w=>w.collectionId);
         }catch{}
 
-        // Sort by order
+        // Sort by order and filter out hidden collections
         collections.sort((a,b)=>a.order-b.order);
+        const visibleCollections=collections.filter(c=>c.visible!==false);
 
         // Show all active collections + next inactive
         let visible;
-        const active=collections.filter(c=>c.active);
-        const nextInactive=collections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
+        const active=visibleCollections.filter(c=>c.active);
+        const nextInactive=visibleCollections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
         visible=nextInactive?[...active,nextInactive]:active;
-        // If no active collections, show all collections
-        if(!visible.length)visible=collections;
+        // If no active collections, show all visible collections
+        if(!visible.length)visible=visibleCollections;
 
         // Add collections view class
         c.classList.add('collections-view');
