@@ -9,6 +9,6 @@
     "id": "collection-2",
     "name": "man",
     "order": 2,
-    "active": false
+    "active": true
   }
 ]
