@@ -82,31 +82,18 @@ async function loadCollections(type){
             hasWorksInCollections=works.some(w=>w.collectionId);
         }catch{}
 
-        // Sort by order and filter out hidden collections
+        // Sort by order and filter to active visible collections
         collections.sort((a,b)=>a.order-b.order);
-        const visibleCollections=collections.filter(c=>c.visible!==false);
-
-        // Show all active collections + next inactive
-        let visible;
-        const active=visibleCollections.filter(c=>c.active);
-        const nextInactive=visibleCollections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
-        visible=nextInactive?[...active,nextInactive]:active;
-        // If no active collections, show all visible collections
-        if(!visible.length)visible=visibleCollections;
+        const visible=collections.filter(c=>c.visible!==false&&c.active);
 
         // Add collections view class
         c.classList.add('collections-view');
-
-        // Get coming soon text
-        const content=await getContent();
-        const comingSoonText=content.general?.comingSoon||'coming soon';
 
         // Render collections
         c.innerHTML=visible.map((col,i)=>`
             <article class="work-item" style="animation-delay:${i*.1}s">
                 <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
                     <div class="collection-title">${col.name}</div>
-                    ${!col.active?`<div class="collection-coming-soon">${comingSoonText}</div>`:''}
                 </a>
             </article>
         `).join('');
