@@ -97,35 +97,21 @@ async function loadCollections(type){
         // Add collections view class
         c.classList.add('collections-view');
 
-        // Check if intro text exists
-        const sectionNote=document.querySelector('.section-note');
-        const hasIntro=sectionNote&&sectionNote.textContent.trim();
-
         // Get coming soon text
         const content=await getContent();
         const comingSoonText=content.general?.comingSoon||'coming soon';
 
-        // Delay rendering if intro text exists
-        const renderCollections=()=>{
-            c.innerHTML=visible.map((col,i)=>`
-                <article class="work-item" style="animation-delay:${i*.1}s">
-                    <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
-                        <div class="collection-title">${col.name}</div>
-                        ${!col.active?`<div class="collection-coming-soon">${comingSoonText}</div>`:''}
-                    </a>
-                </article>
-            `).join('');
-            setupCollectionObserver();
-        };
-
-        if(hasIntro){
-            // Wait for intro to finish before rendering
-            setTimeout(renderCollections,4100);
-        }else{
-            // No intro, render immediately
-            renderCollections();
-            c.style.opacity='1';
-        }
+        // Render collections
+        c.innerHTML=visible.map((col,i)=>`
+            <article class="work-item" style="animation-delay:${i*.1}s">
+                <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
+                    <div class="collection-title">${col.name}</div>
+                    ${!col.active?`<div class="collection-coming-soon">${comingSoonText}</div>`:''}
+                </a>
+            </article>
+        `).join('');
+        setupCollectionObserver();
+        c.style.opacity='1';
 
         function setupCollectionObserver(){
             // Set up intersection observer to highlight centered collection
@@ -158,33 +144,6 @@ async function loadCollections(type){
                 // If only one collection, make it centered by default
                 c.querySelector('.work-item')?.classList.add('collection-centered');
             }
-        }
-
-        // Handle intro text/image fade (desktop and mobile)
-        if(hasIntro){
-            // Hide collections initially
-            c.style.opacity='0';
-
-            // Show and animate intro content
-            sectionNote.style.opacity='0';
-            sectionNote.style.display='flex';
-
-            setTimeout(()=>{
-                sectionNote.style.transition='opacity 0.8s ease';
-                sectionNote.style.opacity='1';
-            },100);
-
-            // Fade out intro content after 3 seconds
-            setTimeout(()=>{
-                sectionNote.style.opacity='0';
-            },3100);
-
-            // Remove intro content after fade out
-            setTimeout(()=>{
-                sectionNote.style.display='none';
-                c.style.transition='opacity 1s ease';
-                c.style.opacity='1';
-            },4100);
         }
     }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
 }
