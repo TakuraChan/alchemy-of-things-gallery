@@ -71,6 +71,7 @@
             // Skip landing page - go straight to hub
             landing.style.display='none';
             hub.style.display='flex';
+            nav.style.display='none';
             buildHubNav();
         }else{
             // First visit - show landing page
@@ -97,6 +98,7 @@
             setTimeout(()=>{
                 landing.style.display='none';
                 hub.style.display='flex';
+                footer.style.display='flex';
                 buildHubNav();
             },600);
         });
