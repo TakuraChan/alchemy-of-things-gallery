@@ -1,22 +1,12 @@
 // Dynamic navigation loader
 async function loadNav(){
     try{
-        const r=await fetch('/data/categories.json');
-        const categories=await r.json();
-        const visible=categories.filter(c=>c.visible).sort((a,b)=>a.order-b.order);
-
         const nav=document.querySelector('.nav');
         const navLinks=document.querySelector('.nav-links');
         if(!nav||!navLinks)return;
 
-        // Build menu items
-        let html='';
-        visible.forEach(cat=>{
-            const url=cat.file==='index.html'?'/':'/'+cat.file;
-            html+=`<a href="${url}">${cat.name}</a>`;
-        });
-        html+='<a href="/about.html">About</a>';
-        navLinks.innerHTML=html;
+        // Just show home link
+        navLinks.innerHTML='<a href="/">home</a>';
 
         // Add symbol above nav-links
         let symbol=document.getElementById('nav-symbol');
@@ -40,7 +30,6 @@ async function loadNav(){
             }
         });
     }catch{
-        // Fallback if categories.json doesn't exist
         console.log('Using default navigation');
     }
 }
