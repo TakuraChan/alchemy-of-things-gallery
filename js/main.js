@@ -297,24 +297,18 @@ async function loadSingleWork(){
             </div>
         `;
 
-        // Add zoom functionality for desktop
-        if(window.innerWidth>768){
-            const img=c.querySelector('img');
-            const exitBtn=document.createElement('button');
-            exitBtn.className='zoom-exit';
-            exitBtn.innerHTML='×';
-            exitBtn.setAttribute('aria-label','Exit zoom');
-            document.querySelector('.main').appendChild(exitBtn);
+        // Add lightbox functionality
+        const img=c.querySelector('img');
+        const lightbox=document.createElement('div');
+        lightbox.className='lightbox';
+        lightbox.innerHTML=`<img src="${w.image}${cacheBust}" alt="${w.title}"><button class="lightbox-close" aria-label="Close">×</button>`;
+        document.body.appendChild(lightbox);
 
-            img.addEventListener('click',()=>{
-                img.classList.toggle('zoomed');
-                exitBtn.classList.toggle('visible');
-            });
-
-            exitBtn.addEventListener('click',()=>{
-                img.classList.remove('zoomed');
-                exitBtn.classList.remove('visible');
-            });
-        }
+        img.addEventListener('click',()=>lightbox.classList.add('active'));
+        lightbox.addEventListener('click',(e)=>{
+            if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
+                lightbox.classList.remove('active');
+            }
+        });
     }catch{c.innerHTML='<p class="empty">Error loading work.</p>'}
 }

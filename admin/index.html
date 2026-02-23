@@ -60,6 +60,11 @@
         .setup code{background:var(--card);padding:.2rem .4rem;font-size:.85rem}
         .divider{margin:3rem 0;padding-top:2rem;border-top:1px solid var(--border)}
         .divider h3{font-size:1rem;font-weight:400;margin-bottom:1rem}
+        .drag-item{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border);margin-bottom:.5rem;background:var(--card);cursor:grab}
+        .drag-item:active{cursor:grabbing}
+        .drag-item.dragging{opacity:0.5;border-style:dashed}
+        .drag-handle{color:var(--light);font-size:1.2rem}
+        .drag-item-title{flex:1;font-weight:400}
         @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
     </style>
 </head>
@@ -95,6 +100,7 @@
         <div class="tabs">
             <button class="tab active" onclick="showTab('paintings')">Paintings</button>
             <button class="tab" onclick="showTab('photography')">Photography</button>
+            <button class="tab" onclick="showTab('categories')">Categories</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
 
@@ -131,6 +137,11 @@
                 <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
             </form>
             <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
+        </div>
+
+        <div id="categories" class="tab-content hidden">
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Drag to reorder. Changes save automatically.</p>
+            <div id="cat-list"></div>
         </div>
 
         <div id="settings" class="tab-content hidden">
@@ -184,16 +195,42 @@ function showTab(t){
     document.getElementById(t).classList.remove('hidden');
 }
 
-function preview(input,type){
+async function preview(input,type){
     const f=input.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=e=>{
-        const c=document.getElementById(type+'-upload');
-        c.classList.add('has');
-        c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+e.target.result+'">';
-        img[type]={data:e.target.result.split(',')[1],type:f.type};
-    };
-    r.readAsDataURL(f);
+    const c=document.getElementById(type+'-upload');
+    c.innerHTML='<span>Optimizing...</span>';
+
+    // Auto-optimize image
+    const optimized=await optimizeImage(f,type==='symbol'?200:1600);
+    c.classList.add('has');
+    c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+optimized.dataUrl+'">';
+    img[type]={data:optimized.base64,type:'image/jpeg'};
+}
+
+function optimizeImage(file,maxSize){
+    return new Promise((resolve)=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const canvas=document.createElement('canvas');
+                let w=img.width,h=img.height;
+                // Scale down if larger than maxSize
+                if(w>maxSize||h>maxSize){
+                    if(w>h){h=Math.round(h*maxSize/w);w=maxSize}
+                    else{w=Math.round(w*maxSize/h);h=maxSize}
+                }
+                canvas.width=w;canvas.height=h;
+                const ctx=canvas.getContext('2d');
+                ctx.drawImage(img,0,0,w,h);
+                // Compress to JPEG at 85% quality
+                const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+                resolve({dataUrl,base64:dataUrl.split(',')[1]});
+            };
+            img.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
 async function gh(path,method,body){
@@ -219,7 +256,7 @@ async function uploadImg(data,folder){
     return '/'+path;
 }
 
-async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list')}
+async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list');await loadCategories()}
 
 async function loadList(folder,containerId){
     const c=document.getElementById(containerId);c.innerHTML='<div class="loading"></div>';
@@ -278,6 +315,64 @@ async function saveSymbol(e){
 }
 
 function msg(t,type){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+type;setTimeout(()=>m.classList.add('hidden'),4000)}
+
+let categories=[];
+async function loadCategories(){
+    const c=document.getElementById('cat-list');c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await gh('/contents/data/categories.json');
+        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No categories.</p>';return}
+        const fd=await r.json();
+        categories=JSON.parse(atob(fd.content));
+        categories.sort((a,b)=>a.order-b.order);
+        renderCategories();
+    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+}
+
+function renderCategories(){
+    const c=document.getElementById('cat-list');
+    // Add About at the end as a special category
+    const allItems=[...categories,{id:'about',name:'About',order:999,special:true}];
+    c.innerHTML=allItems.map(cat=>`
+        <div class="drag-item" draggable="true" data-id="${cat.id}">
+            <span class="drag-handle">☰</span>
+            <span class="drag-item-title">${cat.name}</span>
+        </div>
+    `).join('');
+    setupDrag();
+}
+
+function setupDrag(){
+    const items=document.querySelectorAll('.drag-item');
+    let dragItem=null;
+    items.forEach(item=>{
+        item.addEventListener('dragstart',()=>{dragItem=item;item.classList.add('dragging')});
+        item.addEventListener('dragend',()=>{item.classList.remove('dragging');saveCategories()});
+        item.addEventListener('dragover',e=>{e.preventDefault();const rect=item.getBoundingClientRect();const mid=rect.top+rect.height/2;if(e.clientY<mid)item.parentNode.insertBefore(dragItem,item);else item.parentNode.insertBefore(dragItem,item.nextSibling)});
+    });
+}
+
+async function saveCategories(){
+    const items=document.querySelectorAll('.drag-item');
+    const newOrder=[];
+    items.forEach((item,i)=>{
+        const id=item.dataset.id;
+        if(id==='about')return;// Skip about, it's not in categories.json
+        const cat=categories.find(c=>c.id===id);
+        if(cat){cat.order=i+1;newOrder.push(cat)}
+    });
+    try{
+        const e=await getFile('data/categories.json');
+        await gh('/contents/data/categories.json','PUT',{
+            message:'Reorder categories',
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(newOrder,null,2)))),
+            sha:e?.sha,
+            branch:'main'
+        });
+        categories=newOrder;
+        msg('Order saved','ok');
+    }catch{msg('Error saving','err')}
+}
 
 init();
     </script>
