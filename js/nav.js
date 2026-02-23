@@ -3,31 +3,26 @@ async function loadNav(){
     try{
         const nav=document.querySelector('.nav');
         const navLinks=document.querySelector('.nav-links');
-        if(!nav||!navLinks)return;
+        if(!nav)return;
 
-        // Just show home link
-        navLinks.innerHTML='<a href="/">home</a>';
+        // Remove nav-links, just use symbol as home button
+        if(navLinks)navLinks.remove();
 
-        // Add symbol above nav-links
+        // Add symbol as home button
         let symbol=document.getElementById('nav-symbol');
         if(!symbol){
             symbol=document.createElement('img');
             symbol.src='/images/symbol.svg';
-            symbol.alt='';
+            symbol.alt='Home';
             symbol.className='symbol';
             symbol.id='nav-symbol';
             symbol.style.cursor='pointer';
-            nav.insertBefore(symbol,navLinks);
+            nav.appendChild(symbol);
         }
 
-        // Add click handler to symbol for landing page
+        // Click symbol to go home
         symbol.addEventListener('click',()=>{
-            if(window.location.pathname==='/'||window.location.pathname==='/index.html'){
-                sessionStorage.removeItem('hasVisited');
-                location.reload();
-            }else{
-                window.location.href='/';
-            }
+            window.location.href='/';
         });
     }catch{
         console.log('Using default navigation');
