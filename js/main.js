@@ -58,7 +58,6 @@ async function loadWorks(type){
 
 async function loadCollections(type){
     const c=document.getElementById('works');
-    // Determine collections file based on type
     let collectionsFile,worksFile;
     if(type==='paintings'){
         collectionsFile='/data/collections.json';
@@ -72,67 +71,76 @@ async function loadCollections(type){
     }
 
     try{
-        const r=await fetch(collectionsFile),collections=await r.json();
+        const [colRes,workRes]=await Promise.all([fetch(collectionsFile),fetch(worksFile)]);
+        const collections=await colRes.json();
+        const allWorks=await workRes.json();
+
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
-        // Check if any works exist in any collection
-        let hasWorksInCollections=false;
-        try{
-            const wr=await fetch(worksFile),works=await wr.json();
-            hasWorksInCollections=works.some(w=>w.collectionId);
-        }catch{}
+        // Filter and sort collections
+        const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>a.order-b.order);
 
-        // Sort by order and filter to active visible collections
-        collections.sort((a,b)=>a.order-b.order);
-        const visible=collections.filter(c=>c.visible!==false&&c.active);
+        const cacheBust='?_='+Date.now();
 
-        // Add collections view class
-        c.classList.add('collections-view');
+        // Build HTML for each collection with its works
+        let html='';
+        visible.forEach(col=>{
+            const colWorks=allWorks.filter(w=>w.collectionId===col.id).sort((a,b)=>(a.order||999)-(b.order||999));
+            html+=`<section class="collection-section">
+                <h2 class="collection-header">${col.name}</h2>
+                <div class="collection-works">
+                    ${colWorks.map(w=>`
+                        <div class="work-thumb" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
+                            <img src="${w.image}${cacheBust}" alt="${w.title}" loading="lazy">
+                            <span class="work-thumb-title">${w.title}</span>
+                        </div>
+                    `).join('')}
+                    ${!colWorks.length?'<p class="empty-collection">new work coming soon</p>':''}
+                </div>
+            </section>`;
+        });
 
-        // Render collections
-        c.innerHTML=visible.map((col,i)=>`
-            <article class="work-item" style="animation-delay:${i*.1}s">
-                <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
-                    <div class="collection-title">${col.name}</div>
-                </a>
-            </article>
-        `).join('');
-        setupCollectionObserver();
+        c.innerHTML=html;
+        c.classList.add('collections-expanded');
         c.style.opacity='1';
 
-        function setupCollectionObserver(){
-            // Set up intersection observer to highlight centered collection
-            if(window.IntersectionObserver&&visible.length>1){
-                const items=c.querySelectorAll('.work-item');
-                const observer=new IntersectionObserver((entries)=>{
-                    entries.forEach(entry=>{
-                        if(entry.isIntersecting&&entry.intersectionRatio>0.5){
-                            items.forEach(item=>item.classList.remove('collection-centered'));
-                            entry.target.classList.add('collection-centered');
-                        }
-                    });
-                },{threshold:[0.5],rootMargin:'-20% 0px'});
+        // Add lightbox for work details
+        const lightbox=document.createElement('div');
+        lightbox.className='work-lightbox';
+        lightbox.innerHTML=`<div class="work-lightbox-content"></div><button class="lightbox-close">×</button>`;
+        document.body.appendChild(lightbox);
 
-                items.forEach(item=>observer.observe(item));
-
-                // Scroll to the latest active collection by default
-                const activeCollections=visible.filter(col=>col.active);
-                if(activeCollections.length>0){
-                    const latestActive=activeCollections[activeCollections.length-1];
-                    const idx=visible.findIndex(col=>col.id===latestActive.id);
-                    if(idx>=0){
-                        setTimeout(()=>{
-                            items[idx].scrollIntoView({block:'center',behavior:'smooth'});
-                            items[idx].classList.add('collection-centered');
-                        },100);
-                    }
+        // Click handlers for work thumbnails
+        c.querySelectorAll('.work-thumb').forEach(thumb=>{
+            thumb.addEventListener('click',()=>{
+                const w=JSON.parse(thumb.dataset.work);
+                const t=thumb.dataset.type;
+                let editionInfo='';
+                if(t==='photography'&&w.editionSize){
+                    const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
+                    editionInfo=`<p>${remaining} of ${w.editionSize} available</p>`;
                 }
-            }else if(visible.length===1){
-                // If only one collection, make it centered by default
-                c.querySelector('.work-item')?.classList.add('collection-centered');
+                lightbox.querySelector('.work-lightbox-content').innerHTML=`
+                    <img src="${w.image}${cacheBust}" alt="${w.title}">
+                    <div class="work-lightbox-info">
+                        <h1>${w.title}</h1>
+                        <p>${w.year} · ${w.medium} · ${w.dimensions}</p>
+                        ${editionInfo}
+                        <p>${w.available?'Available':'Sold'}</p>
+                        ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                    </div>
+                `;
+                lightbox.classList.add('active');
+            });
+        });
+
+        lightbox.addEventListener('click',e=>{
+            if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
+                lightbox.classList.remove('active');
             }
-        }
-    }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
+        });
+
+    }catch{c.innerHTML='<p class="empty">Error loading.</p>'}
 }
 
 async function loadCollection(){
