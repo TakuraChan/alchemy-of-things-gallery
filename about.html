@@ -27,7 +27,17 @@
             <p id="about-line1">Johannesburg. South Africa</p>
             <p id="about-line2">Work may be viewed by arrangement.</p>
             <p><a href="mailto:inquiry@alchemyofthings.com" id="about-email">inquiry@alchemyofthings.com</a></p>
+            <p class="about-portfolio"><a href="#" id="portfolio-link">Work in Architecture <span class="external-icon">↗</span></a></p>
         </section>
+
+        <div class="portfolio-modal" id="portfolio-modal">
+            <div class="portfolio-modal-content">
+                <h2>Work in Architecture</h2>
+                <p>Professional architecture portfolio</p>
+                <a href="https://takurachangwa.com" target="_blank" rel="noopener" class="portfolio-btn">View Portfolio <span class="external-icon">↗</span></a>
+            </div>
+            <button class="lightbox-close" id="portfolio-close">×</button>
+        </div>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -52,6 +62,24 @@
                 }
             })
             .catch(()=>{});
+
+        // Portfolio modal
+        const portfolioLink=document.getElementById('portfolio-link');
+        const portfolioModal=document.getElementById('portfolio-modal');
+        const portfolioClose=document.getElementById('portfolio-close');
+
+        portfolioLink.addEventListener('click',e=>{
+            e.preventDefault();
+            portfolioModal.classList.add('active');
+        });
+
+        portfolioClose.addEventListener('click',()=>{
+            portfolioModal.classList.remove('active');
+        });
+
+        portfolioModal.addEventListener('click',e=>{
+            if(e.target===portfolioModal)portfolioModal.classList.remove('active');
+        });
     </script>
 </body>
 </html>

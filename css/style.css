@@ -61,6 +61,17 @@ a:hover{opacity:.6}
 .about p:has(#about-email){margin-bottom:0}
 #about-email{font-size:.8rem;color:var(--muted);transition:color .3s}
 #about-email:hover{color:var(--text)}
+.about-portfolio{margin-top:3rem}
+.about-portfolio a{font-size:.85rem;color:var(--muted);transition:color .3s}
+.about-portfolio a:hover{color:var(--text);opacity:1}
+.external-icon{font-size:.7em;margin-left:.2em;opacity:.7}
+.portfolio-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s}
+.portfolio-modal.active{opacity:1;visibility:visible}
+.portfolio-modal-content{text-align:center;color:#fff}
+.portfolio-modal-content h2{font-family:var(--font-display);font-size:1.8rem;font-style:italic;font-weight:400;margin-bottom:.75rem}
+.portfolio-modal-content p{font-size:.9rem;color:#aaa;margin-bottom:2rem}
+.portfolio-btn{display:inline-block;padding:1rem 2rem;border:1px solid #fff;color:#fff;font-family:var(--font-body);font-size:.85rem;transition:all .3s}
+.portfolio-btn:hover{background:#fff;color:#000;opacity:1}
 .inquiry{max-width:500px;margin:0 auto}
 .inquiry h1{font-family:var(--font-display);font-size:1.5rem;font-weight:400;margin-bottom:2rem}
 .work-ref{font-size:.9rem;color:var(--muted);margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
