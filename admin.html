@@ -173,6 +173,12 @@
         </div>
 
         <div id="settings" class="tab-content hidden">
+            <div id="biometric-settings" class="hidden">
+                <h3 style="font-size:1rem;font-weight:400;margin-bottom:1rem">Face ID</h3>
+                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Enable Face ID for faster login.</p>
+                <button class="btn submit" onclick="setupBiometricFromSettings()" id="faceid-btn">Set up Face ID</button>
+                <div class="divider"></div>
+            </div>
             <form onsubmit="return saveSymbol(event)">
                 <div class="field"><label>Symbol</label>
                     <div class="upload" id="symbol-upload"><input type="file" accept="image/svg+xml,image/png" onchange="preview(this,'symbol')"><span>Upload SVG</span></div>
@@ -221,6 +227,10 @@ async function init(){
     else if(sessionStorage.getItem('alchemy_auth')){
         show('admin');
         document.getElementById('cfg-repo').value=cfg.repo;
+        // Show Face ID setup option if available and not already set up
+        if(biometricAvailable&&!cfg.credentialId){
+            document.getElementById('biometric-settings').classList.remove('hidden');
+        }
         loadAll();
     }
     // Show login
@@ -311,6 +321,35 @@ async function loginWithBiometric(){
     }
 }
 
+async function setupBiometricFromSettings(){
+    const btn=document.getElementById('faceid-btn');
+    btn.disabled=true;btn.textContent='Setting up...';
+    try{
+        const userId=new Uint8Array(16);
+        crypto.getRandomValues(userId);
+
+        const credential=await navigator.credentials.create({
+            publicKey:{
+                challenge:crypto.getRandomValues(new Uint8Array(32)),
+                rp:{name:'Alchemy of Things',id:location.hostname},
+                user:{id:userId,name:'admin',displayName:'Admin'},
+                pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+                authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+                timeout:60000
+            }
+        });
+
+        cfg.credentialId=bufferToBase64(credential.rawId);
+        localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+        msg('Face ID enabled!','ok');
+        document.getElementById('biometric-settings').classList.add('hidden');
+    }catch(e){
+        console.error(e);
+        msg('Face ID setup failed','err');
+    }
+    btn.disabled=false;btn.textContent='Set up Face ID';
+}
+
 async function doLogin(){
     const pass=document.getElementById('login-pass').value;
     if(!pass){alert('Enter password');return}
@@ -320,7 +359,15 @@ async function doLogin(){
     sessionStorage.setItem('alchemy_auth','1');
     show('admin');
     document.getElementById('cfg-repo').value=cfg.repo;
+    showBiometricSettingsIfAvailable();
     loadAll();
+}
+
+async function showBiometricSettingsIfAvailable(){
+    if(canUseBiometric&&!cfg.credentialId){
+        const available=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if(available)document.getElementById('biometric-settings').classList.remove('hidden');
+    }
 }
 
 function doLogout(){
@@ -344,6 +391,7 @@ async function migrateConfig(){
     sessionStorage.setItem('alchemy_auth','1');
     show('admin');
     document.getElementById('cfg-repo').value=cfg.repo;
+    showBiometricSettingsIfAvailable();
     loadAll();
 }
 
@@ -363,6 +411,7 @@ async function saveConfig(){
     sessionStorage.setItem('alchemy_auth','1');
     show('admin');
     document.getElementById('cfg-repo').value=cfg.repo;
+    showBiometricSettingsIfAvailable();
     loadAll();
 }
 
@@ -521,14 +570,14 @@ async function loadList(folder,containerId){
         const r=await gh('/contents/data/'+folder);
         if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
         const files=await r.json();
-        if(!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
+        if(!Array.isArray(files)||!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
         c.innerHTML='';
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
             const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
             c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
         }
-    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+    }catch(e){console.error('Load error:',folder,e);c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
 }
 
 async function delWork(folder,file,sha){
