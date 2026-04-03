@@ -65,6 +65,11 @@
         .drag-item.dragging{opacity:0.5;border-style:dashed}
         .drag-handle{color:var(--light);font-size:1.2rem}
         .drag-item-title{flex:1;font-weight:400}
+        .btn-outline{background:transparent;color:var(--text)}
+        .btn-outline:hover{background:var(--text);color:var(--bg)}
+        .btn-biometric{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1rem;width:100%}
+        .login-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;width:280px;color:var(--light);font-size:.85rem}
+        .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
         @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
     </style>
 </head>
@@ -72,14 +77,22 @@
     <div id="login" class="login">
         <h1>Alchemy of Things</h1>
         <p>Admin access</p>
+        <div id="biometric-login" class="hidden">
+            <button class="btn" onclick="loginWithBiometric()">Sign in with Face ID</button>
+            <div class="login-divider">or</div>
+        </div>
         <div class="field" style="width:280px;margin-bottom:1rem"><input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <button class="btn" onclick="doLogin()">Enter</button>
     </div>
 
     <div id="migrate" class="container hidden">
         <div class="setup">
-            <h2>Set Password</h2>
-            <p>Your GitHub connection is still active. Just create a password to continue.</p>
+            <h2>Set Up Login</h2>
+            <p>Your GitHub connection is still active. Choose how to sign in.</p>
+            <div id="migrate-biometric" class="hidden" style="margin-bottom:2rem">
+                <button class="btn submit" onclick="setupBiometric('migrate')" style="display:flex;align-items:center;justify-content:center;gap:.5rem">Set up Face ID</button>
+                <div class="login-divider" style="width:100%">or use password</div>
+            </div>
             <div class="field"><label>Create Password</label><input type="password" id="migrate-pass" placeholder="Choose a password"></div>
             <div class="field"><label>Confirm Password</label><input type="password" id="migrate-pass2" placeholder="Confirm password"></div>
             <button class="btn submit" onclick="migrateConfig()">Continue</button>
@@ -89,7 +102,11 @@
     <div id="setup" class="container hidden">
         <div class="setup">
             <h2>First-time Setup</h2>
-            <p>Create your admin password and connect GitHub.</p>
+            <p>Set up your login and connect GitHub.</p>
+            <div id="setup-biometric" class="hidden" style="margin-bottom:2rem">
+                <button class="btn submit" onclick="setupBiometric('setup')" style="display:flex;align-items:center;justify-content:center;gap:.5rem">Set up Face ID</button>
+                <div class="login-divider" style="width:100%">or use password</div>
+            </div>
             <div class="field"><label>Create Password</label><input type="password" id="setup-pass" placeholder="Choose a password"></div>
             <div class="field"><label>Confirm Password</label><input type="password" id="setup-pass2" placeholder="Confirm password"></div>
             <div class="divider" style="margin-top:2rem">
@@ -172,16 +189,23 @@
 
     <script>
 let cfg,img={painting:null,photo:null,symbol:null};
+const canUseBiometric=window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
 
 async function init(){
     cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
+
+    // Check biometric availability
+    const biometricAvailable=canUseBiometric&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
     // Check if setup is needed (no config at all)
     if(!cfg||!cfg.token){
         show('setup');
+        if(biometricAvailable)document.getElementById('setup-biometric').classList.remove('hidden');
     }
-    // Migrate old config (has token but no password)
-    else if(!cfg.passHash){
+    // Migrate old config (has token but no password/biometric)
+    else if(!cfg.passHash&&!cfg.credentialId){
         show('migrate');
+        if(biometricAvailable)document.getElementById('migrate-biometric').classList.remove('hidden');
     }
     // Check if logged in this session
     else if(sessionStorage.getItem('alchemy_auth')){
@@ -192,6 +216,8 @@ async function init(){
     // Show login
     else{
         show('login');
+        // Show biometric login if set up
+        if(cfg.credentialId)document.getElementById('biometric-login').classList.remove('hidden');
     }
 }
 
@@ -204,9 +230,81 @@ async function hashPass(pass){
     return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+// WebAuthn / Face ID functions
+function bufferToBase64(buffer){
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+function base64ToBuffer(base64){
+    return Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+}
+
+async function setupBiometric(mode){
+    try{
+        const userId=new Uint8Array(16);
+        crypto.getRandomValues(userId);
+
+        const credential=await navigator.credentials.create({
+            publicKey:{
+                challenge:crypto.getRandomValues(new Uint8Array(32)),
+                rp:{name:'Alchemy of Things',id:location.hostname},
+                user:{id:userId,name:'admin',displayName:'Admin'},
+                pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+                authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+                timeout:60000
+            }
+        });
+
+        const credentialId=bufferToBase64(credential.rawId);
+
+        if(mode==='setup'){
+            // Full setup - need GitHub token too
+            const t=document.getElementById('gh-token').value.trim();
+            const r=document.getElementById('gh-repo').value.trim();
+            if(!t||!r){alert('Fill in GitHub token and repository first');return}
+            cfg={token:t,repo:r,credentialId};
+        }else{
+            // Migration - just add credential to existing config
+            cfg.credentialId=credentialId;
+        }
+
+        localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+        sessionStorage.setItem('alchemy_auth','1');
+        show('admin');
+        document.getElementById('cfg-repo').value=cfg.repo;
+        loadAll();
+    }catch(e){
+        console.error(e);
+        alert('Face ID setup failed. Try using a password instead.');
+    }
+}
+
+async function loginWithBiometric(){
+    try{
+        const credential=await navigator.credentials.get({
+            publicKey:{
+                challenge:crypto.getRandomValues(new Uint8Array(32)),
+                allowCredentials:[{id:base64ToBuffer(cfg.credentialId),type:'public-key',transports:['internal']}],
+                userVerification:'required',
+                timeout:60000
+            }
+        });
+
+        if(credential){
+            sessionStorage.setItem('alchemy_auth','1');
+            show('admin');
+            document.getElementById('cfg-repo').value=cfg.repo;
+            loadAll();
+        }
+    }catch(e){
+        console.error(e);
+        alert('Face ID failed. Try your password.');
+    }
+}
+
 async function doLogin(){
     const pass=document.getElementById('login-pass').value;
     if(!pass){alert('Enter password');return}
+    if(!cfg.passHash){alert('No password set. Use Face ID or reset config.');return}
     const hash=await hashPass(pass);
     if(hash!==cfg.passHash){alert('Incorrect password');return}
     sessionStorage.setItem('alchemy_auth','1');
@@ -219,6 +317,8 @@ function doLogout(){
     sessionStorage.removeItem('alchemy_auth');
     show('login');
     document.getElementById('login-pass').value='';
+    // Show biometric option if available
+    if(cfg&&cfg.credentialId)document.getElementById('biometric-login').classList.remove('hidden');
 }
 
 async function migrateConfig(){
