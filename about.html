@@ -9,6 +9,12 @@
     <meta name="description" content="Works by Takura, between observation, emotion, and form.">
     <title>About — Alchemy of Things</title>
     <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
+    <link rel="apple-touch-icon" href="/images/icon-180.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Alchemy">
+    <meta name="theme-color" content="#faf9f7">
     <meta property="og:title" content="About — Alchemy of Things">
     <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">
     <meta property="og:image" content="/images/symbol.svg">
@@ -23,11 +29,21 @@
     </nav>
     <main class="main">
         <section class="about">
-            <p class="about-name" id="about-name">Takura Changwa</p>
-            <p id="about-line1">Architect. Johannesburg.</p>
+            <p class="about-name" id="about-name">The work presented here is authored by Takura Changwa, working between disciplines of observation and form.</p>
+            <p id="about-line1">Johannesburg. South Africa</p>
             <p id="about-line2">Work may be viewed by arrangement.</p>
             <p><a href="mailto:inquiry@alchemyofthings.com" id="about-email">inquiry@alchemyofthings.com</a></p>
+            <p class="about-portfolio"><a href="#" id="portfolio-link">Work in Architecture <span class="external-icon">↗</span></a></p>
         </section>
+
+        <div class="portfolio-modal" id="portfolio-modal">
+            <div class="portfolio-modal-content">
+                <h2>Work in Architecture</h2>
+                <p>Professional architecture portfolio</p>
+                <a href="https://takurachangwa.com" target="_blank" rel="noopener" class="portfolio-btn">View Portfolio <span class="external-icon">↗</span></a>
+            </div>
+            <button class="lightbox-close" id="portfolio-close">×</button>
+        </div>
     </main>
     <footer class="footer">
         <div class="footer-content">
@@ -52,6 +68,24 @@
                 }
             })
             .catch(()=>{});
+
+        // Portfolio modal
+        const portfolioLink=document.getElementById('portfolio-link');
+        const portfolioModal=document.getElementById('portfolio-modal');
+        const portfolioClose=document.getElementById('portfolio-close');
+
+        portfolioLink.addEventListener('click',e=>{
+            e.preventDefault();
+            portfolioModal.classList.add('active');
+        });
+
+        portfolioClose.addEventListener('click',()=>{
+            portfolioModal.classList.remove('active');
+        });
+
+        portfolioModal.addEventListener('click',e=>{
+            if(e.target===portfolioModal)portfolioModal.classList.remove('active');
+        });
     </script>
 </body>
 </html>

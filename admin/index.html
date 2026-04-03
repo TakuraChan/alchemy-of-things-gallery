@@ -60,41 +60,75 @@
         .setup code{background:var(--card);padding:.2rem .4rem;font-size:.85rem}
         .divider{margin:3rem 0;padding-top:2rem;border-top:1px solid var(--border)}
         .divider h3{font-size:1rem;font-weight:400;margin-bottom:1rem}
+        .drag-item{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid var(--border);margin-bottom:.5rem;background:var(--card);cursor:grab}
+        .drag-item:active{cursor:grabbing}
+        .drag-item.dragging{opacity:0.5;border-style:dashed}
+        .drag-handle{color:var(--light);font-size:1.2rem}
+        .drag-item-title{flex:1;font-weight:400}
+        .btn-outline{background:transparent;color:var(--text)}
+        .btn-outline:hover{background:var(--text);color:var(--bg)}
+        .btn-biometric{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1rem;width:100%}
+        .login-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;width:280px;color:var(--light);font-size:.85rem}
+        .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
         @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
     </style>
 </head>
 <body>
     <div id="login" class="login">
         <h1>Alchemy of Things</h1>
-        <p>Admin access required</p>
+        <p>Admin access</p>
+        <div id="biometric-login" class="hidden">
+            <button class="btn" onclick="loginWithBiometric()">Sign in with Face ID</button>
+            <div class="login-divider">or</div>
+        </div>
+        <div class="field" style="width:280px;margin-bottom:1rem"><input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <button class="btn" onclick="doLogin()">Enter</button>
+    </div>
+
+    <div id="migrate" class="container hidden">
+        <div class="setup">
+            <h2>Set Up Login</h2>
+            <p>Your GitHub connection is still active. Choose how to sign in.</p>
+            <div id="migrate-biometric" class="hidden" style="margin-bottom:2rem">
+                <button class="btn submit" onclick="setupBiometric('migrate')" style="display:flex;align-items:center;justify-content:center;gap:.5rem">Set up Face ID</button>
+                <div class="login-divider" style="width:100%">or use password</div>
+            </div>
+            <div class="field"><label>Create Password</label><input type="password" id="migrate-pass" placeholder="Choose a password"></div>
+            <div class="field"><label>Confirm Password</label><input type="password" id="migrate-pass2" placeholder="Confirm password"></div>
+            <button class="btn submit" onclick="migrateConfig()">Continue</button>
+        </div>
     </div>
 
     <div id="setup" class="container hidden">
         <div class="setup">
-            <h2>GitHub Setup</h2>
-            <p>Connect to save artworks directly to your repository.</p>
-            <ol>
-                <li><a href="https://github.com/settings/tokens/new?scopes=repo&description=Alchemy" target="_blank">Create GitHub token</a></li>
-                <li>Set expiration (90 days)</li>
-                <li>Ensure <code>repo</code> is checked</li>
-                <li>Copy token below</li>
-            </ol>
+            <h2>First-time Setup</h2>
+            <p>Set up your login and connect GitHub.</p>
+            <div id="setup-biometric" class="hidden" style="margin-bottom:2rem">
+                <button class="btn submit" onclick="setupBiometric('setup')" style="display:flex;align-items:center;justify-content:center;gap:.5rem">Set up Face ID</button>
+                <div class="login-divider" style="width:100%">or use password</div>
+            </div>
+            <div class="field"><label>Create Password</label><input type="password" id="setup-pass" placeholder="Choose a password"></div>
+            <div class="field"><label>Confirm Password</label><input type="password" id="setup-pass2" placeholder="Confirm password"></div>
+            <div class="divider" style="margin-top:2rem">
+                <h3>GitHub Connection</h3>
+                <p style="margin-bottom:1rem"><a href="https://github.com/settings/tokens/new?scopes=repo&description=Alchemy" target="_blank">Create a GitHub token</a> with <code>repo</code> access.</p>
+            </div>
             <div class="field"><label>GitHub Token</label><input type="password" id="gh-token" placeholder="ghp_xxxx"></div>
             <div class="field"><label>Repository</label><input type="text" id="gh-repo" value="TakuraChan/alchemy-of-things-gallery"></div>
-            <button class="btn submit" onclick="saveConfig()">Save</button>
+            <button class="btn submit" onclick="saveConfig()">Complete Setup</button>
         </div>
     </div>
 
     <div id="admin" class="container hidden">
         <header class="header">
             <h1>Admin</h1>
-            <div><span id="user"></span> <button class="logout" onclick="doLogout()">Logout</button></div>
+            <button class="logout" onclick="doLogout()">Logout</button>
         </header>
 
         <div class="tabs">
             <button class="tab active" onclick="showTab('paintings')">Paintings</button>
             <button class="tab" onclick="showTab('photography')">Photography</button>
+            <button class="tab" onclick="showTab('categories')">Categories</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
         </div>
 
@@ -133,6 +167,11 @@
             <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
         </div>
 
+        <div id="categories" class="tab-content hidden">
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Drag to reorder. Changes save automatically.</p>
+            <div id="cat-list"></div>
+        </div>
+
         <div id="settings" class="tab-content hidden">
             <form onsubmit="return saveSymbol(event)">
                 <div class="field"><label>Symbol</label>
@@ -141,6 +180,16 @@
                 <button type="submit" class="btn submit">Update Symbol</button>
             </form>
             <div class="divider">
+                <h3>App Icon</h3>
+                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Upload an image to use as the home screen icon. Will auto-generate all required sizes.</p>
+                <form onsubmit="return saveAppIcons(event)">
+                    <div class="field">
+                        <div class="upload" id="appicon-upload"><input type="file" accept="image/*" onchange="previewAppIcon(this)"><span>Upload Icon (square image)</span></div>
+                    </div>
+                    <button type="submit" class="btn submit" id="appicon-btn">Save App Icons</button>
+                </form>
+            </div>
+            <div class="divider">
                 <h3>GitHub</h3>
                 <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
                 <button class="logout" onclick="resetConfig()">Reset Config</button>
@@ -148,35 +197,183 @@
         </div>
     </div>
 
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
     <script>
-const AUTH0={domain:'dev-0or17tvlovkdkwt6.us.auth0.com',clientId:'Wawyj8DhMBc4OevEU5tB6Q4dqmEjQ3i8',authorizationParams:{redirect_uri:location.origin+'/admin/'}};
-let auth0,user,cfg,img={painting:null,photo:null,symbol:null};
+let cfg,img={painting:null,photo:null,symbol:null};
+const canUseBiometric=window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
 
 async function init(){
-    auth0=await window.auth0.createAuth0Client(AUTH0);
-    if(location.search.includes('code=')){await auth0.handleRedirectCallback();history.replaceState({},'','/admin/')}
-    if(await auth0.isAuthenticated()){user=await auth0.getUser();route()}else{show('login')}
-}
-
-function route(){
     cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
-    if(!cfg||!cfg.token){show('setup')}
-    else{show('admin');document.getElementById('user').textContent=user.email;document.getElementById('cfg-repo').value=cfg.repo;loadAll()}
+
+    // Check biometric availability
+    const biometricAvailable=canUseBiometric&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
+    // Check if setup is needed (no config at all)
+    if(!cfg||!cfg.token){
+        show('setup');
+        if(biometricAvailable)document.getElementById('setup-biometric').classList.remove('hidden');
+    }
+    // Migrate old config (has token but no password/biometric)
+    else if(!cfg.passHash&&!cfg.credentialId){
+        show('migrate');
+        if(biometricAvailable)document.getElementById('migrate-biometric').classList.remove('hidden');
+    }
+    // Check if logged in this session
+    else if(sessionStorage.getItem('alchemy_auth')){
+        show('admin');
+        document.getElementById('cfg-repo').value=cfg.repo;
+        loadAll();
+    }
+    // Show login
+    else{
+        show('login');
+        // Show biometric login if set up
+        if(cfg.credentialId)document.getElementById('biometric-login').classList.remove('hidden');
+    }
 }
 
-function show(id){['login','setup','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id))}
+function show(id){['login','setup','admin','migrate'].forEach(x=>{const el=document.getElementById(x);if(el)el.classList.toggle('hidden',x!==id)})}
 
-async function doLogin(){await auth0.loginWithRedirect()}
-async function doLogout(){await auth0.logout({logoutParams:{returnTo:location.origin}})}
-
-function saveConfig(){
-    const t=document.getElementById('gh-token').value.trim(),r=document.getElementById('gh-repo').value.trim();
-    if(!t||!r)return alert('Fill both fields');
-    cfg={token:t,repo:r};localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));route();
+// Simple hash for password (not cryptographically secure but fine for personal use)
+async function hashPass(pass){
+    const enc=new TextEncoder().encode(pass+'alchemy_salt');
+    const hash=await crypto.subtle.digest('SHA-256',enc);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-function resetConfig(){if(confirm('Reset?')){localStorage.removeItem('alchemy_cfg');cfg=null;route()}}
+// WebAuthn / Face ID functions
+function bufferToBase64(buffer){
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+function base64ToBuffer(base64){
+    return Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+}
+
+async function setupBiometric(mode){
+    try{
+        const userId=new Uint8Array(16);
+        crypto.getRandomValues(userId);
+
+        const credential=await navigator.credentials.create({
+            publicKey:{
+                challenge:crypto.getRandomValues(new Uint8Array(32)),
+                rp:{name:'Alchemy of Things',id:location.hostname},
+                user:{id:userId,name:'admin',displayName:'Admin'},
+                pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+                authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+                timeout:60000
+            }
+        });
+
+        const credentialId=bufferToBase64(credential.rawId);
+
+        if(mode==='setup'){
+            // Full setup - need GitHub token too
+            const t=document.getElementById('gh-token').value.trim();
+            const r=document.getElementById('gh-repo').value.trim();
+            if(!t||!r){alert('Fill in GitHub token and repository first');return}
+            cfg={token:t,repo:r,credentialId};
+        }else{
+            // Migration - just add credential to existing config
+            cfg.credentialId=credentialId;
+        }
+
+        localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+        sessionStorage.setItem('alchemy_auth','1');
+        show('admin');
+        document.getElementById('cfg-repo').value=cfg.repo;
+        loadAll();
+    }catch(e){
+        console.error(e);
+        alert('Face ID setup failed. Try using a password instead.');
+    }
+}
+
+async function loginWithBiometric(){
+    try{
+        const credential=await navigator.credentials.get({
+            publicKey:{
+                challenge:crypto.getRandomValues(new Uint8Array(32)),
+                allowCredentials:[{id:base64ToBuffer(cfg.credentialId),type:'public-key',transports:['internal']}],
+                userVerification:'required',
+                timeout:60000
+            }
+        });
+
+        if(credential){
+            sessionStorage.setItem('alchemy_auth','1');
+            show('admin');
+            document.getElementById('cfg-repo').value=cfg.repo;
+            loadAll();
+        }
+    }catch(e){
+        console.error(e);
+        alert('Face ID failed. Try your password.');
+    }
+}
+
+async function doLogin(){
+    const pass=document.getElementById('login-pass').value;
+    if(!pass){alert('Enter password');return}
+    if(!cfg.passHash){alert('No password set. Use Face ID or reset config.');return}
+    const hash=await hashPass(pass);
+    if(hash!==cfg.passHash){alert('Incorrect password');return}
+    sessionStorage.setItem('alchemy_auth','1');
+    show('admin');
+    document.getElementById('cfg-repo').value=cfg.repo;
+    loadAll();
+}
+
+function doLogout(){
+    sessionStorage.removeItem('alchemy_auth');
+    show('login');
+    document.getElementById('login-pass').value='';
+    // Show biometric option if available
+    if(cfg&&cfg.credentialId)document.getElementById('biometric-login').classList.remove('hidden');
+}
+
+async function migrateConfig(){
+    const pass=document.getElementById('migrate-pass').value;
+    const pass2=document.getElementById('migrate-pass2').value;
+
+    if(!pass||pass.length<4){alert('Password must be at least 4 characters');return}
+    if(pass!==pass2){alert('Passwords do not match');return}
+
+    const passHash=await hashPass(pass);
+    cfg.passHash=passHash;
+    localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+    sessionStorage.setItem('alchemy_auth','1');
+    show('admin');
+    document.getElementById('cfg-repo').value=cfg.repo;
+    loadAll();
+}
+
+async function saveConfig(){
+    const pass=document.getElementById('setup-pass').value;
+    const pass2=document.getElementById('setup-pass2').value;
+    const t=document.getElementById('gh-token').value.trim();
+    const r=document.getElementById('gh-repo').value.trim();
+
+    if(!pass||pass.length<4){alert('Password must be at least 4 characters');return}
+    if(pass!==pass2){alert('Passwords do not match');return}
+    if(!t||!r){alert('Fill all fields');return}
+
+    const passHash=await hashPass(pass);
+    cfg={token:t,repo:r,passHash};
+    localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+    sessionStorage.setItem('alchemy_auth','1');
+    show('admin');
+    document.getElementById('cfg-repo').value=cfg.repo;
+    loadAll();
+}
+
+function resetConfig(){
+    if(confirm('This will clear your password and GitHub token. Continue?')){
+        localStorage.removeItem('alchemy_cfg');
+        sessionStorage.removeItem('alchemy_auth');
+        cfg=null;
+        show('setup');
+    }
+}
 
 function showTab(t){
     document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase().includes(t)));
@@ -184,16 +381,113 @@ function showTab(t){
     document.getElementById(t).classList.remove('hidden');
 }
 
-function preview(input,type){
+async function preview(input,type){
     const f=input.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=e=>{
-        const c=document.getElementById(type+'-upload');
+    const c=document.getElementById(type+'-upload');
+    c.innerHTML='<span>Optimizing...</span>';
+
+    // Auto-optimize image
+    const optimized=await optimizeImage(f,type==='symbol'?200:1600);
+    c.classList.add('has');
+    c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+optimized.dataUrl+'">';
+    img[type]={data:optimized.base64,type:'image/jpeg'};
+}
+
+function optimizeImage(file,maxSize){
+    return new Promise((resolve)=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const canvas=document.createElement('canvas');
+                let w=img.width,h=img.height;
+                // Scale down if larger than maxSize
+                if(w>maxSize||h>maxSize){
+                    if(w>h){h=Math.round(h*maxSize/w);w=maxSize}
+                    else{w=Math.round(w*maxSize/h);h=maxSize}
+                }
+                canvas.width=w;canvas.height=h;
+                const ctx=canvas.getContext('2d');
+                ctx.drawImage(img,0,0,w,h);
+                // Compress to JPEG at 85% quality
+                const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+                resolve({dataUrl,base64:dataUrl.split(',')[1]});
+            };
+            img.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+let appIconFile=null;
+
+function previewAppIcon(input){
+    const f=input.files[0];if(!f)return;
+    appIconFile=f;
+    const c=document.getElementById('appicon-upload');
+    const reader=new FileReader();
+    reader.onload=e=>{
         c.classList.add('has');
-        c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+e.target.result+'">';
-        img[type]={data:e.target.result.split(',')[1],type:f.type};
+        c.innerHTML='<input type="file" accept="image/*" onchange="previewAppIcon(this)"><img src="'+e.target.result+'">';
     };
-    r.readAsDataURL(f);
+    reader.readAsDataURL(f);
+}
+
+function generateIcon(file,size){
+    return new Promise(resolve=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const canvas=document.createElement('canvas');
+                canvas.width=size;canvas.height=size;
+                const ctx=canvas.getContext('2d');
+                // Fill with background color
+                ctx.fillStyle='#faf9f7';
+                ctx.fillRect(0,0,size,size);
+                // Draw image centered/scaled to fit
+                const scale=Math.min(size/img.width,size/img.height);
+                const w=img.width*scale,h=img.height*scale;
+                const x=(size-w)/2,y=(size-h)/2;
+                ctx.drawImage(img,x,y,w,h);
+                const dataUrl=canvas.toDataURL('image/png');
+                resolve(dataUrl.split(',')[1]);
+            };
+            img.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function saveAppIcons(e){
+    e.preventDefault();
+    if(!appIconFile){alert('Upload an image first');return}
+    const btn=document.getElementById('appicon-btn');
+    btn.disabled=true;btn.textContent='Generating...';
+    try{
+        const sizes=[{name:'icon-180.png',size:180},{name:'icon-192.png',size:192},{name:'icon-512.png',size:512}];
+        for(const s of sizes){
+            btn.textContent='Saving '+s.name+'...';
+            const base64=await generateIcon(appIconFile,s.size);
+            const existing=await getFile('images/'+s.name);
+            await gh('/contents/images/'+s.name,'PUT',{
+                message:'Update '+s.name,
+                content:base64,
+                sha:existing?.sha,
+                branch:'main'
+            });
+        }
+        msg('App icons saved!','ok');
+        appIconFile=null;
+        const c=document.getElementById('appicon-upload');
+        c.classList.remove('has');
+        c.innerHTML='<input type="file" accept="image/*" onchange="previewAppIcon(this)"><span>Upload Icon (square image)</span>';
+    }catch(err){
+        console.error(err);
+        msg('Error saving icons','err');
+    }
+    btn.disabled=false;btn.textContent='Save App Icons';
+    return false;
 }
 
 async function gh(path,method,body){
@@ -219,7 +513,7 @@ async function uploadImg(data,folder){
     return '/'+path;
 }
 
-async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list')}
+async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list');await loadCategories()}
 
 async function loadList(folder,containerId){
     const c=document.getElementById(containerId);c.innerHTML='<div class="loading"></div>';
@@ -278,6 +572,64 @@ async function saveSymbol(e){
 }
 
 function msg(t,type){const m=document.getElementById('msg');m.textContent=t;m.className='msg '+type;setTimeout(()=>m.classList.add('hidden'),4000)}
+
+let categories=[];
+async function loadCategories(){
+    const c=document.getElementById('cat-list');c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await gh('/contents/data/categories.json');
+        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No categories.</p>';return}
+        const fd=await r.json();
+        categories=JSON.parse(atob(fd.content));
+        categories.sort((a,b)=>a.order-b.order);
+        renderCategories();
+    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+}
+
+function renderCategories(){
+    const c=document.getElementById('cat-list');
+    // Add About at the end as a special category
+    const allItems=[...categories,{id:'about',name:'About',order:999,special:true}];
+    c.innerHTML=allItems.map(cat=>`
+        <div class="drag-item" draggable="true" data-id="${cat.id}">
+            <span class="drag-handle">☰</span>
+            <span class="drag-item-title">${cat.name}</span>
+        </div>
+    `).join('');
+    setupDrag();
+}
+
+function setupDrag(){
+    const items=document.querySelectorAll('.drag-item');
+    let dragItem=null;
+    items.forEach(item=>{
+        item.addEventListener('dragstart',()=>{dragItem=item;item.classList.add('dragging')});
+        item.addEventListener('dragend',()=>{item.classList.remove('dragging');saveCategories()});
+        item.addEventListener('dragover',e=>{e.preventDefault();const rect=item.getBoundingClientRect();const mid=rect.top+rect.height/2;if(e.clientY<mid)item.parentNode.insertBefore(dragItem,item);else item.parentNode.insertBefore(dragItem,item.nextSibling)});
+    });
+}
+
+async function saveCategories(){
+    const items=document.querySelectorAll('.drag-item');
+    const newOrder=[];
+    items.forEach((item,i)=>{
+        const id=item.dataset.id;
+        if(id==='about')return;// Skip about, it's not in categories.json
+        const cat=categories.find(c=>c.id===id);
+        if(cat){cat.order=i+1;newOrder.push(cat)}
+    });
+    try{
+        const e=await getFile('data/categories.json');
+        await gh('/contents/data/categories.json','PUT',{
+            message:'Reorder categories',
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(newOrder,null,2)))),
+            sha:e?.sha,
+            branch:'main'
+        });
+        categories=newOrder;
+        msg('Order saved','ok');
+    }catch{msg('Error saving','err')}
+}
 
 init();
     </script>

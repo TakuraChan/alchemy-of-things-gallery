@@ -58,7 +58,6 @@ async function loadWorks(type){
 
 async function loadCollections(type){
     const c=document.getElementById('works');
-    // Determine collections file based on type
     let collectionsFile,worksFile;
     if(type==='paintings'){
         collectionsFile='/data/collections.json';
@@ -72,118 +71,76 @@ async function loadCollections(type){
     }
 
     try{
-        const r=await fetch(collectionsFile),collections=await r.json();
+        const [colRes,workRes]=await Promise.all([fetch(collectionsFile),fetch(worksFile)]);
+        const collections=await colRes.json();
+        const allWorks=await workRes.json();
+
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
-        // Check if any works exist in any collection
-        let hasWorksInCollections=false;
-        try{
-            const wr=await fetch(worksFile),works=await wr.json();
-            hasWorksInCollections=works.some(w=>w.collectionId);
-        }catch{}
+        // Filter and sort collections
+        const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>a.order-b.order);
 
-        // Sort by order
-        collections.sort((a,b)=>a.order-b.order);
+        const cacheBust='?_='+Date.now();
 
-        // If no works in any collection, only show first collection
-        // Otherwise show all active + next inactive
-        let visible;
-        if(!hasWorksInCollections){
-            visible=[collections[0]];
-        }else{
-            const active=collections.filter(c=>c.active);
-            const nextInactive=collections.find(c=>!c.active&&c.order>Math.max(...active.map(a=>a.order),0));
-            visible=nextInactive?[...active,nextInactive]:active;
-        }
+        // Build HTML for each collection with its works
+        let html='';
+        visible.forEach(col=>{
+            const colWorks=allWorks.filter(w=>w.collectionId===col.id).sort((a,b)=>(a.order||999)-(b.order||999));
+            html+=`<section class="collection-section">
+                <h2 class="collection-header">${col.name}</h2>
+                <div class="collection-works">
+                    ${colWorks.map(w=>`
+                        <div class="work-thumb" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
+                            <img src="${w.image}${cacheBust}" alt="${w.title}" loading="lazy">
+                            <span class="work-thumb-title">${w.title}</span>
+                        </div>
+                    `).join('')}
+                    ${!colWorks.length?'<p class="empty-collection">new work coming soon</p>':''}
+                </div>
+            </section>`;
+        });
 
-        // Add collections view class
-        c.classList.add('collections-view');
+        c.innerHTML=html;
+        c.classList.add('collections-expanded');
+        c.style.opacity='1';
 
-        // Check if intro text exists
-        const sectionNote=document.querySelector('.section-note');
-        const hasIntro=sectionNote&&sectionNote.textContent.trim();
+        // Add lightbox for work details
+        const lightbox=document.createElement('div');
+        lightbox.className='work-lightbox';
+        lightbox.innerHTML=`<div class="work-lightbox-content"></div><button class="lightbox-close">×</button>`;
+        document.body.appendChild(lightbox);
 
-        // Delay rendering if intro text exists
-        const renderCollections=()=>{
-            c.innerHTML=visible.map((col,i)=>`
-                <article class="work-item" style="animation-delay:${i*.1}s">
-                    <a href="/collection.html?id=${col.id}&type=${type}" class="work-link collection-link">
-                        <div class="collection-title">${col.name}</div>
-                    </a>
-                </article>
-            `).join('');
-            setupCollectionObserver();
-        };
-
-        if(hasIntro){
-            // Wait for intro to finish before rendering
-            setTimeout(renderCollections,4100);
-        }else{
-            // No intro, render immediately
-            renderCollections();
-            c.style.opacity='1';
-        }
-
-        function setupCollectionObserver(){
-            // Set up intersection observer to highlight centered collection
-            if(window.IntersectionObserver&&visible.length>1){
-                const items=c.querySelectorAll('.work-item');
-                const observer=new IntersectionObserver((entries)=>{
-                    entries.forEach(entry=>{
-                        if(entry.isIntersecting&&entry.intersectionRatio>0.5){
-                            items.forEach(item=>item.classList.remove('collection-centered'));
-                            entry.target.classList.add('collection-centered');
-                        }
-                    });
-                },{threshold:[0.5],rootMargin:'-20% 0px'});
-
-                items.forEach(item=>observer.observe(item));
-
-                // Scroll to the latest active collection by default
-                const activeCollections=visible.filter(col=>col.active);
-                if(activeCollections.length>0){
-                    const latestActive=activeCollections[activeCollections.length-1];
-                    const idx=visible.findIndex(col=>col.id===latestActive.id);
-                    if(idx>=0){
-                        setTimeout(()=>{
-                            items[idx].scrollIntoView({block:'center',behavior:'smooth'});
-                            items[idx].classList.add('collection-centered');
-                        },100);
-                    }
+        // Click handlers for work thumbnails
+        c.querySelectorAll('.work-thumb').forEach(thumb=>{
+            thumb.addEventListener('click',()=>{
+                const w=JSON.parse(thumb.dataset.work);
+                const t=thumb.dataset.type;
+                let editionInfo='';
+                if(t==='photography'&&w.editionSize){
+                    const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
+                    editionInfo=`<p>${remaining} of ${w.editionSize} available</p>`;
                 }
-            }else if(visible.length===1){
-                // If only one collection, make it centered by default
-                c.querySelector('.work-item')?.classList.add('collection-centered');
+                lightbox.querySelector('.work-lightbox-content').innerHTML=`
+                    <img src="${w.image}${cacheBust}" alt="${w.title}">
+                    <div class="work-lightbox-info">
+                        <h1>${w.title}</h1>
+                        <p>${w.year} · ${w.medium} · ${w.dimensions}</p>
+                        ${editionInfo}
+                        <p>${w.available?'Available':'Sold'}</p>
+                        ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                    </div>
+                `;
+                lightbox.classList.add('active');
+            });
+        });
+
+        lightbox.addEventListener('click',e=>{
+            if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
+                lightbox.classList.remove('active');
             }
-        }
+        });
 
-        // Handle intro text/image fade (desktop and mobile)
-        if(hasIntro){
-            // Hide collections initially
-            c.style.opacity='0';
-
-            // Show and animate intro content
-            sectionNote.style.opacity='0';
-            sectionNote.style.display='flex';
-
-            setTimeout(()=>{
-                sectionNote.style.transition='opacity 0.8s ease';
-                sectionNote.style.opacity='1';
-            },100);
-
-            // Fade out intro content after 3 seconds
-            setTimeout(()=>{
-                sectionNote.style.opacity='0';
-            },3100);
-
-            // Remove intro content after fade out
-            setTimeout(()=>{
-                sectionNote.style.display='none';
-                c.style.transition='opacity 1s ease';
-                c.style.opacity='1';
-            },4100);
-        }
-    }catch{c.innerHTML='<p class="empty">Error loading collections.</p>'}
+    }catch{c.innerHTML='<p class="empty">Error loading.</p>'}
 }
 
 async function loadCollection(){
@@ -222,7 +179,7 @@ async function loadCollection(){
         if(!collectionWorks.length){
             // Empty collection - show "soon" message
             const content=await getContent();
-            const comingSoonText=content.general?.comingSoon||'New work arriving soon';
+            const comingSoonText=content.general?.comingSoon||'new work coming soon';
             c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p><a href="${back}" class="back-link">${backText}</a></div>`;
             return;
         }
@@ -305,7 +262,13 @@ async function loadSingleWork(){
         path='/data/'+type+'.json';
     }
     try{
-        const r=await fetch(path),works=await r.json(),w=works.find(x=>x.id===id);
+        const r=await fetch(path),works=await r.json();
+        let w=works.find(x=>x.id===id);
+        // Fallback: if not in aggregated file, try individual data file
+        if(!w){
+            const folder=type==='paintings'?'paintings':type==='photography'?'photography':type;
+            try{const ir=await fetch('/data/'+folder+'/'+id+'.json?_='+Date.now());if(ir.ok)w=await ir.json()}catch{}
+        }
         if(!w){c.innerHTML='<p class="empty">Work not found.</p>';return}
         document.title=w.title+' — Alchemy of Things';
         // Hide header and footer on mobile
@@ -319,33 +282,41 @@ async function loadSingleWork(){
         }
 
         const cacheBust='?_='+Date.now();
+        // Build edition info for photography
+        let editionInfo='';
+        let showAvailability=true;
+        if(type==='photography'){
+            const parts=[];
+            if(w.editionSize){
+                const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
+                parts.push(`${remaining} of ${w.editionSize} available`);
+                showAvailability=false;
+            }
+            if(w.artistProof)parts.push('artist proof available');
+            if(w.signed!==false)parts.push('signed');
+            if(parts.length)editionInfo=`<p class="edition-info">${parts.join(' · ')}</p>`;
+        }
         c.innerHTML=`
-            <a href="${back}" class="back-link mobile-back-arrow">← Back</a>
+            <a href="${back}" class="back-link mobile-back-arrow">Back</a>
             <img src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
             <div class="single-work-meta">
-                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p><p>${w.available?'Available':'Sold'}</p></div>
+                <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p>${editionInfo}${showAvailability?`<p>${w.available?'Available':'Sold'}</p>`:''}</div>
                 ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;
 
-        // Add zoom functionality for desktop
-        if(window.innerWidth>768){
-            const img=c.querySelector('img');
-            const exitBtn=document.createElement('button');
-            exitBtn.className='zoom-exit';
-            exitBtn.innerHTML='×';
-            exitBtn.setAttribute('aria-label','Exit zoom');
-            document.querySelector('.main').appendChild(exitBtn);
+        // Add lightbox functionality
+        const img=c.querySelector('img');
+        const lightbox=document.createElement('div');
+        lightbox.className='lightbox';
+        lightbox.innerHTML=`<img src="${w.image}${cacheBust}" alt="${w.title}"><button class="lightbox-close" aria-label="Close">×</button>`;
+        document.body.appendChild(lightbox);
 
-            img.addEventListener('click',()=>{
-                img.classList.toggle('zoomed');
-                exitBtn.classList.toggle('visible');
-            });
-
-            exitBtn.addEventListener('click',()=>{
-                img.classList.remove('zoomed');
-                exitBtn.classList.remove('visible');
-            });
-        }
+        img.addEventListener('click',()=>lightbox.classList.add('active'));
+        lightbox.addEventListener('click',(e)=>{
+            if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
+                lightbox.classList.remove('active');
+            }
+        });
     }catch{c.innerHTML='<p class="empty">Error loading work.</p>'}
 }

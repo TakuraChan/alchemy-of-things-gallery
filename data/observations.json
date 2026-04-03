@@ -4,11 +4,5 @@
     "name": "Observation 1",
     "order": 1,
     "active": true
-  },
-  {
-    "id": "observation-2",
-    "name": "Observation 2",
-    "order": 2,
-    "active": false
   }
 ]
