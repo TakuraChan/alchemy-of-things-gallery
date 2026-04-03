@@ -76,6 +76,16 @@
         <button class="btn" onclick="doLogin()">Enter</button>
     </div>
 
+    <div id="migrate" class="container hidden">
+        <div class="setup">
+            <h2>Set Password</h2>
+            <p>Your GitHub connection is still active. Just create a password to continue.</p>
+            <div class="field"><label>Create Password</label><input type="password" id="migrate-pass" placeholder="Choose a password"></div>
+            <div class="field"><label>Confirm Password</label><input type="password" id="migrate-pass2" placeholder="Confirm password"></div>
+            <button class="btn submit" onclick="migrateConfig()">Continue</button>
+        </div>
+    </div>
+
     <div id="setup" class="container hidden">
         <div class="setup">
             <h2>First-time Setup</h2>
@@ -166,8 +176,12 @@ let cfg,img={painting:null,photo:null,symbol:null};
 async function init(){
     cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
     // Check if setup is needed (no config at all)
-    if(!cfg||!cfg.token||!cfg.passHash){
+    if(!cfg||!cfg.token){
         show('setup');
+    }
+    // Migrate old config (has token but no password)
+    else if(!cfg.passHash){
+        show('migrate');
     }
     // Check if logged in this session
     else if(sessionStorage.getItem('alchemy_auth')){
@@ -181,7 +195,7 @@ async function init(){
     }
 }
 
-function show(id){['login','setup','admin'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id))}
+function show(id){['login','setup','admin','migrate'].forEach(x=>{const el=document.getElementById(x);if(el)el.classList.toggle('hidden',x!==id)})}
 
 // Simple hash for password (not cryptographically secure but fine for personal use)
 async function hashPass(pass){
@@ -205,6 +219,22 @@ function doLogout(){
     sessionStorage.removeItem('alchemy_auth');
     show('login');
     document.getElementById('login-pass').value='';
+}
+
+async function migrateConfig(){
+    const pass=document.getElementById('migrate-pass').value;
+    const pass2=document.getElementById('migrate-pass2').value;
+
+    if(!pass||pass.length<4){alert('Password must be at least 4 characters');return}
+    if(pass!==pass2){alert('Passwords do not match');return}
+
+    const passHash=await hashPass(pass);
+    cfg.passHash=passHash;
+    localStorage.setItem('alchemy_cfg',JSON.stringify(cfg));
+    sessionStorage.setItem('alchemy_auth','1');
+    show('admin');
+    document.getElementById('cfg-repo').value=cfg.repo;
+    loadAll();
 }
 
 async function saveConfig(){
