@@ -130,6 +130,7 @@
             <button class="tab" onclick="showTab('photography')">Photography</button>
             <button class="tab" onclick="showTab('categories')">Categories</button>
             <button class="tab" onclick="showTab('settings')">Settings</button>
+            <button class="tab" onclick="showTab('logs')" id="logs-tab">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>
         </div>
 
         <div id="msg" class="msg hidden"></div>
@@ -201,11 +202,44 @@
                 <button class="logout" onclick="resetConfig()">Reset Config</button>
             </div>
         </div>
+
+        <div id="logs" class="tab-content hidden">
+            <p style="color:var(--muted);margin-bottom:1rem;font-size:.85rem">Error log for troubleshooting. Tap to copy.</p>
+            <div id="error-log" style="background:var(--card);border:1px solid var(--border);padding:1rem;font-family:monospace;font-size:.75rem;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-all" onclick="copyLogs()">No errors yet.</div>
+            <button class="btn submit" style="margin-top:1rem" onclick="copyLogs()">Copy Logs</button>
+            <button class="logout" style="margin-top:.5rem" onclick="clearLogs()">Clear Logs</button>
+        </div>
     </div>
 
     <script>
 let cfg,img={painting:null,photo:null,symbol:null};
 const canUseBiometric=window.PublicKeyCredential&&PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
+
+// Error logging
+const errorLog=[];
+const origConsoleError=console.error;
+console.error=function(...args){
+    origConsoleError.apply(console,args);
+    const msg=args.map(a=>typeof a==='object'?JSON.stringify(a,null,2):String(a)).join(' ');
+    errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
+    updateLogDisplay();
+};
+window.onerror=(msg,src,line)=>{errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg+' ('+src+':'+line+')');updateLogDisplay()};
+window.onunhandledrejection=e=>{errorLog.push('['+new Date().toLocaleTimeString()+'] Unhandled: '+(e.reason?.message||e.reason||'Promise rejected'));updateLogDisplay()};
+
+function updateLogDisplay(){
+    const el=document.getElementById('error-log');
+    const count=document.getElementById('log-count');
+    if(el)el.textContent=errorLog.length?errorLog.join('\n\n'):'No errors yet.';
+    if(count){count.textContent=errorLog.length;count.style.display=errorLog.length?'inline':'none'}
+}
+function copyLogs(){
+    const text=errorLog.length?errorLog.join('\n\n'):'No errors';
+    navigator.clipboard.writeText(text).then(()=>alert('Copied!')).catch(()=>{
+        const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Copied!');
+    });
+}
+function clearLogs(){errorLog.length=0;updateLogDisplay()}
 
 async function init(){
     cfg=JSON.parse(localStorage.getItem('alchemy_cfg'));
@@ -545,7 +579,13 @@ async function gh(path,method,body){
         headers:{Authorization:'token '+cfg.token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
         body:body?JSON.stringify(body):undefined
     });
-    if(!res.ok&&res.status!==404)throw new Error('GitHub error');
+    if(!res.ok&&res.status!==404){
+        const errorText=await res.text().catch(()=>'');
+        console.error('GitHub API error:',res.status,errorText);
+        if(res.status===401)throw new Error('Invalid GitHub token. Go to Settings → Reset Config.');
+        if(res.status===403)throw new Error('GitHub rate limit or token permissions issue.');
+        throw new Error('GitHub error: '+res.status);
+    }
     return res;
 }
 
@@ -577,7 +617,7 @@ async function loadList(folder,containerId){
             const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
             c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
         }
-    }catch(e){console.error('Load error:',folder,e);c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+    }catch(e){console.error('Load error:',folder,e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
 }
 
 async function delWork(folder,file,sha){
@@ -632,7 +672,7 @@ async function loadCategories(){
         categories=JSON.parse(atob(fd.content));
         categories.sort((a,b)=>a.order-b.order);
         renderCategories();
-    }catch{c.innerHTML='<p style="color:var(--err)">Error loading.</p>'}
+    }catch(e){console.error('Categories error:',e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
 }
 
 function renderCategories(){
