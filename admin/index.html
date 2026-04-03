@@ -180,6 +180,16 @@
                 <button type="submit" class="btn submit">Update Symbol</button>
             </form>
             <div class="divider">
+                <h3>App Icon</h3>
+                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Upload an image to use as the home screen icon. Will auto-generate all required sizes.</p>
+                <form onsubmit="return saveAppIcons(event)">
+                    <div class="field">
+                        <div class="upload" id="appicon-upload"><input type="file" accept="image/*" onchange="previewAppIcon(this)"><span>Upload Icon (square image)</span></div>
+                    </div>
+                    <button type="submit" class="btn submit" id="appicon-btn">Save App Icons</button>
+                </form>
+            </div>
+            <div class="divider">
                 <h3>GitHub</h3>
                 <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
                 <button class="logout" onclick="resetConfig()">Reset Config</button>
@@ -407,6 +417,77 @@ function optimizeImage(file,maxSize){
         };
         reader.readAsDataURL(file);
     });
+}
+
+let appIconFile=null;
+
+function previewAppIcon(input){
+    const f=input.files[0];if(!f)return;
+    appIconFile=f;
+    const c=document.getElementById('appicon-upload');
+    const reader=new FileReader();
+    reader.onload=e=>{
+        c.classList.add('has');
+        c.innerHTML='<input type="file" accept="image/*" onchange="previewAppIcon(this)"><img src="'+e.target.result+'">';
+    };
+    reader.readAsDataURL(f);
+}
+
+function generateIcon(file,size){
+    return new Promise(resolve=>{
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const img=new Image();
+            img.onload=()=>{
+                const canvas=document.createElement('canvas');
+                canvas.width=size;canvas.height=size;
+                const ctx=canvas.getContext('2d');
+                // Fill with background color
+                ctx.fillStyle='#faf9f7';
+                ctx.fillRect(0,0,size,size);
+                // Draw image centered/scaled to fit
+                const scale=Math.min(size/img.width,size/img.height);
+                const w=img.width*scale,h=img.height*scale;
+                const x=(size-w)/2,y=(size-h)/2;
+                ctx.drawImage(img,x,y,w,h);
+                const dataUrl=canvas.toDataURL('image/png');
+                resolve(dataUrl.split(',')[1]);
+            };
+            img.src=e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function saveAppIcons(e){
+    e.preventDefault();
+    if(!appIconFile){alert('Upload an image first');return}
+    const btn=document.getElementById('appicon-btn');
+    btn.disabled=true;btn.textContent='Generating...';
+    try{
+        const sizes=[{name:'icon-180.png',size:180},{name:'icon-192.png',size:192},{name:'icon-512.png',size:512}];
+        for(const s of sizes){
+            btn.textContent='Saving '+s.name+'...';
+            const base64=await generateIcon(appIconFile,s.size);
+            const existing=await getFile('images/'+s.name);
+            await gh('/contents/images/'+s.name,'PUT',{
+                message:'Update '+s.name,
+                content:base64,
+                sha:existing?.sha,
+                branch:'main'
+            });
+        }
+        msg('App icons saved!','ok');
+        appIconFile=null;
+        const c=document.getElementById('appicon-upload');
+        c.classList.remove('has');
+        c.innerHTML='<input type="file" accept="image/*" onchange="previewAppIcon(this)"><span>Upload Icon (square image)</span>';
+    }catch(err){
+        console.error(err);
+        msg('Error saving icons','err');
+    }
+    btn.disabled=false;btn.textContent='Save App Icons';
+    return false;
 }
 
 async function gh(path,method,body){
