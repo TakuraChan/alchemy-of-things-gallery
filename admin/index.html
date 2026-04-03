@@ -169,8 +169,17 @@
         </div>
 
         <div id="categories" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">Drag to reorder. Changes save automatically.</p>
-            <div id="cat-list"></div>
+            <form id="cat-form" onsubmit="return saveCategory(event)">
+                <div class="field"><label>Name</label><input type="text" id="cat-name" placeholder="e.g. Architecture" required></div>
+                <div class="field"><label>Collection Label</label><input type="text" id="cat-label" placeholder="e.g. Sketch, Series, Chapter" value="Collection"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="cat-visible" checked><span>Visible</span></label></div>
+                <button type="submit" class="btn submit" id="cat-btn">Add Category</button>
+            </form>
+            <div class="list" style="margin-top:2rem">
+                <h3>Existing Categories</h3>
+                <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">Drag to reorder. Tap name to edit.</p>
+                <div id="cat-list"></div>
+            </div>
         </div>
 
         <div id="settings" class="tab-content hidden">
@@ -631,20 +640,29 @@ async function saveWork(e,type){
     const prefix=type==='painting'?'painting':'photo',folder=type==='painting'?'paintings':'photography';
     const btn=document.getElementById(prefix+'-btn');btn.disabled=true;btn.textContent='Saving...';
     try{
-        if(!img[prefix])throw new Error('Upload image');
+        if(!img[prefix])throw new Error('Upload image first');
         const title=document.getElementById(prefix+'-title').value.trim();
-        if(!title)throw new Error('Enter title');
+        if(!title)throw new Error('Enter a title');
         const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        if(!id)throw new Error('Title must contain letters or numbers');
+
+        btn.textContent='Uploading image...';
         const imgPath=await uploadImg(img[prefix],folder);
+
+        btn.textContent='Saving data...';
         const work={id,title,year:+document.getElementById(prefix+'-year').value,medium:document.getElementById(prefix+'-medium').value,dimensions:document.getElementById(prefix+'-dimensions').value,image:imgPath,available:document.getElementById(prefix+'-available').checked};
         if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
         if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
+
         await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
         msg(title+' saved','ok');
         document.getElementById(prefix+'-form').reset();
         const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
         img[prefix]=null;loadAll();
-    }catch(err){msg(err.message||'Error','err')}
+    }catch(err){
+        console.error('Save work error:',type,err);
+        msg(err.message||'Error saving','err');
+    }
     btn.disabled=false;btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
     return false;
 }
@@ -677,15 +695,96 @@ async function loadCategories(){
 
 function renderCategories(){
     const c=document.getElementById('cat-list');
-    // Add About at the end as a special category
-    const allItems=[...categories,{id:'about',name:'About',order:999,special:true}];
-    c.innerHTML=allItems.map(cat=>`
-        <div class="drag-item" draggable="true" data-id="${cat.id}">
+    c.innerHTML=categories.map(cat=>`
+        <div class="drag-item" draggable="true" data-id="${cat.id}" style="${cat.visible===false?'opacity:0.5':''}">
             <span class="drag-handle">☰</span>
-            <span class="drag-item-title">${cat.name}</span>
+            <span class="drag-item-title" style="flex:1">${cat.name} <span style="font-size:.75rem;color:var(--light)">(${cat.collectionLabel||'Collection'})</span></span>
+            <button onclick="toggleCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:${cat.visible===false?'var(--light)':'var(--ok)'}">${cat.visible===false?'○':'●'}</button>
+            <button onclick="deleteCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--light)">✕</button>
         </div>
     `).join('');
+    if(!categories.length)c.innerHTML='<p style="color:var(--muted)">No categories yet.</p>';
     setupDrag();
+}
+
+async function saveCategory(e){
+    e.preventDefault();
+    const name=document.getElementById('cat-name').value.trim();
+    const label=document.getElementById('cat-label').value.trim()||'Collection';
+    const visible=document.getElementById('cat-visible').checked;
+    if(!name){alert('Enter a name');return}
+
+    const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    if(categories.find(c=>c.id===id)){alert('Category already exists');return}
+
+    const btn=document.getElementById('cat-btn');
+    btn.disabled=true;btn.textContent='Saving...';
+
+    try{
+        const newCat={id,name,order:categories.length+1,visible,collectionLabel:label,file:id+'.html'};
+        categories.push(newCat);
+
+        const existing=await getFile('data/categories.json');
+        await gh('/contents/data/categories.json','PUT',{
+            message:'Add category: '+name,
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+            sha:existing?.sha,
+            branch:'main'
+        });
+
+        msg(name+' added','ok');
+        document.getElementById('cat-form').reset();
+        document.getElementById('cat-label').value='Collection';
+        renderCategories();
+    }catch(err){
+        categories.pop();
+        console.error(err);
+        msg(err.message||'Error','err');
+    }
+    btn.disabled=false;btn.textContent='Add Category';
+    return false;
+}
+
+async function toggleCategory(id){
+    const cat=categories.find(c=>c.id===id);
+    if(!cat)return;
+    cat.visible=cat.visible===false?true:false;
+    try{
+        const existing=await getFile('data/categories.json');
+        await gh('/contents/data/categories.json','PUT',{
+            message:(cat.visible?'Show':'Hide')+' '+cat.name,
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+            sha:existing?.sha,
+            branch:'main'
+        });
+        msg(cat.name+(cat.visible?' visible':' hidden'),'ok');
+        renderCategories();
+    }catch(err){console.error(err);msg('Error','err')}
+}
+
+async function deleteCategory(id){
+    const cat=categories.find(c=>c.id===id);
+    if(!cat)return;
+    if(!confirm('Delete "'+cat.name+'"? This only removes it from the menu, not the content.'))return;
+
+    const idx=categories.indexOf(cat);
+    categories.splice(idx,1);
+
+    try{
+        const existing=await getFile('data/categories.json');
+        await gh('/contents/data/categories.json','PUT',{
+            message:'Delete category: '+cat.name,
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+            sha:existing?.sha,
+            branch:'main'
+        });
+        msg(cat.name+' deleted','ok');
+        renderCategories();
+    }catch(err){
+        categories.splice(idx,0,cat);
+        console.error(err);
+        msg('Error','err');
+    }
 }
 
 function setupDrag(){
