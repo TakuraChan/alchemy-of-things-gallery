@@ -717,19 +717,26 @@ async function saveWorkDynamic(e){
 
         if(isUnfinished&&multiImgs.length){
             // Bulk upload for unfinished works
+            addLog('Starting bulk upload: '+multiImgs.length+' images');
             btn.textContent='Uploading 0/'+multiImgs.length+'...';
+            let uploaded=0;
             for(let i=0;i<multiImgs.length;i++){
                 btn.textContent='Uploading '+(i+1)+'/'+multiImgs.length+'...';
+                addLog('Processing image '+(i+1)+'/'+multiImgs.length);
                 const id='unfinished-'+Date.now()+'-'+i;
                 const imgPath=await uploadImg(multiImgs[i],folder);
                 const work={id,title:'Unfinished',collectionId,unfinished:true,image:imgPath};
                 await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add unfinished work');
+                uploaded++;
             }
-            msg(multiImgs.length+' unfinished works added','ok');
+            addLog('Bulk upload complete: '+uploaded+' images');
+            msg(uploaded+' unfinished works added','ok');
             multiImgs=[];
             document.getElementById('multi-preview').innerHTML='';
             const u=document.getElementById('work-upload-multi');
             if(u){u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" multiple onchange="previewMultiple(this)"><span>Tap to select images</span>';}
+        }else if(isUnfinished&&!multiImgs.length&&!workImg){
+            throw new Error('Select images first');
         }else{
             // Single work upload
             let title,id,work;
@@ -1069,22 +1076,41 @@ async function gh(path,method,body){
 async function getFile(p){try{const r=await gh('/contents/'+p);return r.status===404?null:await r.json()}catch{return null}}
 
 async function saveFile(p,content,commitMsg){
-    const e=await getFile(p);
-    const res=await gh('/contents/'+p,'PUT',{message:commitMsg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
-    if(!res.ok){
-        const body=await res.text().catch(()=>'');
-        throw new Error('Save failed: '+(body||res.status));
+    addLog('Saving '+p+'...');
+    try{
+        const e=await getFile(p);
+        const res=await gh('/contents/'+p,'PUT',{message:commitMsg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
+        if(!res.ok){
+            const body=await res.text().catch(()=>'');
+            addLog('Save failed: '+res.status);
+            throw new Error('Save failed: '+(body||res.status));
+        }
+        addLog('Saved: '+p);
+    }catch(e){
+        addLog('Save error: '+(e.message||e));
+        throw e;
     }
 }
 
 async function uploadImg(data,folder){
-    const ext=data.type.split('/')[1]||'jpg',name=Date.now()+'.'+ext,path='images/'+folder+'/'+name;
-    const res=await gh('/contents/'+path,'PUT',{message:'Add '+name,content:data.data,branch:'main'});
-    if(!res.ok){
-        const body=await res.text().catch(()=>'');
-        throw new Error('Upload failed: '+(body||res.status));
+    if(!data||!data.data){
+        throw new Error('No image data');
     }
-    return '/'+path;
+    addLog('Uploading to '+folder+'...');
+    const ext=data.type.split('/')[1]||'jpg',name=Date.now()+'.'+ext,path='images/'+folder+'/'+name;
+    try{
+        const res=await gh('/contents/'+path,'PUT',{message:'Add '+name,content:data.data,branch:'main'});
+        if(!res.ok){
+            const body=await res.text().catch(()=>'');
+            addLog('Upload failed: '+res.status+' '+body);
+            throw new Error('Upload failed: '+(body||res.status));
+        }
+        addLog('Uploaded: '+path);
+        return '/'+path;
+    }catch(e){
+        addLog('Upload error: '+(e.message||e));
+        throw e;
+    }
 }
 
 async function loadAll(){
