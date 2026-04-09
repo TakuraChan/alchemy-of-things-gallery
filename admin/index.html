@@ -692,8 +692,10 @@ async function saveWorkDynamic(e){
         }
         loadCategoryWorks(currentCategory);
     }catch(err){
-        console.error('Save work error:',err);
-        msg(err.message||'Error saving','err');
+        const errMsg=err?.message||err?.statusText||(typeof err==='string'?err:JSON.stringify(err))||'Unknown error';
+        console.error('Save work error:',errMsg,err);
+        addLog('Save error: '+errMsg);
+        msg(errMsg,'err');
     }
     btn.disabled=false;btn.textContent='Add to '+currentCategory.name;
     return false;
@@ -975,14 +977,22 @@ async function gh(path,method,body){
 
 async function getFile(p){try{const r=await gh('/contents/'+p);return r.status===404?null:await r.json()}catch{return null}}
 
-async function saveFile(p,content,msg){
+async function saveFile(p,content,commitMsg){
     const e=await getFile(p);
-    await gh('/contents/'+p,'PUT',{message:msg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
+    const res=await gh('/contents/'+p,'PUT',{message:commitMsg,content:btoa(unescape(encodeURIComponent(content))),sha:e?.sha,branch:'main'});
+    if(!res.ok){
+        const body=await res.text().catch(()=>'');
+        throw new Error('Save failed: '+(body||res.status));
+    }
 }
 
 async function uploadImg(data,folder){
     const ext=data.type.split('/')[1]||'jpg',name=Date.now()+'.'+ext,path='images/'+folder+'/'+name;
-    await gh('/contents/'+path,'PUT',{message:'Add '+name,content:data.data,branch:'main'});
+    const res=await gh('/contents/'+path,'PUT',{message:'Add '+name,content:data.data,branch:'main'});
+    if(!res.ok){
+        const body=await res.text().catch(()=>'');
+        throw new Error('Upload failed: '+(body||res.status));
+    }
     return '/'+path;
 }
 
