@@ -85,14 +85,15 @@ async function loadCollections(type){
         // Build HTML for each collection with its works
         let html='';
         visible.forEach(col=>{
+            const isUnfinished=col.isUnfinished||col.id==='unfinished';
             const colWorks=allWorks.filter(w=>w.collectionId===col.id).sort((a,b)=>(a.order||999)-(b.order||999));
-            html+=`<section class="collection-section">
-                <h2 class="collection-header">${col.name}</h2>
+            html+=`<section class="collection-section${isUnfinished?' collection-unfinished':''}">
+                <h2 class="collection-header${isUnfinished?' collection-header-muted':''}">${col.name}</h2>
                 <div class="collection-works">
                     ${colWorks.map(w=>`
-                        <div class="work-thumb" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
-                            <img src="${w.image}${cacheBust}" alt="${w.title}" loading="lazy">
-                            <span class="work-thumb-title">${w.title}</span>
+                        <div class="work-thumb${w.unfinished?' work-unfinished':''}" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
+                            <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" loading="lazy">
+                            ${w.unfinished?'':`<span class="work-thumb-title">${w.title}</span>`}
                         </div>
                     `).join('')}
                     ${!colWorks.length?'<p class="empty-collection">new work coming soon</p>':''}
