@@ -548,19 +548,33 @@ async function showCategoryContent(cat){
 
 async function loadCategoryCollections(cat){
     categoryCollections=[];
+    addLog('Loading collections for '+cat.id+'...');
     try{
         // Try category-specific collections file first, then fallback to old naming
         let r=await gh('/contents/data/'+cat.id+'-collections.json');
+        addLog('Tried '+cat.id+'-collections.json: status='+r.status);
         if(r.status===404){
             // Fallback for paintings->collections.json, photography->observations.json
-            if(cat.id==='paintings')r=await gh('/contents/data/collections.json');
-            else if(cat.id==='photography')r=await gh('/contents/data/observations.json');
+            if(cat.id==='paintings'){
+                r=await gh('/contents/data/collections.json');
+                addLog('Fallback to collections.json: status='+r.status);
+            }
+            else if(cat.id==='photography'){
+                r=await gh('/contents/data/observations.json');
+                addLog('Fallback to observations.json: status='+r.status);
+            }
         }
         if(r.status!==404){
             const fd=await r.json();
             categoryCollections=JSON.parse(atob(fd.content));
+            addLog('Loaded '+categoryCollections.length+' collections: '+categoryCollections.map(c=>c.id).join(', '));
+        }else{
+            addLog('No collections file found');
         }
-    }catch(e){console.error('Load collections error:',e)}
+    }catch(e){
+        addLog('Load collections error: '+(e.message||e));
+        console.error('Load collections error:',e);
+    }
 }
 
 function renderCollectionsList(cat){
@@ -655,7 +669,9 @@ let multiImgs=[];
 function isUnfinishedCollection(){
     const colId=document.getElementById('work-collection')?.value;
     const col=categoryCollections.find(c=>c.id===colId);
-    return col?.isUnfinished||col?.id==='unfinished';
+    const result=col?.isUnfinished||col?.id==='unfinished';
+    addLog('isUnfinishedCollection: colId='+colId+', found='+!!col+', result='+result);
+    return result;
 }
 
 function onCollectionChange(){
@@ -663,6 +679,8 @@ function onCollectionChange(){
     const single=document.getElementById('single-upload-area');
     const multi=document.getElementById('multi-upload-area');
     const fields=document.getElementById('finished-fields');
+
+    addLog('onCollectionChange: isUnfinished='+isUnfinished);
 
     if(single)single.style.display=isUnfinished?'none':'block';
     if(multi)multi.style.display=isUnfinished?'block':'none';
@@ -911,23 +929,39 @@ function renderWorkItem(w,cat,isText){
 }
 
 async function updateWorkCollection(folder,file,sha,newCollectionId){
+    addLog('Updating collection: '+file+' to '+newCollectionId);
     const work=allWorks.find(w=>w._file===file);
-    if(!work)return;
+    if(!work){
+        addLog('Error: work not found in allWorks ('+file+')');
+        msg('Work not found - refresh page','err');
+        return;
+    }
     work.collectionId=newCollectionId;
 
     try{
         const workData={...work};
         delete workData._file;
         delete workData._sha;
-        await gh('/contents/data/'+folder+'/'+file,'PUT',{
+        addLog('Saving to GitHub...');
+        const res=await gh('/contents/data/'+folder+'/'+file,'PUT',{
             message:'Update collection for '+work.title,
             content:btoa(unescape(encodeURIComponent(JSON.stringify(workData,null,2)))),
             sha,
             branch:'main'
         });
+        if(!res.ok){
+            const body=await res.text().catch(()=>'');
+            addLog('GitHub error: '+res.status+' '+body);
+            throw new Error('Update failed: '+res.status);
+        }
+        addLog('Collection updated successfully');
         msg('Moved to '+(categoryCollections.find(c=>c.id===newCollectionId)?.name||'Uncategorized'),'ok');
         loadCategoryWorks(currentCategory);
-    }catch(e){console.error(e);msg('Error updating','err')}
+    }catch(e){
+        addLog('Update error: '+(e.message||e));
+        console.error(e);
+        msg('Error updating: '+(e.message||'unknown'),'err');
+    }
 }
 
 async function editWork(folder,file){
@@ -1073,19 +1107,35 @@ async function saveAppIcons(e){
 }
 
 async function gh(path,method,body){
-    const res=await fetch('https://api.github.com/repos/'+cfg.repo+path,{
-        method:method||'GET',
-        headers:{Authorization:'token '+cfg.token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
-        body:body?JSON.stringify(body):undefined
-    });
-    if(!res.ok&&res.status!==404){
-        const errorText=await res.text().catch(()=>'');
-        console.error('GitHub API error:',res.status,errorText);
-        if(res.status===401)throw new Error('Invalid GitHub token. Go to Settings → Reset Config.');
-        if(res.status===403)throw new Error('GitHub rate limit or token permissions issue.');
-        throw new Error('GitHub error: '+res.status);
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30000); // 30 second timeout
+    try{
+        addLog('GitHub API: '+(method||'GET')+' '+path);
+        const res=await fetch('https://api.github.com/repos/'+cfg.repo+path,{
+            method:method||'GET',
+            headers:{Authorization:'token '+cfg.token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
+            body:body?JSON.stringify(body):undefined,
+            signal:controller.signal
+        });
+        clearTimeout(timeout);
+        addLog('GitHub response: '+res.status);
+        if(!res.ok&&res.status!==404){
+            const errorText=await res.text().catch(()=>'');
+            addLog('GitHub error: '+res.status+' '+errorText);
+            console.error('GitHub API error:',res.status,errorText);
+            if(res.status===401)throw new Error('Invalid GitHub token. Go to Settings → Reset Config.');
+            if(res.status===403)throw new Error('GitHub rate limit or token permissions issue.');
+            throw new Error('GitHub error: '+res.status);
+        }
+        return res;
+    }catch(e){
+        clearTimeout(timeout);
+        if(e.name==='AbortError'){
+            addLog('GitHub timeout after 30s');
+            throw new Error('Request timed out - check your internet connection');
+        }
+        throw e;
     }
-    return res;
 }
 
 async function getFile(p){try{const r=await gh('/contents/'+p);return r.status===404?null:await r.json()}catch{return null}}
