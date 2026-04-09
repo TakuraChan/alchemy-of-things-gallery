@@ -10,5 +10,12 @@
     "name": "man",
     "order": 2,
     "active": true
+  },
+  {
+    "id": "unfinished",
+    "name": "Unfinished",
+    "order": 99,
+    "active": false,
+    "isUnfinished": true
   }
 ]
