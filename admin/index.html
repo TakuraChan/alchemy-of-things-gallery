@@ -136,8 +136,14 @@
 
         <div id="categories" class="tab-content hidden">
             <form id="cat-form" onsubmit="return saveCategory(event)">
-                <div class="field"><label>Name</label><input type="text" id="cat-name" placeholder="e.g. Architecture" required></div>
-                <div class="field"><label>Collection Label</label><input type="text" id="cat-label" placeholder="e.g. Sketch, Series, Chapter" value="Collection"></div>
+                <div class="field"><label>Name</label><input type="text" id="cat-name" placeholder="e.g. Architecture, Poetry" required></div>
+                <div class="field"><label>Collection Label</label><input type="text" id="cat-label" placeholder="e.g. Sketch, Series, Chapter, Poem" value="Collection"></div>
+                <div class="field"><label>Type</label>
+                    <select id="cat-type" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
+                        <option value="image">Image-based (paintings, photos, sketches)</option>
+                        <option value="text">Text-based (poetry, writing, stories)</option>
+                    </select>
+                </div>
                 <div class="field"><label class="check"><input type="checkbox" id="cat-visible" checked><span>Visible</span></label></div>
                 <button type="submit" class="btn submit" id="cat-btn">Add Category</button>
             </form>
@@ -470,23 +476,161 @@ function buildTabs(){
     updateLogDisplay();
 }
 
-function showCategoryContent(cat){
+let categoryCollections=[];
+
+async function showCategoryContent(cat){
     const container=document.getElementById('category-content');
+    const isText=cat.type==='text';
+    const collLabel=cat.collectionLabel||'Collection';
+
+    // Load collections for this category
+    await loadCategoryCollections(cat);
+
+    const collectionsHtml=categoryCollections.length?
+        categoryCollections.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''):
+        '<option value="">No ${collLabel}s yet</option>';
+
     container.innerHTML=`
-        <form id="work-form" onsubmit="return saveWorkDynamic(event)">
-            <div class="field"><label>Image</label>
-                <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span></div>
+        <!-- Collections Management -->
+        <div style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)">
+            <h3 style="font-size:.9rem;font-weight:400;color:var(--muted);margin-bottom:1rem">${collLabel}s</h3>
+            <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+                <input type="text" id="new-collection" placeholder="New ${collLabel.toLowerCase()} name" style="flex:1;padding:.75rem;border:1px solid var(--border);font-family:inherit">
+                <button class="btn" onclick="addCollection()" style="padding:.75rem 1rem">Add</button>
             </div>
-            <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
-            <div class="field"><label>Year</label><input type="number" id="work-year" value="2026"></div>
-            <div class="field"><label>Medium</label><input type="text" id="work-medium" placeholder="e.g. Acrylic on canvas"></div>
-            <div class="field"><label>Dimensions</label><input type="text" id="work-dimensions" placeholder="e.g. 60 × 80 cm"></div>
-            <div class="field"><label class="check"><input type="checkbox" id="work-available" checked><span>Available</span></label></div>
+            <div id="collections-list"></div>
+        </div>
+
+        <!-- Add Work Form -->
+        <form id="work-form" onsubmit="return saveWorkDynamic(event)">
+            <div class="field"><label>${collLabel}</label>
+                <select id="work-collection" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
+                    ${collectionsHtml}
+                </select>
+            </div>
+            ${isText?`
+                <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
+                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:var(--font-display);font-style:italic" placeholder="Write your ${cat.name.toLowerCase()} here..."></textarea></div>
+            `:`
+                <div class="field"><label>Image</label>
+                    <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span></div>
+                </div>
+                <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
+                <div class="field"><label>Year</label><input type="number" id="work-year" value="2026"></div>
+                <div class="field"><label>Medium</label><input type="text" id="work-medium" placeholder="e.g. Acrylic on canvas"></div>
+                <div class="field"><label>Dimensions</label><input type="text" id="work-dimensions" placeholder="e.g. 60 × 80 cm"></div>
+                <div class="field"><label class="check"><input type="checkbox" id="work-available" checked><span>Available</span></label></div>
+            `}
             <button type="submit" class="btn submit" id="work-btn">Add to ${cat.name}</button>
         </form>
         <div class="list"><h3>Existing Works</h3><div id="work-list"><div class="loading"></div></div></div>
     `;
+
+    renderCollectionsList(cat);
     loadCategoryWorks(cat);
+}
+
+async function loadCategoryCollections(cat){
+    categoryCollections=[];
+    try{
+        // Try category-specific collections file first, then fallback to old naming
+        let r=await gh('/contents/data/'+cat.id+'-collections.json');
+        if(r.status===404){
+            // Fallback for paintings->collections.json, photography->observations.json
+            if(cat.id==='paintings')r=await gh('/contents/data/collections.json');
+            else if(cat.id==='photography')r=await gh('/contents/data/observations.json');
+        }
+        if(r.status!==404){
+            const fd=await r.json();
+            categoryCollections=JSON.parse(atob(fd.content));
+        }
+    }catch(e){console.error('Load collections error:',e)}
+}
+
+function renderCollectionsList(cat){
+    const c=document.getElementById('collections-list');
+    if(!c)return;
+    if(!categoryCollections.length){
+        c.innerHTML='<p style="color:var(--muted);font-size:.85rem">No '+(cat.collectionLabel||'collection').toLowerCase()+'s yet.</p>';
+        return;
+    }
+    c.innerHTML=categoryCollections.map(col=>`
+        <div class="item" style="padding:.75rem">
+            <span style="flex:1">${col.name}</span>
+            <button onclick="toggleCollection('${col.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:${col.active===false?'var(--light)':'var(--ok)'}">${col.active===false?'○':'●'}</button>
+            <button onclick="deleteCollection('${col.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--light)">✕</button>
+        </div>
+    `).join('');
+}
+
+async function addCollection(){
+    const input=document.getElementById('new-collection');
+    const name=input.value.trim();
+    if(!name||!currentCategory)return;
+
+    const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    if(categoryCollections.find(c=>c.id===id)){alert('Already exists');return}
+
+    const newCol={id,name,order:categoryCollections.length+1,active:true};
+    categoryCollections.push(newCol);
+
+    try{
+        await saveCollectionsFile();
+        input.value='';
+        msg(name+' added','ok');
+        renderCollectionsList(currentCategory);
+        // Refresh collection dropdown
+        const select=document.getElementById('work-collection');
+        if(select)select.innerHTML+=`<option value="${id}">${name}</option>`;
+    }catch(e){
+        categoryCollections.pop();
+        console.error(e);
+        msg('Error','err');
+    }
+}
+
+async function toggleCollection(id){
+    const col=categoryCollections.find(c=>c.id===id);
+    if(!col)return;
+    col.active=col.active===false?true:false;
+    try{
+        await saveCollectionsFile();
+        msg(col.name+(col.active?' active':' inactive'),'ok');
+        renderCollectionsList(currentCategory);
+    }catch(e){console.error(e);msg('Error','err')}
+}
+
+async function deleteCollection(id){
+    const col=categoryCollections.find(c=>c.id===id);
+    if(!col||!confirm('Delete "'+col.name+'"?'))return;
+
+    const idx=categoryCollections.indexOf(col);
+    categoryCollections.splice(idx,1);
+
+    try{
+        await saveCollectionsFile();
+        msg(col.name+' deleted','ok');
+        renderCollectionsList(currentCategory);
+        // Refresh dropdown
+        showCategoryContent(currentCategory);
+    }catch(e){
+        categoryCollections.splice(idx,0,col);
+        console.error(e);
+        msg('Error','err');
+    }
+}
+
+async function saveCollectionsFile(){
+    if(!currentCategory)return;
+    // Use category-specific file
+    const filename='data/'+currentCategory.id+'-collections.json';
+    const existing=await getFile(filename);
+    await gh('/contents/'+filename,'PUT',{
+        message:'Update '+currentCategory.name+' collections',
+        content:btoa(unescape(encodeURIComponent(JSON.stringify(categoryCollections,null,2)))),
+        sha:existing?.sha,
+        branch:'main'
+    });
 }
 
 let workImg=null;
@@ -505,34 +649,47 @@ async function saveWorkDynamic(e){
     if(!currentCategory)return;
     const btn=document.getElementById('work-btn');
     btn.disabled=true;btn.textContent='Saving...';
+
+    const isText=currentCategory.type==='text';
+    const collectionId=document.getElementById('work-collection')?.value||'';
+
     try{
-        if(!workImg)throw new Error('Upload image first');
         const title=document.getElementById('work-title').value.trim();
         if(!title)throw new Error('Enter a title');
         const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
         if(!id)throw new Error('Title must contain letters or numbers');
 
-        btn.textContent='Uploading image...';
         const folder=currentCategory.id;
-        const imgPath=await uploadImg(workImg,folder);
+        let work={id,title,collectionId};
 
-        btn.textContent='Saving data...';
-        const work={
-            id,title,
-            year:+document.getElementById('work-year').value,
-            medium:document.getElementById('work-medium').value,
-            dimensions:document.getElementById('work-dimensions').value,
-            image:imgPath,
-            available:document.getElementById('work-available').checked
-        };
+        if(isText){
+            // Text-based work (poetry, writing)
+            const text=document.getElementById('work-text')?.value||'';
+            if(!text)throw new Error('Enter content');
+            work.text=text;
+            work.type='text';
+        }else{
+            // Image-based work
+            if(!workImg)throw new Error('Upload image first');
+            btn.textContent='Uploading image...';
+            const imgPath=await uploadImg(workImg,folder);
+            work.image=imgPath;
+            work.year=+document.getElementById('work-year').value;
+            work.medium=document.getElementById('work-medium').value;
+            work.dimensions=document.getElementById('work-dimensions').value;
+            work.available=document.getElementById('work-available').checked;
+        }
 
+        btn.textContent='Saving...';
         await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
-        msg(title+' added to '+currentCategory.name,'ok');
+        msg(title+' added','ok');
         document.getElementById('work-form').reset();
-        const u=document.getElementById('work-upload');
-        u.classList.remove('has');
-        u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';
-        workImg=null;
+
+        if(!isText){
+            const u=document.getElementById('work-upload');
+            if(u){u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';}
+            workImg=null;
+        }
         loadCategoryWorks(currentCategory);
     }catch(err){
         console.error('Save work error:',err);
@@ -542,24 +699,143 @@ async function saveWorkDynamic(e){
     return false;
 }
 
+let allWorks=[];
+
 async function loadCategoryWorks(cat){
     const c=document.getElementById('work-list');
     if(!c)return;
     c.innerHTML='<div class="loading"></div>';
+    allWorks=[];
+
     try{
         const r=await gh('/contents/data/'+cat.id);
         if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
         const files=await r.json();
         if(!Array.isArray(files)||!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
-        c.innerHTML='';
+
+        // Load all works
         for(const f of files){
             if(!f.name.endsWith('.json'))continue;
             const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
             const fd=await fr.json();
             const w=JSON.parse(atob(fd.content));
-            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWorkDynamic('${cat.id}','${f.name}','${fd.sha}')">Delete</button></div>`;
+            w._file=f.name;
+            w._sha=fd.sha;
+            allWorks.push(w);
         }
+
+        // Group by collection
+        const collLabel=cat.collectionLabel||'Collection';
+        const grouped={};
+        const uncategorized=[];
+
+        allWorks.forEach(w=>{
+            if(w.collectionId){
+                if(!grouped[w.collectionId])grouped[w.collectionId]=[];
+                grouped[w.collectionId].push(w);
+            }else{
+                uncategorized.push(w);
+            }
+        });
+
+        let html='';
+        const isText=cat.type==='text';
+
+        // Show grouped by collection
+        categoryCollections.forEach(col=>{
+            const works=grouped[col.id]||[];
+            html+=`<div style="margin-bottom:1.5rem"><h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">${col.name} (${works.length})</h4>`;
+            if(works.length){
+                works.forEach(w=>{
+                    html+=renderWorkItem(w,cat,isText);
+                });
+            }else{
+                html+=`<p style="color:var(--light);font-size:.8rem;font-style:italic">No works in this ${collLabel.toLowerCase()}</p>`;
+            }
+            html+=`</div>`;
+        });
+
+        // Show uncategorized
+        if(uncategorized.length){
+            html+=`<div style="margin-bottom:1.5rem"><h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Uncategorized (${uncategorized.length})</h4>`;
+            uncategorized.forEach(w=>{
+                html+=renderWorkItem(w,cat,isText);
+            });
+            html+=`</div>`;
+        }
+
+        c.innerHTML=html||'<p style="color:var(--muted)">No works yet.</p>';
     }catch(e){console.error('Load works error:',cat.id,e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
+}
+
+function renderWorkItem(w,cat,isText){
+    const collSelect=categoryCollections.map(col=>
+        `<option value="${col.id}"${w.collectionId===col.id?' selected':''}>${col.name}</option>`
+    ).join('');
+
+    if(isText){
+        const preview=(w.text||'').substring(0,100)+(w.text?.length>100?'...':'');
+        return `<div class="item" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.5rem">
+                <div class="item-info" style="flex:1"><div class="item-title">${w.title}</div></div>
+                <select onchange="updateWorkCollection('${cat.id}','${w._file}','${w._sha}',this.value)" style="padding:.25rem;border:1px solid var(--border);font-size:.75rem">${collSelect}<option value="">Uncategorized</option></select>
+                <button class="item-del" onclick="editWork('${cat.id}','${w._file}')">Edit</button>
+                <button class="item-del" onclick="delWorkDynamic('${cat.id}','${w._file}','${w._sha}')">✕</button>
+            </div>
+            <p style="font-size:.8rem;color:var(--muted);font-style:italic">${preview}</p>
+        </div>`;
+    }else{
+        return `<div class="item">
+            <img src="${w.image}" onerror="this.style.background='var(--border)'">
+            <div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year||''} · ${w.available?'Available':'Sold'}</div></div>
+            <select onchange="updateWorkCollection('${cat.id}','${w._file}','${w._sha}',this.value)" style="padding:.25rem;border:1px solid var(--border);font-size:.75rem">${collSelect}<option value="">Uncategorized</option></select>
+            <button class="item-del" onclick="editWork('${cat.id}','${w._file}')">Edit</button>
+            <button class="item-del" onclick="delWorkDynamic('${cat.id}','${w._file}','${w._sha}')">✕</button>
+        </div>`;
+    }
+}
+
+async function updateWorkCollection(folder,file,sha,newCollectionId){
+    const work=allWorks.find(w=>w._file===file);
+    if(!work)return;
+    work.collectionId=newCollectionId;
+
+    try{
+        const workData={...work};
+        delete workData._file;
+        delete workData._sha;
+        await gh('/contents/data/'+folder+'/'+file,'PUT',{
+            message:'Update collection for '+work.title,
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(workData,null,2)))),
+            sha,
+            branch:'main'
+        });
+        msg('Moved to '+(categoryCollections.find(c=>c.id===newCollectionId)?.name||'Uncategorized'),'ok');
+        loadCategoryWorks(currentCategory);
+    }catch(e){console.error(e);msg('Error updating','err')}
+}
+
+async function editWork(folder,file){
+    const work=allWorks.find(w=>w._file===file);
+    if(!work)return;
+    // For now, simple edit via prompt - could make this a modal later
+    const newTitle=prompt('Edit title:',work.title);
+    if(newTitle===null||newTitle===work.title)return;
+
+    work.title=newTitle;
+    try{
+        const workData={...work};
+        delete workData._file;
+        delete workData._sha;
+        await gh('/contents/data/'+folder+'/'+file,'PUT',{
+            message:'Edit '+newTitle,
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(workData,null,2)))),
+            sha:work._sha,
+            branch:'main'
+        });
+        msg('Updated','ok');
+        loadCategoryWorks(currentCategory);
+    }catch(e){console.error(e);msg('Error','err')}
 }
 
 async function delWorkDynamic(folder,file,sha){
