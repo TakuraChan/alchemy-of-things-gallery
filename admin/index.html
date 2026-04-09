@@ -214,6 +214,10 @@ function updateLogDisplay(){
     if(el)el.textContent=errorLog.length?errorLog.join('\n\n'):'No errors yet.';
     if(count){count.textContent=errorLog.length;count.style.display=errorLog.length?'inline':'none'}
 }
+function addLog(msg){
+    errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
+    updateLogDisplay();
+}
 function copyLogs(){
     const text=errorLog.length?errorLog.join('\n\n'):'No errors';
     navigator.clipboard.writeText(text).then(()=>alert('Copied!')).catch(()=>{
