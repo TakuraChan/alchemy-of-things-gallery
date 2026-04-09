@@ -125,48 +125,14 @@
             <button class="logout" onclick="doLogout()">Logout</button>
         </header>
 
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('paintings')">Paintings</button>
-            <button class="tab" onclick="showTab('photography')">Photography</button>
-            <button class="tab" onclick="showTab('categories')">Categories</button>
-            <button class="tab" onclick="showTab('settings')">Settings</button>
-            <button class="tab" onclick="showTab('logs')" id="logs-tab">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>
+        <div class="tabs" id="admin-tabs">
+            <!-- Tabs generated dynamically -->
         </div>
 
         <div id="msg" class="msg hidden"></div>
 
-        <div id="paintings" class="tab-content">
-            <form id="painting-form" onsubmit="return saveWork(event,'painting')">
-                <div class="field"><label>Image</label>
-                    <div class="upload" id="painting-upload"><input type="file" accept="image/*" onchange="preview(this,'painting')"><span>Tap to upload</span></div>
-                </div>
-                <div class="field"><label>Title</label><input type="text" id="painting-title" required></div>
-                <div class="field"><label>Year</label><input type="number" id="painting-year" value="2025"></div>
-                <div class="field"><label>Medium</label><input type="text" id="painting-medium" value="Acrylic on canvas"></div>
-                <div class="field"><label>Dimensions</label><input type="text" id="painting-dimensions" placeholder="60 × 80 cm"></div>
-                <div class="field"><label>Price</label><input type="text" id="painting-price" placeholder="POA"></div>
-                <div class="field"><label class="check"><input type="checkbox" id="painting-available" checked><span>Available</span></label></div>
-                <button type="submit" class="btn submit" id="painting-btn">Add Painting</button>
-            </form>
-            <div class="list"><h3>Existing Works</h3><div id="painting-list"><div class="loading"></div></div></div>
-        </div>
-
-        <div id="photography" class="tab-content hidden">
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.9rem">3-5 elevated photographs maximum.</p>
-            <form id="photo-form" onsubmit="return saveWork(event,'photography')">
-                <div class="field"><label>Image</label>
-                    <div class="upload" id="photo-upload"><input type="file" accept="image/*" onchange="preview(this,'photo')"><span>Tap to upload</span></div>
-                </div>
-                <div class="field"><label>Title</label><input type="text" id="photo-title" required></div>
-                <div class="field"><label>Year</label><input type="number" id="photo-year" value="2025"></div>
-                <div class="field"><label>Medium</label><input type="text" id="photo-medium" value="Archival pigment print"></div>
-                <div class="field"><label>Dimensions</label><input type="text" id="photo-dimensions" placeholder="40 × 30 cm"></div>
-                <div class="field"><label>Edition</label><input type="text" id="photo-edition" placeholder="Edition of 5"></div>
-                <div class="field"><label class="check"><input type="checkbox" id="photo-available" checked><span>Available</span></label></div>
-                <button type="submit" class="btn submit" id="photo-btn">Add Photograph</button>
-            </form>
-            <div class="list"><h3>Existing Works</h3><div id="photo-list"><div class="loading"></div></div></div>
-        </div>
+        <!-- Dynamic category content -->
+        <div id="category-content" class="tab-content"></div>
 
         <div id="categories" class="tab-content hidden">
             <form id="cat-form" onsubmit="return saveCategory(event)">
@@ -177,7 +143,7 @@
             </form>
             <div class="list" style="margin-top:2rem">
                 <h3>Existing Categories</h3>
-                <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">Drag to reorder. Tap name to edit.</p>
+                <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">Drag to reorder. Tap ● to toggle visibility.</p>
                 <div id="cat-list"></div>
             </div>
         </div>
@@ -467,11 +433,144 @@ function resetConfig(){
     }
 }
 
+let currentCategory=null;
+
 function showTab(t){
-    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.textContent.toLowerCase().includes(t)));
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(x=>x.classList.add('hidden'));
-    document.getElementById(t).classList.remove('hidden');
+
+    // Find and activate the clicked tab
+    const tabs=document.querySelectorAll('.tab');
+    tabs.forEach(tab=>{if(tab.dataset.tab===t)tab.classList.add('active')});
+
+    // Check if it's a category or fixed tab
+    const cat=categories.find(c=>c.id===t);
+    if(cat){
+        currentCategory=cat;
+        showCategoryContent(cat);
+        document.getElementById('category-content').classList.remove('hidden');
+    }else{
+        const el=document.getElementById(t);
+        if(el)el.classList.remove('hidden');
+    }
 }
+
+function buildTabs(){
+    const container=document.getElementById('admin-tabs');
+    let html='';
+    // Category tabs
+    categories.forEach((cat,i)=>{
+        html+=`<button class="tab${i===0?' active':''}" data-tab="${cat.id}" onclick="showTab('${cat.id}')">${cat.name}</button>`;
+    });
+    // Fixed tabs
+    html+=`<button class="tab" data-tab="categories" onclick="showTab('categories')">Categories</button>`;
+    html+=`<button class="tab" data-tab="settings" onclick="showTab('settings')">Settings</button>`;
+    html+=`<button class="tab" data-tab="logs" onclick="showTab('logs')">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>`;
+    container.innerHTML=html;
+    updateLogDisplay();
+}
+
+function showCategoryContent(cat){
+    const container=document.getElementById('category-content');
+    container.innerHTML=`
+        <form id="work-form" onsubmit="return saveWorkDynamic(event)">
+            <div class="field"><label>Image</label>
+                <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span></div>
+            </div>
+            <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
+            <div class="field"><label>Year</label><input type="number" id="work-year" value="2026"></div>
+            <div class="field"><label>Medium</label><input type="text" id="work-medium" placeholder="e.g. Acrylic on canvas"></div>
+            <div class="field"><label>Dimensions</label><input type="text" id="work-dimensions" placeholder="e.g. 60 × 80 cm"></div>
+            <div class="field"><label class="check"><input type="checkbox" id="work-available" checked><span>Available</span></label></div>
+            <button type="submit" class="btn submit" id="work-btn">Add to ${cat.name}</button>
+        </form>
+        <div class="list"><h3>Existing Works</h3><div id="work-list"><div class="loading"></div></div></div>
+    `;
+    loadCategoryWorks(cat);
+}
+
+let workImg=null;
+async function previewWork(input){
+    const f=input.files[0];if(!f)return;
+    const c=document.getElementById('work-upload');
+    c.innerHTML='<span>Optimizing...</span>';
+    const optimized=await optimizeImage(f,1600);
+    c.classList.add('has');
+    c.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><img src="'+optimized.dataUrl+'">';
+    workImg={data:optimized.base64,type:'image/jpeg'};
+}
+
+async function saveWorkDynamic(e){
+    e.preventDefault();
+    if(!currentCategory)return;
+    const btn=document.getElementById('work-btn');
+    btn.disabled=true;btn.textContent='Saving...';
+    try{
+        if(!workImg)throw new Error('Upload image first');
+        const title=document.getElementById('work-title').value.trim();
+        if(!title)throw new Error('Enter a title');
+        const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        if(!id)throw new Error('Title must contain letters or numbers');
+
+        btn.textContent='Uploading image...';
+        const folder=currentCategory.id;
+        const imgPath=await uploadImg(workImg,folder);
+
+        btn.textContent='Saving data...';
+        const work={
+            id,title,
+            year:+document.getElementById('work-year').value,
+            medium:document.getElementById('work-medium').value,
+            dimensions:document.getElementById('work-dimensions').value,
+            image:imgPath,
+            available:document.getElementById('work-available').checked
+        };
+
+        await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
+        msg(title+' added to '+currentCategory.name,'ok');
+        document.getElementById('work-form').reset();
+        const u=document.getElementById('work-upload');
+        u.classList.remove('has');
+        u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';
+        workImg=null;
+        loadCategoryWorks(currentCategory);
+    }catch(err){
+        console.error('Save work error:',err);
+        msg(err.message||'Error saving','err');
+    }
+    btn.disabled=false;btn.textContent='Add to '+currentCategory.name;
+    return false;
+}
+
+async function loadCategoryWorks(cat){
+    const c=document.getElementById('work-list');
+    if(!c)return;
+    c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await gh('/contents/data/'+cat.id);
+        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
+        const files=await r.json();
+        if(!Array.isArray(files)||!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
+        c.innerHTML='';
+        for(const f of files){
+            if(!f.name.endsWith('.json'))continue;
+            const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
+            const fd=await fr.json();
+            const w=JSON.parse(atob(fd.content));
+            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWorkDynamic('${cat.id}','${f.name}','${fd.sha}')">Delete</button></div>`;
+        }
+    }catch(e){console.error('Load works error:',cat.id,e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
+}
+
+async function delWorkDynamic(folder,file,sha){
+    if(!confirm('Delete this work?'))return;
+    try{
+        await gh('/contents/data/'+folder+'/'+file,'DELETE',{message:'Delete',sha,branch:'main'});
+        msg('Deleted','ok');
+        if(currentCategory)loadCategoryWorks(currentCategory);
+    }catch(e){console.error(e);msg('Error deleting','err')}
+}
+
 
 async function preview(input,type){
     const f=input.files[0];if(!f)return;
@@ -611,60 +710,13 @@ async function uploadImg(data,folder){
     return '/'+path;
 }
 
-async function loadAll(){await loadList('paintings','painting-list');await loadList('photography','photo-list');await loadCategories()}
-
-async function loadList(folder,containerId){
-    const c=document.getElementById(containerId);c.innerHTML='<div class="loading"></div>';
-    try{
-        const r=await gh('/contents/data/'+folder);
-        if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
-        const files=await r.json();
-        if(!Array.isArray(files)||!files.length){c.innerHTML='<p style="color:var(--muted)">No works yet.</p>';return}
-        c.innerHTML='';
-        for(const f of files){
-            if(!f.name.endsWith('.json'))continue;
-            const fr=await gh('/contents/data/'+folder+'/'+f.name),fd=await fr.json(),w=JSON.parse(atob(fd.content));
-            c.innerHTML+=`<div class="item"><img src="${w.image}" onerror="this.style.background='var(--border)'"><div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year} · ${w.available?'Available':'Sold'}</div></div><button class="item-del" onclick="delWork('${folder}','${f.name}','${fd.sha}')">Delete</button></div>`;
-        }
-    }catch(e){console.error('Load error:',folder,e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
-}
-
-async function delWork(folder,file,sha){
-    if(!confirm('Delete?'))return;
-    try{await gh('/contents/data/'+folder+'/'+file,'DELETE',{message:'Delete',sha,branch:'main'});msg('Deleted','ok');loadAll()}
-    catch{msg('Error','err')}
-}
-
-async function saveWork(e,type){
-    e.preventDefault();
-    const prefix=type==='painting'?'painting':'photo',folder=type==='painting'?'paintings':'photography';
-    const btn=document.getElementById(prefix+'-btn');btn.disabled=true;btn.textContent='Saving...';
-    try{
-        if(!img[prefix])throw new Error('Upload image first');
-        const title=document.getElementById(prefix+'-title').value.trim();
-        if(!title)throw new Error('Enter a title');
-        const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-        if(!id)throw new Error('Title must contain letters or numbers');
-
-        btn.textContent='Uploading image...';
-        const imgPath=await uploadImg(img[prefix],folder);
-
-        btn.textContent='Saving data...';
-        const work={id,title,year:+document.getElementById(prefix+'-year').value,medium:document.getElementById(prefix+'-medium').value,dimensions:document.getElementById(prefix+'-dimensions').value,image:imgPath,available:document.getElementById(prefix+'-available').checked};
-        if(type==='painting'){const p=document.getElementById('painting-price').value;if(p)work.price=p}
-        if(type==='photography'){const ed=document.getElementById('photo-edition').value;if(ed)work.edition=ed}
-
-        await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
-        msg(title+' saved','ok');
-        document.getElementById(prefix+'-form').reset();
-        const u=document.getElementById(prefix+'-upload');u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+prefix+'\')"><span>Tap to upload</span>';
-        img[prefix]=null;loadAll();
-    }catch(err){
-        console.error('Save work error:',type,err);
-        msg(err.message||'Error saving','err');
+async function loadAll(){
+    await loadCategories();
+    buildTabs();
+    // Show first category by default
+    if(categories.length){
+        showTab(categories[0].id);
     }
-    btn.disabled=false;btn.textContent=type==='painting'?'Add Painting':'Add Photograph';
-    return false;
 }
 
 async function saveSymbol(e){
@@ -732,9 +784,10 @@ async function saveCategory(e){
             branch:'main'
         });
 
-        msg(name+' added','ok');
+        msg(name+' added - check tabs!','ok');
         document.getElementById('cat-form').reset();
         document.getElementById('cat-label').value='Collection';
+        buildTabs();
         renderCategories();
     }catch(err){
         categories.pop();
