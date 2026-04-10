@@ -660,8 +660,15 @@ async function deleteCollection(id){
 
 async function saveCollectionsFile(){
     if(!currentCategory)return;
-    // Use category-specific file
-    const filename='data/'+currentCategory.id+'-collections.json';
+    // Use correct filename - paintings uses collections.json, photography uses observations.json
+    let filename;
+    if(currentCategory.id==='paintings'){
+        filename='data/collections.json';
+    }else if(currentCategory.id==='photography'){
+        filename='data/observations.json';
+    }else{
+        filename='data/'+currentCategory.id+'-collections.json';
+    }
     const existing=await getFile(filename);
     await gh('/contents/'+filename,'PUT',{
         message:'Update '+currentCategory.name+' collections',
