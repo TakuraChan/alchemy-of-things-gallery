@@ -93,7 +93,7 @@ a:hover{opacity:.6}
 .collection-header{font-family:var(--font-display);font-size:1.3rem;font-style:italic;font-weight:400;color:var(--text);margin-bottom:1.5rem}
 .collection-header-muted{color:var(--light);font-weight:300}
 .collection-unfinished{opacity:.7}
-.work-unfinished img{opacity:.8}
+.work-unfinished img{opacity:.8;filter:grayscale(100%)}
 .collection-works{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem}
 .work-thumb{cursor:pointer;text-align:center;width:200px;transition:opacity .3s}
 .work-thumb:hover{opacity:.7}
@@ -109,17 +109,19 @@ a:hover{opacity:.6}
 .work-lightbox-info p{font-size:.9rem;color:#ccc;margin-bottom:.5rem}
 .work-lightbox-info .inquire-btn{margin-top:1rem;border-color:#fff;color:#fff}
 .work-lightbox-info .inquire-btn:hover{background:#fff;color:#000}
-.heart-rating{margin-top:1.5rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;user-select:none;-webkit-user-select:none;touch-action:none}
-.heart-rating-container{position:relative;width:120px;height:80px;display:flex;align-items:center;justify-content:center;cursor:grab}
-.heart-rating-container:active{cursor:grabbing}
-.heart-rating-heart{transition:transform .1s ease-out;filter:drop-shadow(0 0 8px rgba(255,100,100,0.3))}
-.heart-rating-heart path{fill:#ff6b6b}
-.heart-rating-hint{font-size:.7rem;color:#888;font-style:italic;transition:opacity .3s}
-.heart-rating-hint.hidden{opacity:0}
-.heart-rating-result{font-size:.8rem;color:#ccc;display:flex;align-items:center;gap:.4rem}
+.heart-rating{margin-top:1.5rem;display:flex;flex-direction:column;align-items:center;gap:.75rem}
+.heart-rating-hearts{display:flex;gap:.5rem}
+.heart-rating-heart{width:24px;height:24px;cursor:pointer;transition:transform .15s ease}
+.heart-rating-heart:hover{transform:scale(1.15)}
+.heart-rating-heart svg{width:100%;height:100%}
+.heart-rating-heart svg path{fill:none;stroke:#999;stroke-width:1.5;transition:fill .15s,stroke .15s}
+.heart-rating-heart.filled svg path{fill:#666;stroke:#666}
+.heart-rating-heart.preview svg path{fill:#888;stroke:#888}
+.heart-rating-hint{font-size:.7rem;color:#777;font-style:italic}
+.heart-rating-result{font-size:.8rem;color:#aaa;display:flex;align-items:center;gap:.4rem}
 .heart-rating-result svg{width:14px;height:14px}
-.heart-rating-result svg path{fill:#ff6b6b}
-.heart-rating-thanks{font-size:.75rem;color:#888;font-style:italic;margin-top:.25rem}
+.heart-rating-result svg path{fill:#888;stroke:none}
+.heart-rating-thanks{font-size:.75rem;color:#777;font-style:italic}
 .hub-category{cursor:pointer;transition:color .3s}
 .hub-category.expanded{color:var(--text)}
 .hub-collections{display:none;margin-top:1rem;padding-left:0}
