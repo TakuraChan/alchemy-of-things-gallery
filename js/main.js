@@ -49,6 +49,8 @@ async function submitRating(workId,rating){
     return null;
 }
 
+const HEART_SVG='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z';
+
 function createHeartRatingUI(workId,isUnfinished){
     if(isUnfinished)return '';
 
@@ -60,21 +62,21 @@ function createHeartRatingUI(workId,isUnfinished){
         const count=ratingData?.count||1;
         return `<div class="heart-rating">
             <div class="heart-rating-result">
-                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="${HEART_SVG}"/></svg>
                 ${count} ${count===1?'appreciation':'appreciations'}
             </div>
-            <div class="heart-rating-thanks">Thank you for sharing your appreciation</div>
+            <div class="heart-rating-thanks">Thank you</div>
         </div>`;
     }
 
-    // Show rating slider
+    // Show 3 hearts to tap
     return `<div class="heart-rating" data-work="${workId}">
-        <div class="heart-rating-container">
-            <svg class="heart-rating-heart" viewBox="0 0 24 24" width="40" height="40">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
+        <div class="heart-rating-hearts">
+            <div class="heart-rating-heart" data-value="1"><svg viewBox="0 0 24 24"><path d="${HEART_SVG}"/></svg></div>
+            <div class="heart-rating-heart" data-value="2"><svg viewBox="0 0 24 24"><path d="${HEART_SVG}"/></svg></div>
+            <div class="heart-rating-heart" data-value="3"><svg viewBox="0 0 24 24"><path d="${HEART_SVG}"/></svg></div>
         </div>
-        <div class="heart-rating-hint">Drag to show appreciation</div>
+        <div class="heart-rating-hint">Tap to appreciate</div>
     </div>`;
 }
 
@@ -83,72 +85,48 @@ function initHeartRating(container){
     if(!ratingEl)return;
 
     const workId=ratingEl.dataset.work;
-    const heartContainer=ratingEl.querySelector('.heart-rating-container');
-    const heart=ratingEl.querySelector('.heart-rating-heart');
+    const hearts=ratingEl.querySelectorAll('.heart-rating-heart');
     const hint=ratingEl.querySelector('.heart-rating-hint');
 
-    let isDragging=false;
-    let startY=0;
-    let currentScale=1;
-
-    const updateHeart=(scale)=>{
-        currentScale=Math.max(0.5,Math.min(2.5,scale));
-        heart.style.transform=`scale(${currentScale})`;
-        // Change color intensity based on size
-        const intensity=Math.round(107+(currentScale-0.5)*30);
-        heart.querySelector('path').style.fill=`rgb(255,${intensity},${intensity})`;
+    // Preview on hover/touch
+    const preview=(level)=>{
+        hearts.forEach((h,i)=>{
+            h.classList.toggle('preview',i<level);
+        });
     };
 
-    const startDrag=(e)=>{
-        isDragging=true;
-        startY=e.touches?e.touches[0].clientY:e.clientY;
-        hint.classList.add('hidden');
-        e.preventDefault();
+    // Submit rating on click
+    const rate=async(level)=>{
+        // Map 1-3 to rating values (33, 66, 100)
+        const rating=Math.round((level/3)*100);
+
+        // Show filled state
+        hearts.forEach((h,i)=>{
+            h.classList.remove('preview');
+            h.classList.toggle('filled',i<level);
+        });
+        hint.textContent='...';
+
+        const result=await submitRating(workId,rating);
+        const count=result?.count||1;
+
+        // Update to result view
+        ratingEl.innerHTML=`
+            <div class="heart-rating-result">
+                <svg viewBox="0 0 24 24"><path d="${HEART_SVG}"/></svg>
+                ${count} ${count===1?'appreciation':'appreciations'}
+            </div>
+            <div class="heart-rating-thanks">Thank you</div>
+        `;
     };
 
-    const doDrag=(e)=>{
-        if(!isDragging)return;
-        const y=e.touches?e.touches[0].clientY:e.clientY;
-        const delta=(startY-y)/50; // Moving up = bigger heart
-        updateHeart(1+delta);
-    };
-
-    const endDrag=async()=>{
-        if(!isDragging)return;
-        isDragging=false;
-
-        if(currentScale>0.6){
-            // Convert scale to 1-100 rating
-            const rating=Math.round(((currentScale-0.5)/2)*100);
-
-            // Show submitting state
-            hint.textContent='Sending...';
-            hint.classList.remove('hidden');
-
-            const result=await submitRating(workId,rating);
-
-            // Update UI to show result
-            const count=result?.count||1;
-            ratingEl.innerHTML=`
-                <div class="heart-rating-result">
-                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    ${count} ${count===1?'appreciation':'appreciations'}
-                </div>
-                <div class="heart-rating-thanks">Thank you for sharing your appreciation</div>
-            `;
-        }else{
-            // Reset if too small
-            updateHeart(1);
-            hint.classList.remove('hidden');
-        }
-    };
-
-    heartContainer.addEventListener('mousedown',startDrag);
-    heartContainer.addEventListener('touchstart',startDrag,{passive:false});
-    document.addEventListener('mousemove',doDrag);
-    document.addEventListener('touchmove',doDrag,{passive:false});
-    document.addEventListener('mouseup',endDrag);
-    document.addEventListener('touchend',endDrag);
+    hearts.forEach(heart=>{
+        const val=parseInt(heart.dataset.value);
+        heart.addEventListener('mouseenter',()=>preview(val));
+        heart.addEventListener('mouseleave',()=>preview(0));
+        heart.addEventListener('click',()=>rate(val));
+        heart.addEventListener('touchend',(e)=>{e.preventDefault();rate(val);});
+    });
 }
 
 // Load ratings on page load
