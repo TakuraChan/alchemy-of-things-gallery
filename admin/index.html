@@ -190,6 +190,13 @@
             <button class="btn submit" style="margin-top:1rem" onclick="copyLogs()">Copy Logs</button>
             <button class="logout" style="margin-top:.5rem" onclick="clearLogs()">Clear Logs</button>
         </div>
+
+        <div id="ratings" class="tab-content hidden">
+            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Appreciations</h3>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">See how visitors appreciate your work.</p>
+            <div id="ratings-list"><div class="loading"></div></div>
+            <button class="btn submit" style="margin-top:1rem" onclick="loadRatingsAdmin()">Refresh</button>
+        </div>
     </div>
 
     <script>
@@ -474,6 +481,7 @@ function buildTabs(){
     });
     // Fixed tabs
     html+=`<button class="tab" data-tab="categories" onclick="showTab('categories')">Categories</button>`;
+    html+=`<button class="tab" data-tab="ratings" onclick="showTab('ratings');loadRatingsAdmin()">♥</button>`;
     html+=`<button class="tab" data-tab="settings" onclick="showTab('settings')">Settings</button>`;
     html+=`<button class="tab" data-tab="logs" onclick="showTab('logs')">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>`;
     container.innerHTML=html;
@@ -1184,6 +1192,66 @@ async function loadAll(){
     // Show first category by default
     if(categories.length){
         showTab(categories[0].id);
+    }
+}
+
+async function loadRatingsAdmin(){
+    const c=document.getElementById('ratings-list');
+    c.innerHTML='<div class="loading"></div>';
+
+    try{
+        const r=await fetch('/.netlify/functions/ratings');
+        if(!r.ok)throw new Error('Failed to load ratings');
+        const ratings=await r.json();
+
+        // Load all works to get titles
+        const worksMap={};
+        for(const cat of categories){
+            try{
+                const wr=await gh('/contents/data/'+cat.id);
+                if(wr.status===200){
+                    const files=await wr.json();
+                    for(const f of files){
+                        if(!f.name.endsWith('.json'))continue;
+                        const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
+                        if(fr.status===200){
+                            const fd=await fr.json();
+                            const w=JSON.parse(atob(fd.content));
+                            worksMap[w.id]={title:w.title,category:cat.name,image:w.image};
+                        }
+                    }
+                }
+            }catch(e){}
+        }
+
+        // Build ratings display
+        const entries=Object.entries(ratings).sort((a,b)=>b[1].count-a[1].count);
+
+        if(!entries.length){
+            c.innerHTML='<p style="color:var(--muted)">No appreciations yet. Ratings will appear here when visitors interact with your work.</p>';
+            return;
+        }
+
+        c.innerHTML=entries.map(([workId,data])=>{
+            const work=worksMap[workId]||{title:workId,category:'Unknown'};
+            const avgPercent=Math.round(data.avgSize);
+            const heartSize=0.8+(avgPercent/100)*0.7;
+            return `<div class="item" style="padding:1rem">
+                ${work.image?`<img src="${work.image}" style="width:50px;height:50px;object-fit:cover">`:''}
+                <div class="item-info">
+                    <div class="item-title">${work.title||'Untitled'}</div>
+                    <div class="item-meta">${work.category}</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:${heartSize}rem;color:#ff6b6b">♥</div>
+                    <div style="font-size:.75rem;color:var(--muted)">${data.count} ${data.count===1?'appreciation':'appreciations'}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+    }catch(e){
+        console.error('Load ratings error:',e);
+        c.innerHTML='<p style="color:var(--muted)">Ratings not available. The feature will activate once deployed.</p>';
     }
 }
 
