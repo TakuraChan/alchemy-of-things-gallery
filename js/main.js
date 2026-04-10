@@ -1,5 +1,158 @@
 // Content cache to avoid redundant fetches
 let contentCache=null;
+
+// Rating system
+const RATINGS_API='/.netlify/functions/ratings';
+let ratingsCache={};
+
+function getVisitorId(){
+    let id=localStorage.getItem('alchemy_visitor');
+    if(!id){
+        id='v_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);
+        localStorage.setItem('alchemy_visitor',id);
+    }
+    return id;
+}
+
+function getUserRating(workId){
+    const ratings=JSON.parse(localStorage.getItem('alchemy_ratings')||'{}');
+    return ratings[workId];
+}
+
+function saveUserRating(workId,rating){
+    const ratings=JSON.parse(localStorage.getItem('alchemy_ratings')||'{}');
+    ratings[workId]=rating;
+    localStorage.setItem('alchemy_ratings',JSON.stringify(ratings));
+}
+
+async function loadRatings(){
+    try{
+        const r=await fetch(RATINGS_API);
+        if(r.ok)ratingsCache=await r.json();
+    }catch(e){console.log('Ratings not available')}
+}
+
+async function submitRating(workId,rating){
+    saveUserRating(workId,rating);
+    try{
+        const r=await fetch(RATINGS_API,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({workId,rating,visitorId:getVisitorId()})
+        });
+        if(r.ok){
+            const data=await r.json();
+            ratingsCache[workId]={avgSize:data.avgSize,count:data.count};
+            return data;
+        }
+    }catch(e){console.log('Could not submit rating')}
+    return null;
+}
+
+function createHeartRatingUI(workId,isUnfinished){
+    if(isUnfinished)return '';
+
+    const userRating=getUserRating(workId);
+    const ratingData=ratingsCache[workId];
+
+    // If user already rated, show result
+    if(userRating){
+        const count=ratingData?.count||1;
+        return `<div class="heart-rating">
+            <div class="heart-rating-result">
+                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                ${count} ${count===1?'appreciation':'appreciations'}
+            </div>
+            <div class="heart-rating-thanks">Thank you for sharing your appreciation</div>
+        </div>`;
+    }
+
+    // Show rating slider
+    return `<div class="heart-rating" data-work="${workId}">
+        <div class="heart-rating-container">
+            <svg class="heart-rating-heart" viewBox="0 0 24 24" width="40" height="40">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+        </div>
+        <div class="heart-rating-hint">Drag to show appreciation</div>
+    </div>`;
+}
+
+function initHeartRating(container){
+    const ratingEl=container.querySelector('.heart-rating[data-work]');
+    if(!ratingEl)return;
+
+    const workId=ratingEl.dataset.work;
+    const heartContainer=ratingEl.querySelector('.heart-rating-container');
+    const heart=ratingEl.querySelector('.heart-rating-heart');
+    const hint=ratingEl.querySelector('.heart-rating-hint');
+
+    let isDragging=false;
+    let startY=0;
+    let currentScale=1;
+
+    const updateHeart=(scale)=>{
+        currentScale=Math.max(0.5,Math.min(2.5,scale));
+        heart.style.transform=`scale(${currentScale})`;
+        // Change color intensity based on size
+        const intensity=Math.round(107+(currentScale-0.5)*30);
+        heart.querySelector('path').style.fill=`rgb(255,${intensity},${intensity})`;
+    };
+
+    const startDrag=(e)=>{
+        isDragging=true;
+        startY=e.touches?e.touches[0].clientY:e.clientY;
+        hint.classList.add('hidden');
+        e.preventDefault();
+    };
+
+    const doDrag=(e)=>{
+        if(!isDragging)return;
+        const y=e.touches?e.touches[0].clientY:e.clientY;
+        const delta=(startY-y)/50; // Moving up = bigger heart
+        updateHeart(1+delta);
+    };
+
+    const endDrag=async()=>{
+        if(!isDragging)return;
+        isDragging=false;
+
+        if(currentScale>0.6){
+            // Convert scale to 1-100 rating
+            const rating=Math.round(((currentScale-0.5)/2)*100);
+
+            // Show submitting state
+            hint.textContent='Sending...';
+            hint.classList.remove('hidden');
+
+            const result=await submitRating(workId,rating);
+
+            // Update UI to show result
+            const count=result?.count||1;
+            ratingEl.innerHTML=`
+                <div class="heart-rating-result">
+                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    ${count} ${count===1?'appreciation':'appreciations'}
+                </div>
+                <div class="heart-rating-thanks">Thank you for sharing your appreciation</div>
+            `;
+        }else{
+            // Reset if too small
+            updateHeart(1);
+            hint.classList.remove('hidden');
+        }
+    };
+
+    heartContainer.addEventListener('mousedown',startDrag);
+    heartContainer.addEventListener('touchstart',startDrag,{passive:false});
+    document.addEventListener('mousemove',doDrag);
+    document.addEventListener('touchmove',doDrag,{passive:false});
+    document.addEventListener('mouseup',endDrag);
+    document.addEventListener('touchend',endDrag);
+}
+
+// Load ratings on page load
+loadRatings();
 async function getContent(){
     if(contentCache)return contentCache;
     try{
@@ -116,22 +269,27 @@ async function loadCollections(type){
             thumb.addEventListener('click',()=>{
                 const w=JSON.parse(thumb.dataset.work);
                 const t=thumb.dataset.type;
+                const isUnfinished=w.unfinished;
                 let editionInfo='';
                 if(t==='photography'&&w.editionSize){
                     const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
                     editionInfo=`<p>${remaining} of ${w.editionSize} available</p>`;
                 }
-                lightbox.querySelector('.work-lightbox-content').innerHTML=`
-                    <img src="${w.image}${cacheBust}" alt="${w.title}">
+                const content=lightbox.querySelector('.work-lightbox-content');
+                content.innerHTML=`
+                    <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}">
                     <div class="work-lightbox-info">
-                        <h1>${w.title}</h1>
-                        <p>${w.year} · ${w.medium} · ${w.dimensions}</p>
+                        ${isUnfinished?'':`<h1>${w.title}</h1>`}
+                        ${isUnfinished?'':`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`}
                         ${editionInfo}
-                        <p>${w.available?'Available':'Sold'}</p>
-                        ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                        ${isUnfinished?'<p style="font-style:italic;color:#888">Work in progress</p>':`<p>${w.available?'Available':'Sold'}</p>`}
+                        ${!isUnfinished&&w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                        ${createHeartRatingUI(w.id,isUnfinished)}
                     </div>
                 `;
                 lightbox.classList.add('active');
+                // Initialize heart rating interaction
+                initHeartRating(content);
             });
         });
 

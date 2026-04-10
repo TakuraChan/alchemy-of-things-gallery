@@ -1,6 +1,10 @@
 [build]
   publish = "."
   command = "node scripts/build.js"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
 
 [[headers]]
   for = "/*"
