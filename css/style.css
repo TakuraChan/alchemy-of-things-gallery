@@ -93,7 +93,7 @@ a:hover{opacity:.6}
 .collection-header{font-family:var(--font-display);font-size:1.3rem;font-style:italic;font-weight:400;color:var(--text);margin-bottom:1.5rem}
 .collection-header-muted{color:var(--light);font-weight:300}
 .collection-unfinished{opacity:.7}
-.work-unfinished img{opacity:.8;filter:grayscale(100%)}
+.work-unfinished img{opacity:.9;filter:grayscale(90%)}
 .collection-works{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem}
 .work-thumb{cursor:pointer;text-align:center;width:200px;transition:opacity .3s}
 .work-thumb:hover{opacity:.7}
