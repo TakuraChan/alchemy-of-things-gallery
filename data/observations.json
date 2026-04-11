@@ -4,5 +4,11 @@
     "name": "Observation 1",
     "order": 1,
     "active": true
+  },
+  {
+    "id": "giants",
+    "name": "Giants",
+    "order": 2,
+    "active": true
   }
 ]
