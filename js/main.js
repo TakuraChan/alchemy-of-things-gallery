@@ -216,17 +216,18 @@ async function loadCollections(type){
         // Build HTML for each collection with its works
         let html='';
         visible.forEach(col=>{
-            const isUnfinished=col.isUnfinished||col.id==='unfinished';
+            const isUnfinishedCol=col.isUnfinished||col.id==='unfinished';
             const colWorks=allWorks.filter(w=>w.collectionId===col.id).sort((a,b)=>(a.order||999)-(b.order||999));
-            html+=`<section class="collection-section${isUnfinished?' collection-unfinished':''}">
-                <h2 class="collection-header${isUnfinished?' collection-header-muted':''}">${col.name}</h2>
+            html+=`<section class="collection-section${isUnfinishedCol?' collection-unfinished':''}">
+                <h2 class="collection-header${isUnfinishedCol?' collection-header-muted':''}">${col.name}</h2>
                 <div class="collection-works">
-                    ${colWorks.map(w=>`
-                        <div class="work-thumb${w.unfinished?' work-unfinished':''}" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
+                    ${colWorks.map(w=>{
+                        const workIsUnfinished=w.unfinished||isUnfinishedCol;
+                        return `<div class="work-thumb${workIsUnfinished?' work-unfinished':''}" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
                             <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" loading="lazy">
-                            ${w.unfinished?'':`<span class="work-thumb-title">${w.title}</span>`}
-                        </div>
-                    `).join('')}
+                            ${workIsUnfinished?'':`<span class="work-thumb-title">${w.title}</span>`}
+                        </div>`;
+                    }).join('')}
                     ${!colWorks.length?'<p class="empty-collection">new work coming soon</p>':''}
                 </div>
             </section>`;
@@ -247,7 +248,8 @@ async function loadCollections(type){
             thumb.addEventListener('click',()=>{
                 const w=JSON.parse(thumb.dataset.work);
                 const t=thumb.dataset.type;
-                const isUnfinished=w.unfinished;
+                // Check both unfinished flag AND if in unfinished collection
+                const isUnfinished=w.unfinished||w.collectionId==='unfinished';
                 let editionInfo='';
                 if(t==='photography'&&w.editionSize){
                     const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
@@ -255,7 +257,7 @@ async function loadCollections(type){
                 }
                 const content=lightbox.querySelector('.work-lightbox-content');
                 content.innerHTML=`
-                    <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}">
+                    <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" style="${isUnfinished?'filter:grayscale(90%);opacity:0.9':''}">
                     <div class="work-lightbox-info">
                         ${isUnfinished?'':`<h1>${w.title}</h1>`}
                         ${isUnfinished?'':`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`}
