@@ -660,22 +660,30 @@ async function deleteCollection(id){
 
 async function saveCollectionsFile(){
     if(!currentCategory)return;
-    // Use correct filename - paintings uses collections.json, photography uses observations.json
-    let filename;
-    if(currentCategory.id==='paintings'){
-        filename='data/collections.json';
-    }else if(currentCategory.id==='photography'){
-        filename='data/observations.json';
-    }else{
-        filename='data/'+currentCategory.id+'-collections.json';
+    // Use the same file that was loaded from
+    // Check if category-specific file exists first, then fallback to legacy names
+    let filename='data/'+currentCategory.id+'-collections.json';
+    let existing=await getFile(filename);
+
+    // If category-specific doesn't exist, check legacy files
+    if(!existing){
+        if(currentCategory.id==='paintings'){
+            const legacy=await getFile('data/collections.json');
+            if(legacy){filename='data/collections.json';existing=legacy;}
+        }else if(currentCategory.id==='photography'){
+            const legacy=await getFile('data/observations.json');
+            if(legacy){filename='data/observations.json';existing=legacy;}
+        }
     }
-    const existing=await getFile(filename);
+
+    addLog('Saving collections to '+filename);
     await gh('/contents/'+filename,'PUT',{
         message:'Update '+currentCategory.name+' collections',
         content:btoa(unescape(encodeURIComponent(JSON.stringify(categoryCollections,null,2)))),
         sha:existing?.sha,
         branch:'main'
     });
+}
 }
 
 let workImg=null;
