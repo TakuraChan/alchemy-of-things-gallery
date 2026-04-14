@@ -382,11 +382,17 @@ async function doLogin(){
     if(!cfg.passHash){alert('No password set. Use Face ID or reset config.');return}
     const hash=await hashPass(pass);
     if(hash!==cfg.passHash){alert('Incorrect password');return}
-    sessionStorage.setItem('alchemy_auth','1');
-    show('admin');
-    document.getElementById('cfg-repo').value=cfg.repo;
-    showBiometricSettingsIfAvailable();
-    loadAll();
+    try{
+        sessionStorage.setItem('alchemy_auth','1');
+        show('admin');
+        const repoEl=document.getElementById('cfg-repo');
+        if(repoEl)repoEl.value=cfg.repo||'';
+        showBiometricSettingsIfAvailable();
+        loadAll();
+    }catch(e){
+        console.error('Login error:',e);
+        alert('Login failed: '+e.message);
+    }
 }
 
 async function showBiometricSettingsIfAvailable(){
