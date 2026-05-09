@@ -612,6 +612,7 @@ function renderCollectionsList(cat){
     c.innerHTML=categoryCollections.map(col=>`
         <div class="item" style="padding:.75rem">
             <span style="flex:1">${col.name}</span>
+            <button onclick="editCollection('${col.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--muted)">✎</button>
             <button onclick="toggleCollection('${col.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:${col.active===false?'var(--light)':'var(--ok)'}">${col.active===false?'○':'●'}</button>
             <button onclick="deleteCollection('${col.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--light)">✕</button>
         </div>
@@ -670,6 +671,28 @@ async function deleteCollection(id){
         showCategoryContent(currentCategory);
     }catch(e){
         categoryCollections.splice(idx,0,col);
+        console.error(e);
+        msg('Error','err');
+    }
+}
+
+async function editCollection(id){
+    const col=categoryCollections.find(c=>c.id===id);
+    if(!col)return;
+
+    const newName=prompt('Rename collection:',col.name);
+    if(!newName||newName.trim()===col.name)return;
+
+    const oldName=col.name;
+    col.name=newName.trim();
+
+    try{
+        await saveCollectionsFile();
+        msg('Renamed to '+col.name,'ok');
+        renderCollectionsList(currentCategory);
+        showCategoryContent(currentCategory);
+    }catch(e){
+        col.name=oldName;
         console.error(e);
         msg('Error','err');
     }
