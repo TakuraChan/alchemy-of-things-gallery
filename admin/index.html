@@ -83,6 +83,7 @@
         </div>
         <div class="field" style="width:280px;margin-bottom:1rem"><input type="password" id="login-pass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <button class="btn" onclick="doLogin()">Enter</button>
+        <p style="margin-top:2rem"><a href="#" onclick="forgotPassword()" style="color:var(--muted);font-size:.85rem">Forgot password?</a></p>
     </div>
 
     <div id="migrate" class="container hidden">
@@ -453,6 +454,15 @@ function resetConfig(){
         sessionStorage.removeItem('alchemy_auth');
         cfg=null;
         show('setup');
+    }
+}
+
+function forgotPassword(){
+    if(confirm('This will reset your login. You will need to re-enter your GitHub token. Continue?')){
+        localStorage.removeItem('alchemy_cfg');
+        sessionStorage.removeItem('alchemy_auth');
+        cfg=null;
+        location.reload();
     }
 }
 
