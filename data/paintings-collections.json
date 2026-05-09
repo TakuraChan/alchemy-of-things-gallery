@@ -15,13 +15,13 @@
     "id": "unfinished",
     "name": "Unfinished",
     "order": 99,
-    "active": true,
+    "active": false,
     "isUnfinished": true
   },
   {
     "id": "open",
     "name": "âopen!â",
     "order": 4,
-    "active": false
+    "active": true
   }
 ]
