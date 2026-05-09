@@ -1035,7 +1035,7 @@ async function preview(input,type){
     const optimized=await optimizeImage(f,type==='symbol'?200:1600);
     c.classList.add('has');
     c.innerHTML='<input type="file" accept="image/*" onchange="preview(this,\''+type+'\')"><img src="'+optimized.dataUrl+'">';
-    img[type]={data:optimized.base64,type:'image/jpeg'};
+    img[type]={data:optimized.base64,type:'image/webp'};
 }
 
 function optimizeImage(file,maxSize){
@@ -1054,8 +1054,8 @@ function optimizeImage(file,maxSize){
                 canvas.width=w;canvas.height=h;
                 const ctx=canvas.getContext('2d');
                 ctx.drawImage(img,0,0,w,h);
-                // Compress to JPEG at 85% quality
-                const dataUrl=canvas.toDataURL('image/jpeg',0.85);
+                // Compress to WebP at 85% quality
+                const dataUrl=canvas.toDataURL('image/webp',0.85);
                 resolve({dataUrl,base64:dataUrl.split(',')[1]});
             };
             img.src=e.target.result;
