@@ -1,5 +1,19 @@
 # Alchemy of Things - Codebase Guide
 
+> **IMPORTANT**: Always read this file first. Update this file whenever you modify the codebase structure, add features, or fix patterns. Keep line numbers current.
+
+## Quick Validation Commands
+```bash
+# Check admin JS syntax
+sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /tmp/t.js && node --check /tmp/t.js
+
+# Check for stale .jpeg references
+grep -r "\.jpeg\|\.jpg" data/ --include="*.json"
+
+# Verify WebP files exist
+ls images/**/*.webp | wc -l  # Should match JSON image count
+```
+
 ## Project Overview
 Minimalist art gallery for paintings and photography. Static site hosted on Netlify with GitHub-based CMS.
 
@@ -19,16 +33,21 @@ Images: WebP format, stored in /images/
 - `css/style.css` - All styles
 
 ### Admin
-- `admin/index.html` - **SINGLE FILE** containing all admin HTML + JS (~1400 lines)
-  - Lines 1-230: HTML structure (login, setup, admin panels)
-  - Lines 231-270: `init()`, `show()`, `hashPass()`
-  - Lines 280-400: Auth functions (`doLogin`, `setupBiometric`, `forgotPassword`)
-  - Lines 470-505: `showTab()`, `buildTabs()`
-  - Lines 509-670: Category/collection management
-  - Lines 705-870: Work upload (`saveWork`, `uploadImg`, `optimizeImage`)
-  - Lines 870-1050: Image processing (WebP conversion at 85% quality)
-  - Lines 1100-1200: Categories CRUD
-  - Lines 1200+: Ratings admin, drag/drop, init
+- `admin/index.html` - **SINGLE FILE** containing all admin HTML + JS (~1440 lines)
+  - Lines 1-215: HTML structure (login, setup, admin panels, forms)
+  - Lines 219-235: Logging (`updateLogDisplay`, `addLog`, `copyLogs`, `clearLogs`)
+  - Lines 237-270: `init()`, `show()`, `hashPass()`
+  - Lines 281-405: Auth (`setupBiometric`, `loginWithBiometric`, `doLogin`, `forgotPassword`)
+  - Lines 406-470: Config (`doLogout`, `migrateConfig`, `saveConfig`, `resetConfig`)
+  - Lines 471-505: `showTab()`, `buildTabs()`
+  - Lines 509-675: Category content & collections (`showCategoryContent`, `loadCategoryCollections`, `saveCollectionsFile`)
+  - Lines 707-870: Work management (`isUnfinishedCollection`, `previewWork`, `saveWorkDynamic`)
+  - Lines 875-1005: Work loading & rendering (`loadCategoryWorks`, `renderWorkItem`, `updateWorkCollection`)
+  - Lines 1038-1075: Image optimization (`preview`, `optimizeImage` - WebP at 85%)
+  - Lines 1078-1145: App icons (`previewAppIcon`, `generateIcon`, `saveAppIcons`)
+  - Lines 1147-1215: GitHub API (`gh`, `getFile`, `saveFile`, `uploadImg`)
+  - Lines 1219-1240: Init (`loadAll`, `loadRatingsAdmin`)
+  - Lines 1288+: Settings, categories CRUD, drag/drop
 
 ### Data Files
 ```
