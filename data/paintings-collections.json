@@ -20,8 +20,8 @@
   },
   {
     "id": "open",
-    "name": "“open!”",
+    "name": "âopen!â",
     "order": 4,
-    "active": true
+    "active": false
   }
 ]
