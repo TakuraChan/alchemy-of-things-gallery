@@ -208,8 +208,14 @@ async function loadCollections(type){
 
         if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
 
-        // Filter and sort collections
-        const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>a.order-b.order);
+        // Filter and sort collections (unfinished always last)
+        const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>{
+            const aUnfinished=a.isUnfinished||a.id==='unfinished';
+            const bUnfinished=b.isUnfinished||b.id==='unfinished';
+            if(aUnfinished&&!bUnfinished)return 1;
+            if(!aUnfinished&&bUnfinished)return -1;
+            return a.order-b.order;
+        });
 
         const cacheBust='?_='+Date.now();
 
