@@ -226,6 +226,7 @@ function addLog(msg){
     errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
     updateLogDisplay();
 }
+function decodeBase64(str){return decodeURIComponent(escape(atob(str)))}
 function copyLogs(){
     const text=errorLog.length?errorLog.join('\n\n'):'No errors';
     navigator.clipboard.writeText(text).then(()=>alert('Copied!')).catch(()=>{
@@ -590,7 +591,7 @@ async function loadCategoryCollections(cat){
         }
         if(r.status!==404){
             const fd=await r.json();
-            categoryCollections=JSON.parse(atob(fd.content));
+            categoryCollections=JSON.parse(decodeBase64(fd.content));
             addLog('Loaded '+categoryCollections.length+' collections: '+categoryCollections.map(c=>c.id).join(', '));
         }else{
             addLog('No collections file found');
@@ -889,7 +890,7 @@ async function loadCategoryWorks(cat){
             if(!f.name.endsWith('.json'))continue;
             const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
             const fd=await fr.json();
-            const w=JSON.parse(atob(fd.content));
+            const w=JSON.parse(decodeBase64(fd.content));
             w._file=f.name;
             w._sha=fd.sha;
             allWorks.push(w);
@@ -1246,7 +1247,7 @@ async function loadRatingsAdmin(){
                         const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
                         if(fr.status===200){
                             const fd=await fr.json();
-                            const w=JSON.parse(atob(fd.content));
+                            const w=JSON.parse(decodeBase64(fd.content));
                             worksMap[w.id]={title:w.title,category:cat.name,image:w.image};
                         }
                     }
@@ -1305,7 +1306,7 @@ async function loadCategories(){
         const r=await gh('/contents/data/categories.json');
         if(r.status===404){c.innerHTML='<p style="color:var(--muted)">No categories.</p>';return}
         const fd=await r.json();
-        categories=JSON.parse(atob(fd.content));
+        categories=JSON.parse(decodeBase64(fd.content));
         categories.sort((a,b)=>a.order-b.order);
         renderCategories();
     }catch(e){console.error('Categories error:',e);c.innerHTML='<p style="color:var(--err)">'+(e.message||'Error loading.')+'</p>'}
