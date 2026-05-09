@@ -17,11 +17,5 @@
     "order": 99,
     "active": true,
     "isUnfinished": true
-  },
-  {
-    "id": "draw-me-a-fish",
-    "name": "draw me a fish",
-    "order": 4,
-    "active": true
   }
 ]
