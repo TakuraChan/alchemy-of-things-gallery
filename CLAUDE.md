@@ -40,7 +40,7 @@ Images: WebP format, stored in /images/
   - Lines 281-405: Auth (`setupBiometric`, `loginWithBiometric`, `doLogin`, `forgotPassword`)
   - Lines 406-470: Config (`doLogout`, `migrateConfig`, `saveConfig`, `resetConfig`)
   - Lines 471-505: `showTab()`, `buildTabs()`
-  - Lines 509-675: Category content & collections (`showCategoryContent`, `loadCategoryCollections`, `saveCollectionsFile`)
+  - Lines 509-695: Category content & collections (`showCategoryContent`, `loadCategoryCollections`, `saveCollectionsFile`, `editCollection`)
   - Lines 707-870: Work management (`isUnfinishedCollection`, `previewWork`, `saveWorkDynamic`)
   - Lines 875-1005: Work loading & rendering (`loadCategoryWorks`, `renderWorkItem`, `updateWorkCollection`)
   - Lines 1038-1075: Image optimization (`preview`, `optimizeImage` - WebP at 85%)
