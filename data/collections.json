@@ -17,5 +17,11 @@
     "order": 99,
     "active": true,
     "isUnfinished": true
+  },
+  {
+    "id": "open",
+    "name": "open!",
+    "order": 4,
+    "active": true
   }
 ]
