@@ -112,6 +112,16 @@ Check ALL JSON files have `.webp` paths:
 grep -r "\.jpeg\|\.jpg" data/ --include="*.json"
 ```
 
+Check if images are actually WebP (not PNG saved as .webp):
+```bash
+head -c 4 images/paintings/*.webp | od -c  # Should show "RIFF" not "PNG"
+```
+
+If PNG saved as WebP, convert with:
+```bash
+node -e "require('sharp')('file.webp').webp({quality:85}).toFile('out.webp')"
+```
+
 ### Admin buttons not working
 JavaScript syntax error - validate with:
 ```bash
