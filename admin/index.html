@@ -735,6 +735,7 @@ async function saveCollectionsFile(){
 
 let workImg=null;
 let multiImgs=[];
+let editingWork=null; // Track work being edited
 
 function isUnfinishedCollection(){
     const colId=document.getElementById('work-collection')?.value;
@@ -841,15 +842,20 @@ async function saveWorkDynamic(e){
         }else if(isUnfinished&&!multiImgs.length&&!workImg){
             throw new Error('Select images first');
         }else{
-            // Single work upload
-            let title,id,work;
+            // Single work upload or edit
+            let title,id,work,isEditing=!!editingWork;
 
-            if(isUnfinished){
-                // Single unfinished
+            if(isUnfinished&&!isEditing){
+                // Single unfinished (new)
                 if(!workImg&&!multiImgs.length)throw new Error('Upload image first');
                 id='unfinished-'+Date.now();
                 title='Unfinished';
                 work={id,title,collectionId,unfinished:true};
+            }else if(isEditing){
+                // Editing existing work
+                id=editingWork.id;
+                title=document.getElementById('work-title').value.trim()||editingWork.title;
+                work={id,title,collectionId};
             }else{
                 // Normal work - title required
                 title=document.getElementById('work-title').value.trim();
@@ -867,11 +873,18 @@ async function saveWorkDynamic(e){
                 work.type='text';
             }else{
                 // Image-based work
-                if(!workImg)throw new Error('Upload image first');
-                btn.textContent='Uploading image...';
-                const imgPath=await uploadImg(workImg,folder);
-                work.image=imgPath;
-                if(!isUnfinished){
+                if(workImg){
+                    // New image uploaded
+                    btn.textContent='Uploading image...';
+                    const imgPath=await uploadImg(workImg,folder);
+                    work.image=imgPath;
+                }else if(isEditing&&editingWork.image){
+                    // Keep existing image
+                    work.image=editingWork.image;
+                }else{
+                    throw new Error('Upload image first');
+                }
+                if(!isUnfinished||isEditing){
                     work.year=+document.getElementById('work-year').value;
                     work.medium=document.getElementById('work-medium').value;
                     work.dimensions=document.getElementById('work-dimensions').value;
@@ -880,8 +893,16 @@ async function saveWorkDynamic(e){
             }
 
             btn.textContent='Saving...';
-            await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add '+title);
-            msg(title+' added','ok');
+            const fileName=isEditing?editingWork._file:id+'.json';
+            const sha=isEditing?editingWork._sha:undefined;
+            await gh('/contents/data/'+folder+'/'+fileName,'PUT',{
+                message:(isEditing?'Update ':'Add ')+title,
+                content:btoa(unescape(encodeURIComponent(JSON.stringify(work,null,2)))),
+                sha,
+                branch:'main'
+            });
+            msg(title+(isEditing?' updated':' added'),'ok');
+            editingWork=null;
         }
 
         document.getElementById('work-form').reset();
@@ -899,6 +920,7 @@ async function saveWorkDynamic(e){
         msg(errMsg,'err');
     }
     btn.disabled=false;btn.textContent='Add to '+currentCategory.name;
+    editingWork=null;
     return false;
 }
 
@@ -1037,24 +1059,48 @@ async function updateWorkCollection(folder,file,sha,newCollectionId){
 async function editWork(folder,file){
     const work=allWorks.find(w=>w._file===file);
     if(!work)return;
-    // For now, simple edit via prompt - could make this a modal later
-    const newTitle=prompt('Edit title:',work.title);
-    if(newTitle===null||newTitle===work.title)return;
 
-    work.title=newTitle;
-    try{
-        const workData={...work};
-        delete workData._file;
-        delete workData._sha;
-        await gh('/contents/data/'+folder+'/'+file,'PUT',{
-            message:'Edit '+newTitle,
-            content:btoa(unescape(encodeURIComponent(JSON.stringify(workData,null,2)))),
-            sha:work._sha,
-            branch:'main'
-        });
-        msg('Updated','ok');
-        loadCategoryWorks(currentCategory);
-    }catch(e){console.error(e);msg('Error','err')}
+    // Store editing state
+    editingWork={...work,_folder:folder};
+    workImg=null; // Clear any previous image
+
+    // Populate form fields
+    document.getElementById('work-title').value=work.title||'';
+    document.getElementById('work-year').value=work.year||new Date().getFullYear();
+    document.getElementById('work-medium').value=work.medium||'';
+    document.getElementById('work-dimensions').value=work.dimensions||'';
+    document.getElementById('work-available').checked=work.available!==false;
+
+    // Set collection dropdown
+    const colSelect=document.getElementById('work-collection');
+    if(colSelect)colSelect.value=work.collectionId||'';
+
+    // Show current image in upload area
+    const uploadDiv=document.getElementById('work-upload');
+    if(uploadDiv&&work.image){
+        uploadDiv.classList.add('has');
+        uploadDiv.innerHTML=`<input type="file" accept="image/*" onchange="previewWork(this)"><img src="${work.image}?_=${Date.now()}"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:#fff;padding:.5rem;font-size:.75rem;text-align:center">Tap to replace image</div>`;
+    }
+
+    // Update button text
+    document.getElementById('work-btn').textContent='Update Work';
+
+    // Scroll to form
+    document.getElementById('work-form').scrollIntoView({behavior:'smooth'});
+
+    msg('Editing: '+work.title,'ok');
+}
+
+function cancelEdit(){
+    editingWork=null;
+    workImg=null;
+    document.getElementById('work-form').reset();
+    document.getElementById('work-btn').textContent='Add to '+currentCategory.name;
+    const uploadDiv=document.getElementById('work-upload');
+    if(uploadDiv){
+        uploadDiv.classList.remove('has');
+        uploadDiv.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';
+    }
 }
 
 async function delWorkDynamic(folder,file,sha){
