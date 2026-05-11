@@ -190,8 +190,12 @@ async function loadWorks(type){
 async function loadCollections(type){
     const c=document.getElementById('works');
     let collectionsFile,worksFile;
+
+    // Try category-specific file first, then fallback to legacy names
     if(type==='paintings'){
-        collectionsFile='/data/collections.json';
+        // Try paintings-collections.json first, fallback to collections.json
+        const tryNew=await fetch('/data/paintings-collections.json');
+        collectionsFile=tryNew.ok?'/data/paintings-collections.json':'/data/collections.json';
         worksFile='/data/works.json';
     }else if(type==='photography'){
         collectionsFile='/data/observations.json';
