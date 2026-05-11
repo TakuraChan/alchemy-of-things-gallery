@@ -14,5 +14,13 @@
     "visible": true,
     "collectionLabel": "Observation",
     "file": "photography.html"
+  },
+  {
+    "id": "sketches",
+    "name": "Sketches",
+    "order": 3,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "sketches.html"
   }
 ]
