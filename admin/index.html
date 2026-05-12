@@ -1102,11 +1102,18 @@ async function editWork(folder,file){
     workImg=null; // Clear any previous image
 
     // Populate form fields
-    document.getElementById('work-title').value=work.title||'';
-    document.getElementById('work-year').value=work.year||new Date().getFullYear();
-    document.getElementById('work-medium').value=work.medium||'';
-    document.getElementById('work-dimensions').value=work.dimensions||'';
-    document.getElementById('work-available').checked=work.available!==false;
+    const titleEl=document.getElementById('work-title');
+    if(titleEl)titleEl.value=work.title||'';
+    const textEl=document.getElementById('work-text');
+    if(textEl)textEl.value=work.text||'';
+    const yearEl=document.getElementById('work-year');
+    if(yearEl)yearEl.value=work.year||new Date().getFullYear();
+    const medEl=document.getElementById('work-medium');
+    if(medEl)medEl.value=work.medium||'';
+    const dimEl=document.getElementById('work-dimensions');
+    if(dimEl)dimEl.value=work.dimensions||'';
+    const avEl=document.getElementById('work-available');
+    if(avEl)avEl.checked=work.available!==false;
 
     // Set collection dropdown
     const colSelect=document.getElementById('work-collection');
@@ -1252,9 +1259,9 @@ function generateCategoryHtml(id,name){
             <p class="footer-text">alchemy of things</p>
         </div>
     </footer>
-    <script src="/js/nav.js"></script>
-    <script src="/js/main.js"></script>
-    <script>loadCollections('${id}');</script>
+    <script src="/js/nav.js"><${'</'}script>
+    <script src="/js/main.js"><${'</'}script>
+    <script>loadCollections('${id}');<${'</'}script>
 </body>
 </html>`;
 }
