@@ -207,10 +207,10 @@ async function loadCollections(type){
 
     try{
         const [colRes,workRes]=await Promise.all([fetch(collectionsFile),fetch(worksFile)]);
-        const collections=await colRes.json();
-        const allWorks=await workRes.json();
+        const collections=colRes.ok?await colRes.json().catch(()=>[]):[];
+        const allWorks=workRes.ok?await workRes.json().catch(()=>[]):[];
 
-        if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
+        if(!collections.length){c.innerHTML='<p class="empty">new work coming soon</p>';c.style.opacity='1';return}
 
         // Filter and sort collections (unfinished always last)
         const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>{

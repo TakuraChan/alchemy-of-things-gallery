@@ -1571,6 +1571,7 @@ async function saveCategory(e){
     btn.disabled=true;btn.textContent='Saving...';
 
     try{
+        let savedId;
         if(editingId){
             // Update existing category
             const cat=categories.find(c=>c.id===editingId);
@@ -1584,6 +1585,7 @@ async function saveCategory(e){
             });
             msg(name+' updated','ok');
             delete btn.dataset.editingId;
+            savedId=editingId;
         }else{
             // Add new category
             const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -1597,20 +1599,21 @@ async function saveCategory(e){
                 sha:existing?.sha,
                 branch:'main'
             });
-            // Create page file for new category if it doesn't already exist
-            if(id!=='paintings'&&id!=='photography'){
-                const pageExists=await getFile(id+'.html');
-                if(!pageExists){
-                    const pageHtml=generateCategoryHtml(id,name);
-                    await gh('/contents/'+id+'.html','PUT',{
-                        message:'Add page for '+name,
-                        content:btoa(unescape(encodeURIComponent(pageHtml))),
-                        branch:'main'
-                    });
-                    addLog('Created page: /'+id+'.html');
-                }
-            }
             msg(name+' added','ok');
+            savedId=id;
+        }
+        // Ensure a page file exists for the category (handles both new and pre-existing-without-page cases)
+        if(savedId&&savedId!=='paintings'&&savedId!=='photography'){
+            const pageExists=await getFile(savedId+'.html');
+            if(!pageExists){
+                const pageHtml=generateCategoryHtml(savedId,name);
+                await gh('/contents/'+savedId+'.html','PUT',{
+                    message:'Add page for '+name,
+                    content:btoa(unescape(encodeURIComponent(pageHtml))),
+                    branch:'main'
+                });
+                addLog('Created page: /'+savedId+'.html');
+            }
         }
         document.getElementById('cat-form').reset();
         document.getElementById('cat-label').value='Collection';
