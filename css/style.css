@@ -160,12 +160,15 @@ a:hover{opacity:.6}
     .works.collection-artworks-view .work-title{margin-bottom:0;text-align:center}
     .collection-title{opacity:1;font-size:1rem}
     .collection-soon{min-height:50vh}
-    .collections-expanded{padding:1rem;height:auto}
-    .collection-section{margin-bottom:2rem}
-    .collection-header{font-size:1.1rem;margin-bottom:1rem}
-    .collection-works{gap:1rem}
-    .work-thumb{width:calc(50% - .5rem)}
-    .work-thumb img{height:120px}
+    .collections-expanded{padding:.75rem 0;height:auto}
+    .collection-section{margin-bottom:2rem;text-align:left}
+    .collection-header{font-size:1rem;margin-bottom:.6rem;padding:0 1rem}
+    .collection-works{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;justify-content:flex-start;gap:.75rem;padding:0 1rem .5rem}
+    .collection-works::-webkit-scrollbar{display:none}
+    .work-thumb{flex:0 0 140px;width:140px}
+    .work-thumb img{height:140px;width:140px;object-fit:cover}
+    .work-thumb-text{flex:0 0 140px;width:140px;min-height:140px}
+    .work-thumb-title{font-size:.8rem}
     .work-lightbox-content{max-width:95%;max-height:95%}
     .work-lightbox-content img{max-height:50vh}
     .single-work{height:auto;padding:1.5rem 0}
