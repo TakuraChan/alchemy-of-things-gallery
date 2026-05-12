@@ -27,7 +27,7 @@
     "id": "words",
     "name": "Words",
     "order": 4,
-    "visible": true,
+    "visible": false,
     "collectionLabel": "Collection",
     "file": "words.html"
   }
