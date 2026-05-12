@@ -101,7 +101,7 @@ a:hover{opacity:.6}
 .work-thumb-title{font-family:var(--font-display);font-size:.9rem;font-style:italic;color:var(--muted)}
 .work-thumb-text{display:flex;align-items:center;justify-content:center;width:200px;min-height:100px;border:1px solid var(--border);padding:1rem}
 .work-thumb-text .work-thumb-title{color:var(--text);font-size:1rem}
-.work-lightbox-text{font-family:var(--font-display);font-size:1.1rem;font-style:italic;line-height:1.9;color:#fff;max-width:600px;text-align:center;margin-bottom:1.5rem;white-space:pre-wrap}
+.work-lightbox-text{font-family:var(--font-display);font-size:1.1rem;font-style:italic;line-height:1.9;color:#fff;max-width:600px;text-align:center;margin-bottom:1.5rem;white-space:pre-wrap;user-select:none;-webkit-user-select:none}
 .empty-collection{color:var(--light);font-style:italic}
 .work-lightbox{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s}
 .work-lightbox.active{opacity:1;visibility:visible}
