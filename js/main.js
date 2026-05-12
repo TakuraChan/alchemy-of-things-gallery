@@ -272,8 +272,8 @@ async function loadCollections(type){
                 const isTextWork=w.type==='text';
                 const content=lightbox.querySelector('.work-lightbox-content');
                 content.innerHTML=`
-                    ${w.image?`<img src="${w.image}${cacheBust}" alt="${w.title||''}" style="${isUnfinished?'filter:grayscale(90%);opacity:0.9':''}">`:
-                      w.text?`<div class="work-lightbox-text">${w.text.replace(/\n/g,'<br>')}</div>`:''}
+                    ${w.image?`<img src="${w.image}${cacheBust}" alt="${w.title||''}" style="${isUnfinished?'filter:grayscale(90%);opacity:0.9':''}">`:'' }
+                    ${isTextWork&&w.text?`<div class="work-lightbox-text">${w.text.replace(/\n/g,'<br>')}</div>`:''}
                     <div class="work-lightbox-info">
                         ${!isUnfinished&&w.title?`<h1>${w.title}</h1>`:''}
                         ${isTextWork||isUnfinished?'':(`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`)}
