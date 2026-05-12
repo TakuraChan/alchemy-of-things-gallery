@@ -533,7 +533,7 @@ async function showCategoryContent(cat){
 
     const collectionsHtml=categoryCollections.length?
         categoryCollections.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''):
-        '<option value="">No ${collLabel}s yet</option>';
+        `<option value="">No ${collLabel}s yet</option>`;
 
     container.innerHTML=`
         <!-- Collections Management -->
@@ -554,8 +554,11 @@ async function showCategoryContent(cat){
                 </select>
             </div>
             ${isText?`
-                <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
-                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:var(--font-display);font-style:italic" placeholder="Write your ${cat.name.toLowerCase()} here..."></textarea></div>
+                <div class="field"><label>Title</label><input type="text" id="work-title"></div>
+                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:inherit" placeholder="Write your ${cat.name.toLowerCase()} here..." required></textarea></div>
+                <div class="field"><label>Image <span style="color:var(--light);font-size:.8rem">(optional — photograph a handwritten version)</span></label>
+                    <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to add image</span></div>
+                </div>
             `:`
                 <!-- Single image upload (normal) -->
                 <div id="single-upload-area">
@@ -886,6 +889,14 @@ async function saveWorkDynamic(e){
                 if(!text)throw new Error('Enter content');
                 work.text=text;
                 work.type='text';
+                // Optional image (e.g. handwritten photo)
+                if(workImg){
+                    btn.textContent='Uploading image...';
+                    const imgPath=await uploadImg(workImg,folder);
+                    work.image=imgPath;
+                }else if(isEditing&&editingWork.image){
+                    work.image=editingWork.image;
+                }
             }else{
                 // Image-based work
                 if(workImg){
@@ -922,11 +933,9 @@ async function saveWorkDynamic(e){
 
         document.getElementById('work-form').reset();
 
-        if(!isText){
-            const u=document.getElementById('work-upload');
-            if(u){u.className='upload';u.style.cssText='';u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';}
-            workImg=null;
-        }
+        workImg=null;
+        const u=document.getElementById('work-upload');
+        if(u){u.className='upload';u.style.cssText='';u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to '+(isText?'add image':'upload')+'</span>';}
         loadCategoryWorks(currentCategory);
     }catch(err){
         const errMsg=err?.message||err?.statusText||(typeof err==='string'?err:JSON.stringify(err))||'Unknown error';
@@ -1467,7 +1476,8 @@ function renderCategories(){
     c.innerHTML=categories.map(cat=>`
         <div class="drag-item" draggable="true" data-id="${cat.id}" style="${cat.visible===false?'opacity:0.5':''}">
             <span class="drag-handle">☰</span>
-            <span class="drag-item-title" style="flex:1">${cat.name} <span style="font-size:.75rem;color:var(--light)">(${cat.collectionLabel||'Collection'})</span></span>
+            <span class="drag-item-title" style="flex:1">${cat.name} <span style="font-size:.75rem;color:var(--light)">(${cat.type||'image'} · ${cat.collectionLabel||'Collection'})</span></span>
+            <button onclick="editCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--muted)">✎</button>
             <button onclick="toggleCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:${cat.visible===false?'var(--light)':'var(--ok)'}">${cat.visible===false?'○':'●'}</button>
             <button onclick="deleteCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--light)">✕</button>
         </div>
@@ -1480,39 +1490,69 @@ async function saveCategory(e){
     e.preventDefault();
     const name=document.getElementById('cat-name').value.trim();
     const label=document.getElementById('cat-label').value.trim()||'Collection';
+    const type=document.getElementById('cat-type').value||'image';
     const visible=document.getElementById('cat-visible').checked;
     if(!name){alert('Enter a name');return}
 
-    const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-    if(categories.find(c=>c.id===id)){alert('Category already exists');return}
-
     const btn=document.getElementById('cat-btn');
+    const editingId=btn.dataset.editingId;
+
     btn.disabled=true;btn.textContent='Saving...';
 
     try{
-        const newCat={id,name,order:categories.length+1,visible,collectionLabel:label,file:id+'.html'};
-        categories.push(newCat);
-
-        const existing=await getFile('data/categories.json');
-        await gh('/contents/data/categories.json','PUT',{
-            message:'Add category: '+name,
-            content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
-            sha:existing?.sha,
-            branch:'main'
-        });
-
-        msg(name+' added - check tabs!','ok');
+        if(editingId){
+            // Update existing category
+            const cat=categories.find(c=>c.id===editingId);
+            if(cat){cat.name=name;cat.collectionLabel=label;cat.type=type;cat.visible=visible;}
+            const existing=await getFile('data/categories.json');
+            await gh('/contents/data/categories.json','PUT',{
+                message:'Update category: '+name,
+                content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+                sha:existing?.sha,
+                branch:'main'
+            });
+            msg(name+' updated','ok');
+            delete btn.dataset.editingId;
+        }else{
+            // Add new category
+            const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            if(categories.find(c=>c.id===id)){btn.disabled=false;btn.textContent='Add Category';alert('Category already exists');return false;}
+            const newCat={id,name,type,order:categories.length+1,visible,collectionLabel:label};
+            categories.push(newCat);
+            const existing=await getFile('data/categories.json');
+            await gh('/contents/data/categories.json','PUT',{
+                message:'Add category: '+name,
+                content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+                sha:existing?.sha,
+                branch:'main'
+            });
+            msg(name+' added','ok');
+        }
         document.getElementById('cat-form').reset();
         document.getElementById('cat-label').value='Collection';
         buildTabs();
         renderCategories();
     }catch(err){
-        categories.pop();
+        if(!editingId)categories.pop();
         console.error(err);
         msg(err.message||'Error','err');
     }
     btn.disabled=false;btn.textContent='Add Category';
     return false;
+}
+
+function editCategory(id){
+    const cat=categories.find(c=>c.id===id);
+    if(!cat)return;
+    document.getElementById('cat-name').value=cat.name;
+    document.getElementById('cat-label').value=cat.collectionLabel||'Collection';
+    document.getElementById('cat-type').value=cat.type||'image';
+    document.getElementById('cat-visible').checked=cat.visible!==false;
+    const btn=document.getElementById('cat-btn');
+    btn.textContent='Update Category';
+    btn.dataset.editingId=id;
+    document.getElementById('cat-form').scrollIntoView({behavior:'smooth'});
+    msg('Editing: '+cat.name,'ok');
 }
 
 async function toggleCategory(id){
