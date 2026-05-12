@@ -841,7 +841,7 @@ async function saveWorkDynamic(e){
             // Bulk upload for unfinished works
             addLog('Starting bulk upload: '+multiImgs.length+' images');
             btn.textContent='Uploading 0/'+multiImgs.length+'...';
-            let uploaded=0;
+            let uploaded=0;const bulkWorks=[];
             for(let i=0;i<multiImgs.length;i++){
                 btn.textContent='Uploading '+(i+1)+'/'+multiImgs.length+'...';
                 addLog('Processing image '+(i+1)+'/'+multiImgs.length);
@@ -849,8 +849,10 @@ async function saveWorkDynamic(e){
                 const imgPath=await uploadImg(multiImgs[i],folder);
                 const work={id,title:'Unfinished',collectionId,unfinished:true,image:imgPath};
                 await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add unfinished work');
+                bulkWorks.push(work);
                 uploaded++;
             }
+            await updateWorksAggregate(folder,works=>[...works,...bulkWorks]);
             addLog('Bulk upload complete: '+uploaded+' images');
             msg(uploaded+' unfinished works added','ok');
             multiImgs=[];
@@ -926,6 +928,11 @@ async function saveWorkDynamic(e){
                 content:btoa(unescape(encodeURIComponent(JSON.stringify(work,null,2)))),
                 sha,
                 branch:'main'
+            });
+            const cleanedWork=(({_file,_sha,...w})=>w)(work);
+            await updateWorksAggregate(folder,works=>{
+                if(isEditing){const idx=works.findIndex(w=>w.id===cleanedWork.id);if(idx>=0){works[idx]=cleanedWork;}else{works.push(cleanedWork);}return works;}
+                return [...works,cleanedWork];
             });
             msg(title+(isEditing?' updated':' added'),'ok');
             editingWork=null;
@@ -1180,13 +1187,77 @@ function toggleWorkColGroup(id){
 
 async function delWorkDynamic(folder,file,sha){
     if(!confirm('Delete this work?'))return;
+    const work=allWorks.find(w=>w._file===file);
     try{
         await gh('/contents/data/'+folder+'/'+file,'DELETE',{message:'Delete',sha,branch:'main'});
+        if(work)await updateWorksAggregate(folder,works=>works.filter(w=>w.id!==work.id));
         msg('Deleted','ok');
         if(currentCategory)loadCategoryWorks(currentCategory);
     }catch(e){console.error(e);msg('Error deleting','err')}
 }
 
+
+async function updateWorksAggregate(folder,updateFn){
+    if(folder==='paintings'||folder==='photography')return;
+    try{
+        const existingFile=await getFile('data/'+folder+'.json');
+        let works=[];
+        if(existingFile){try{works=JSON.parse(decodeBase64(existingFile.content));}catch(e){}}
+        works=updateFn(works);
+        await gh('/contents/data/'+folder+'.json','PUT',{
+            message:'Update '+folder+' index',
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(works,null,2)))),
+            sha:existingFile?.sha,
+            branch:'main'
+        });
+        addLog('Works index updated for '+folder);
+    }catch(e){addLog('Aggregate update failed: '+(e.message||e));}
+}
+
+function generateCategoryHtml(id,name){
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>${name} — Alchemy of Things</title>
+    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
+    <link rel="apple-touch-icon" href="/images/icon-180.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Alchemy">
+    <meta name="theme-color" content="#faf9f7">
+    <meta property="og:title" content="${name} — Alchemy of Things">
+    <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">
+    <meta property="og:image" content="/images/symbol.svg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-links"></div>
+    </nav>
+    <main class="main">
+        <section class="works" id="works"></section>
+    </main>
+    <footer class="footer">
+        <div class="footer-content">
+            <img src="/images/symbol.svg" alt="" class="symbol-footer">
+            <p class="footer-text">alchemy of things</p>
+        </div>
+    </footer>
+    <script src="/js/nav.js"></script>
+    <script src="/js/main.js"></script>
+    <script>loadCollections('${id}');</script>
+</body>
+</html>`;
+}
 
 async function preview(input,type){
     const f=input.files[0];if(!f)return;
@@ -1526,6 +1597,19 @@ async function saveCategory(e){
                 sha:existing?.sha,
                 branch:'main'
             });
+            // Create page file for new category if it doesn't already exist
+            if(id!=='paintings'&&id!=='photography'){
+                const pageExists=await getFile(id+'.html');
+                if(!pageExists){
+                    const pageHtml=generateCategoryHtml(id,name);
+                    await gh('/contents/'+id+'.html','PUT',{
+                        message:'Add page for '+name,
+                        content:btoa(unescape(encodeURIComponent(pageHtml))),
+                        branch:'main'
+                    });
+                    addLog('Created page: /'+id+'.html');
+                }
+            }
             msg(name+' added','ok');
         }
         document.getElementById('cat-form').reset();
