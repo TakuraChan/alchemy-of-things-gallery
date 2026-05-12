@@ -22,5 +22,13 @@
     "visible": true,
     "collectionLabel": "Collection",
     "file": "sketches.html"
+  },
+  {
+    "id": "words",
+    "name": "Words",
+    "order": 4,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "words.html"
   }
 ]
