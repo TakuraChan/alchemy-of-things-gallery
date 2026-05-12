@@ -83,6 +83,7 @@
           .work-col-group.open .work-col-strip{display:flex;overflow-x:auto;gap:.75rem;padding:.5rem 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
           .work-col-group.open .work-col-strip::-webkit-scrollbar{display:none}
           .work-col-list{display:none}
+          .work-col-group.text-group.open .work-col-list{display:block}
           .work-thumb{flex:0 0 80px;cursor:pointer;text-align:center}
           .work-thumb img{width:80px;height:80px;object-fit:cover;display:block;border:1px solid var(--border)}
           .work-thumb span{font-size:.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;width:80px;margin-top:.25rem}
@@ -1002,7 +1003,7 @@ async function loadCategoryWorks(cat){
             const works=grouped[col.id]||[];
             const stripHtml=!isText&&works.length?works.map(w=>`<div class="work-thumb" onclick="editWork('${cat.id}','${w._file}')"><img src="${w.image}" onerror="this.style.background='var(--border)'"><span>${w.title}</span></div>`).join(''):'';
             const listHtml=works.length?works.map(w=>renderWorkItem(w,cat,isText)).join(''):`<p style="color:var(--light);font-size:.8rem;font-style:italic">No works in this ${collLabel.toLowerCase()}</p>`;
-            html+=`<div class="work-col-group" id="wcg-${col.id}" style="margin-bottom:1.5rem">
+            html+=`<div class="work-col-group${isText?' text-group':''}" id="wcg-${col.id}" style="margin-bottom:1.5rem">
                 <div class="work-col-hdr" onclick="toggleWorkColGroup('${col.id}')">
                     <h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">${col.name} (${works.length})</h4>
                     <span class="work-col-arrow">▾</span>
@@ -1016,7 +1017,7 @@ async function loadCategoryWorks(cat){
         if(uncategorized.length){
             const stripHtml=!isText?uncategorized.map(w=>`<div class="work-thumb" onclick="editWork('${cat.id}','${w._file}')"><img src="${w.image}" onerror="this.style.background='var(--border)'"><span>${w.title}</span></div>`).join(''):'';
             const listHtml=uncategorized.map(w=>renderWorkItem(w,cat,isText)).join('');
-            html+=`<div class="work-col-group" id="wcg-uncategorized" style="margin-bottom:1.5rem">
+            html+=`<div class="work-col-group${isText?' text-group':''}" id="wcg-uncategorized" style="margin-bottom:1.5rem">
                 <div class="work-col-hdr" onclick="toggleWorkColGroup('uncategorized')">
                     <h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Uncategorized (${uncategorized.length})</h4>
                     <span class="work-col-arrow">▾</span>
