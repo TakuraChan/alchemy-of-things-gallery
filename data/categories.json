@@ -19,7 +19,7 @@
     "id": "sketches",
     "name": "Sketches",
     "order": 3,
-    "visible": true,
+    "visible": false,
     "collectionLabel": "Collection",
     "file": "sketches.html"
   },
