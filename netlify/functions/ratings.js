@@ -16,8 +16,15 @@ exports.handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
+  let store;
   try {
-    const store = getStore("ratings");
+    store = getStore("ratings");
+  } catch (initError) {
+    console.error('Blobs init error:', initError);
+    return { statusCode: 200, headers, body: JSON.stringify({}) };
+  }
+
+  try {
 
     // GET - Retrieve all ratings
     if (event.httpMethod === 'GET') {
