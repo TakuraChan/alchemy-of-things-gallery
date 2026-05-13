@@ -105,8 +105,11 @@ a:hover{opacity:.6}
 .empty-collection{color:var(--light);font-style:italic}
 .work-lightbox{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s}
 .work-lightbox.active{opacity:1;visibility:visible}
-.work-lightbox-content{display:flex;flex-direction:column;align-items:center;max-width:90%;max-height:90%;color:#fff}
-.work-lightbox-content img{max-width:100%;max-height:60vh;object-fit:contain;margin-bottom:1.5rem}
+.work-lightbox-content{display:flex;flex-direction:column;align-items:center;max-width:90%;max-height:90%;color:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem 0}
+.work-lightbox-content::-webkit-scrollbar{display:none}
+.work-lightbox-content{scrollbar-width:none}
+.work-lightbox-content img{max-width:100%;max-height:60vh;object-fit:contain;margin-bottom:1.5rem;flex-shrink:0}
+.work-lightbox-content:has(.work-lightbox-text) img{max-height:35vh;max-width:70%}
 .work-lightbox-info{text-align:center}
 .work-lightbox-info h1{font-family:var(--font-display);font-size:1.5rem;font-style:italic;font-weight:400;margin-bottom:.5rem}
 .work-lightbox-info p{font-size:.9rem;color:#ccc;margin-bottom:.5rem}
@@ -171,6 +174,8 @@ a:hover{opacity:.6}
     .work-thumb-title{font-size:.8rem}
     .work-lightbox-content{max-width:95%;max-height:95%}
     .work-lightbox-content img{max-height:50vh}
+    .work-lightbox-content:has(.work-lightbox-text) img{max-height:28vh;max-width:80%}
+    .work-lightbox-text{font-size:1rem;line-height:1.7;flex-shrink:0}
     .single-work{height:auto;padding:1.5rem 0}
     .single-work img{cursor:pointer}
     .single-work-meta{flex-direction:column;gap:1.5rem}
