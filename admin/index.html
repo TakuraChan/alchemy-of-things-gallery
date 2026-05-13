@@ -1520,7 +1520,7 @@ async function loadRatingsAdmin(){
 
     }catch(e){
         console.error('Load ratings error:',e);
-        c.innerHTML='<p style="color:var(--muted)">Ratings not available. The feature will activate once deployed.</p>';
+        c.innerHTML='<p style="color:var(--muted)">Could not load ratings. Check the Logs tab for details.</p>';
     }
 }
 
