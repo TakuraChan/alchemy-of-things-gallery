@@ -215,6 +215,13 @@
             <div id="ratings-list"><div class="loading"></div></div>
             <button class="btn submit" style="margin-top:1rem" onclick="loadRatingsAdmin()">Refresh</button>
         </div>
+
+        <div id="visits" class="tab-content hidden">
+            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Recent Visits</h3>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">Last 50 page views. Your own admin visits are not tracked.</p>
+            <div id="visits-list"><div class="loading"></div></div>
+            <button class="btn submit" style="margin-top:1rem" onclick="loadVisits()">Refresh</button>
+        </div>
     </div>
 
     <script>
@@ -516,6 +523,7 @@ function buildTabs(){
     // Fixed tabs
     html+=`<button class="tab" data-tab="categories" onclick="showTab('categories')">Categories</button>`;
     html+=`<button class="tab" data-tab="ratings" onclick="showTab('ratings');loadRatingsAdmin()">♥</button>`;
+    html+=`<button class="tab" data-tab="visits" onclick="showTab('visits');loadVisits()">Visits</button>`;
     html+=`<button class="tab" data-tab="settings" onclick="showTab('settings')">Settings</button>`;
     html+=`<button class="tab" data-tab="logs" onclick="showTab('logs')">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>`;
     container.innerHTML=html;
@@ -1521,6 +1529,45 @@ async function loadRatingsAdmin(){
     }catch(e){
         console.error('Load ratings error:',e);
         c.innerHTML='<p style="color:var(--muted)">Could not load ratings. Check the Logs tab for details.</p>';
+    }
+}
+
+async function loadVisits(){
+    const c=document.getElementById('visits-list');
+    c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await fetch('/.netlify/functions/visit');
+        if(!r.ok)throw new Error('Failed');
+        const visits=await r.json();
+        if(!visits.length){
+            c.innerHTML='<p style="color:var(--muted)">No visits recorded yet. Visits appear once the site has been viewed.</p>';
+            return;
+        }
+        c.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Time</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Page</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Where</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Device</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">From</th>
+            </tr></thead>
+            <tbody>${visits.map(v=>{
+                const d=new Date(v.time);
+                const timeStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                const where=[v.city,v.country].filter(Boolean).join(', ')||v.ip||'—';
+                const from=v.referer||'—';
+                return `<tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:.5rem .25rem;white-space:nowrap">${timeStr}</td>
+                    <td style="padding:.5rem .25rem;color:var(--muted)">${v.path}</td>
+                    <td style="padding:.5rem .25rem">${where}</td>
+                    <td style="padding:.5rem .25rem">${v.device||'—'} · ${v.browser||'—'}</td>
+                    <td style="padding:.5rem .25rem;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${from}">${from}</td>
+                </tr>`;
+            }).join('')}</tbody>
+        </table>`;
+    }catch(e){
+        console.error('Load visits error:',e);
+        c.innerHTML='<p style="color:var(--muted)">Could not load visits.</p>';
     }
 }
 

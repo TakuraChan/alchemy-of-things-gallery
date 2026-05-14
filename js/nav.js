@@ -29,6 +29,15 @@ async function loadNav(){
     }
 }
 
+// Track page visit (fire and forget)
+if(!location.pathname.startsWith('/admin')){
+    fetch('/.netlify/functions/visit',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({path:location.pathname})
+    }).catch(()=>{});
+}
+
 // Load navigation when DOM is ready
 if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',loadNav);
