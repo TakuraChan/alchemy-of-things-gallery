@@ -10,5 +10,11 @@
     "name": "Giants",
     "order": 2,
     "active": true
+  },
+  {
+    "id": "observation-3",
+    "name": "Observation 3",
+    "order": 3,
+    "active": true
   }
 ]
