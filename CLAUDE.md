@@ -142,5 +142,10 @@ No local server needed for frontend (static files). Admin requires:
 1. GitHub token with repo scope
 2. CORS handled by GitHub API
 
+## Design Skill
+`.claude/skills/restraint/SKILL.md` — the house design system (tokens, language rules,
+layout patterns, ship checklist). Invoke with `/restraint` before any UI, copy, or
+visual change. Source philosophy: `PHILOSOPHY.md`.
+
 ## Branch Convention
 Feature branches: `claude/description-{sessionId}`
