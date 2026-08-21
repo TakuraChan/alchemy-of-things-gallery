@@ -28,9 +28,13 @@ Images: WebP format, stored in /images/
 ## Critical Files
 
 ### Frontend
-- `index.html` - Main gallery page
+- `index.html` - Landing + hub (hub nav = categories.json + Thoughts + About)
+- `thoughts.html` - Writing section. Holds the full "Alchemy of Things" framework
+  (static text, no CMS). Uses `body.reading` so the page scrolls; tables are
+  rendered as stacked `.entry` blocks for mobile. PDF in `documents/`.
+- `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
-- `css/style.css` - All styles
+- `css/style.css` - All styles (`.thoughts*` block = long-form reading)
 
 ### Admin
 - `admin/index.html` - **SINGLE FILE** containing all admin HTML + JS (~1440 lines)
@@ -141,6 +145,11 @@ sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /
 No local server needed for frontend (static files). Admin requires:
 1. GitHub token with repo scope
 2. CORS handled by GitHub API
+
+## Design Skill
+`.claude/skills/restraint/SKILL.md` — the house design system (tokens, language rules,
+layout patterns, ship checklist). Invoke with `/restraint` before any UI, copy, or
+visual change. Source philosophy: `PHILOSOPHY.md`.
 
 ## Branch Convention
 Feature branches: `claude/description-{sessionId}`
