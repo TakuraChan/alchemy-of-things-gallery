@@ -235,3 +235,20 @@ body.reading .main{height:auto;overflow-y:visible}
     .gallery-arrow-left{left:0.5rem}
     .gallery-arrow-right{right:0.5rem}
 }
+@media print{
+    .nav,.footer,.thoughts-segment,.thoughts-pdf{display:none!important}
+    body,body.reading{display:block;overflow:visible;background:#fff;font-size:10.5pt;line-height:1.6}
+    .main{margin:0;padding:0;height:auto;overflow:visible}
+    .thoughts{max-width:none;margin:0;padding:0}
+    .thoughts-title{font-size:22pt;margin-top:32vh}
+    .thoughts-standfirst{font-size:12pt}
+    .thoughts-edition{margin-bottom:0;break-after:page}
+    .thoughts-note{border:0;padding:0;margin:0 0 3rem}
+    .thoughts-contents{margin-bottom:0;break-after:page}
+    .thoughts-contents a{color:var(--muted)}
+    .thoughts section{margin-bottom:2.5rem}
+    .thoughts h2,.thoughts h3,.thoughts .lede{break-after:avoid}
+    .thoughts .entry,.thoughts .law,.thoughts ol li{break-inside:avoid}
+    .thoughts-close{margin-top:3rem;padding-top:2rem}
+    .thoughts-email{border:0}
+}
