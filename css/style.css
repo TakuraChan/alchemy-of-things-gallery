@@ -144,7 +144,6 @@ body.reading .main{height:auto;overflow-y:visible}
 .thought-entry:hover{opacity:.6}
 .thought-number{display:block;font-size:.8rem;color:var(--light);margin-bottom:.6rem}
 .thought-title{display:block;font-family:var(--font-display);font-style:italic;font-size:1.5rem;color:var(--text)}
-.thought-note{display:block;font-size:.8rem;color:var(--muted);margin-top:.6rem}
 .thoughts-segment a{color:inherit}
 .thoughts{max-width:640px;margin:0 auto;padding:6vh 1.5rem 6rem}
 .thoughts-segment{font-family:var(--font-display);font-style:italic;font-size:1.3rem;color:var(--light);text-align:center;margin-bottom:4rem}
