@@ -1,4 +1,4 @@
-// Renders thoughts.html to documents/alchemy-of-things-first-edition.pdf
+// Renders thoughts.html to documents/alchemy-of-things.pdf
 //
 //   node scripts/build-pdf.js
 //
@@ -17,7 +17,7 @@ try { ({ chromium } = require('playwright')); }
 catch { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
 
 const ROOT = path.join(__dirname, '..');
-const OUT = path.join(ROOT, 'documents', 'alchemy-of-things-first-edition.pdf');
+const OUT = path.join(ROOT, 'documents', 'alchemy-of-things.pdf');
 const TEMP = path.join(ROOT, '_print.html');
 const UA = 'Mozilla/5.0'; // a bare UA makes Google serve truetype rather than woff2
 

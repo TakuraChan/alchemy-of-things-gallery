@@ -138,7 +138,7 @@ sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /
 ## The Thoughts PDF
 `thoughts.html` is the source of truth. Regenerate the PDF after editing it:
 ```bash
-node scripts/build-pdf.js   # -> documents/alchemy-of-things-first-edition.pdf
+node scripts/build-pdf.js   # -> documents/alchemy-of-things.pdf
 ```
 Fonts must be fetched as static **TTF** (bare `Mozilla/5.0` user agent against the
 v1 Google Fonts API). Chromium's print pipeline silently drops woff2 web fonts and
