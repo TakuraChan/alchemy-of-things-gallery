@@ -207,10 +207,10 @@ async function loadCollections(type){
 
     try{
         const [colRes,workRes]=await Promise.all([fetch(collectionsFile),fetch(worksFile)]);
-        const collections=await colRes.json();
-        const allWorks=await workRes.json();
+        const collections=colRes.ok?await colRes.json().catch(()=>[]):[];
+        const allWorks=workRes.ok?await workRes.json().catch(()=>[]):[];
 
-        if(!collections.length){c.innerHTML='<p class="empty">No collections yet.</p>';return}
+        if(!collections.length){c.innerHTML='<p class="empty">new work coming soon</p>';c.style.opacity='1';return}
 
         // Filter and sort collections (unfinished always last)
         const visible=collections.filter(col=>col.visible!==false&&col.active).sort((a,b)=>{
@@ -233,8 +233,12 @@ async function loadCollections(type){
                 <div class="collection-works">
                     ${colWorks.map(w=>{
                         const workIsUnfinished=w.unfinished||isUnfinishedCol;
-                        return `<div class="work-thumb${workIsUnfinished?' work-unfinished':''}" data-work='${JSON.stringify(w).replace(/'/g,"&#39;")}' data-type="${type}">
-                            <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" loading="lazy">
+                        const encoded=JSON.stringify(w).replace(/'/g,"&#39;");
+                        if(w.type==='text'&&!w.image){
+                            return `<div class="work-thumb work-thumb-text" data-work='${encoded}' data-type="${type}"><span class="work-thumb-title">${w.title}</span></div>`;
+                        }
+                        return `<div class="work-thumb${workIsUnfinished?' work-unfinished':''}" data-work='${encoded}' data-type="${type}">
+                            ${w.image?`<img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" loading="lazy">`:''}
                             ${workIsUnfinished?'':`<span class="work-thumb-title">${w.title}</span>`}
                         </div>`;
                     }).join('')}
@@ -265,16 +269,18 @@ async function loadCollections(type){
                     const remaining=w.editionRemaining!==undefined?w.editionRemaining:w.editionSize;
                     editionInfo=`<p>${remaining} of ${w.editionSize} available</p>`;
                 }
+                const isTextWork=w.type==='text';
                 const content=lightbox.querySelector('.work-lightbox-content');
                 content.innerHTML=`
-                    <img src="${w.image}${cacheBust}" alt="${w.title||'Unfinished work'}" style="${isUnfinished?'filter:grayscale(90%);opacity:0.9':''}">
+                    ${w.image?`<img src="${w.image}${cacheBust}" alt="${w.title||''}" style="${isUnfinished?'filter:grayscale(90%);opacity:0.9':''}">`:'' }
+                    ${isTextWork&&w.text?`<div class="work-lightbox-text">${w.text.replace(/\n/g,'<br>')}</div>`:''}
                     <div class="work-lightbox-info">
-                        ${isUnfinished?'':`<h1>${w.title}</h1>`}
-                        ${isUnfinished?'':`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`}
+                        ${!isUnfinished&&w.title?`<h1>${w.title}</h1>`:''}
+                        ${isTextWork||isUnfinished?'':(`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`)}
                         ${editionInfo}
-                        ${isUnfinished?'<p style="font-style:italic;color:#888">Work in progress</p>':`<p>${w.available?'Available':'Sold'}</p>`}
-                        ${!isUnfinished&&w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
-                        ${createHeartRatingUI(w.id,isUnfinished)}
+                        ${isUnfinished?'<p style="font-style:italic;color:#888">Work in progress</p>':isTextWork?'':(`<p>${w.available?'Available':'Sold'}</p>`)}
+                        ${!isUnfinished&&!isTextWork&&w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                        ${isTextWork?'':createHeartRatingUI(w.id,isUnfinished)}
                     </div>
                 `;
                 lightbox.classList.add('active');

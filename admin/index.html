@@ -71,6 +71,23 @@
         .login-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;width:280px;color:var(--light);font-size:.85rem}
         .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
         @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
+        .work-col-strip{display:none}
+        .work-col-arrow{display:none}
+        .work-edit-img{border:1px solid var(--border);background:var(--card)}
+        .work-edit-img img{width:100%;max-height:260px;object-fit:contain;display:block}
+        @media(max-width:480px){
+          .work-col-hdr{cursor:pointer;display:flex;align-items:center;padding:.35rem 0}
+          .work-col-hdr h4{margin-bottom:0!important;flex:1}
+          .work-col-arrow{display:inline-block;color:var(--muted);margin-left:.5rem;transition:transform .2s;font-size:.75rem;flex-shrink:0}
+          .work-col-group.open .work-col-arrow{transform:rotate(180deg)}
+          .work-col-group.open .work-col-strip{display:flex;overflow-x:auto;gap:.75rem;padding:.5rem 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+          .work-col-group.open .work-col-strip::-webkit-scrollbar{display:none}
+          .work-col-list{display:none}
+          .work-col-group.text-group.open .work-col-list{display:block}
+          .work-thumb{flex:0 0 80px;cursor:pointer;text-align:center}
+          .work-thumb img{width:80px;height:80px;object-fit:cover;display:block;border:1px solid var(--border)}
+          .work-thumb span{font-size:.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;width:80px;margin-top:.25rem}
+        }
     </style>
 </head>
 <body>
@@ -197,6 +214,13 @@
             <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">See how visitors appreciate your work.</p>
             <div id="ratings-list"><div class="loading"></div></div>
             <button class="btn submit" style="margin-top:1rem" onclick="loadRatingsAdmin()">Refresh</button>
+        </div>
+
+        <div id="visits" class="tab-content hidden">
+            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Recent Visits</h3>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">Last 50 page views. Your own admin visits are not tracked.</p>
+            <div id="visits-list"><div class="loading"></div></div>
+            <button class="btn submit" style="margin-top:1rem" onclick="loadVisits()">Refresh</button>
         </div>
     </div>
 
@@ -499,6 +523,7 @@ function buildTabs(){
     // Fixed tabs
     html+=`<button class="tab" data-tab="categories" onclick="showTab('categories')">Categories</button>`;
     html+=`<button class="tab" data-tab="ratings" onclick="showTab('ratings');loadRatingsAdmin()">♥</button>`;
+    html+=`<button class="tab" data-tab="visits" onclick="showTab('visits');loadVisits()">Visits</button>`;
     html+=`<button class="tab" data-tab="settings" onclick="showTab('settings')">Settings</button>`;
     html+=`<button class="tab" data-tab="logs" onclick="showTab('logs')">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>`;
     container.innerHTML=html;
@@ -517,7 +542,7 @@ async function showCategoryContent(cat){
 
     const collectionsHtml=categoryCollections.length?
         categoryCollections.map(c=>`<option value="${c.id}">${c.name}</option>`).join(''):
-        '<option value="">No ${collLabel}s yet</option>';
+        `<option value="">No ${collLabel}s yet</option>`;
 
     container.innerHTML=`
         <!-- Collections Management -->
@@ -538,8 +563,11 @@ async function showCategoryContent(cat){
                 </select>
             </div>
             ${isText?`
-                <div class="field"><label>Title</label><input type="text" id="work-title" required></div>
-                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:var(--font-display);font-style:italic" placeholder="Write your ${cat.name.toLowerCase()} here..."></textarea></div>
+                <div class="field"><label>Title</label><input type="text" id="work-title"></div>
+                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:inherit" placeholder="Write your ${cat.name.toLowerCase()} here..." required></textarea></div>
+                <div class="field"><label>Image <span style="color:var(--light);font-size:.8rem">(optional — photograph a handwritten version)</span></label>
+                    <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to add image</span></div>
+                </div>
             `:`
                 <!-- Single image upload (normal) -->
                 <div id="single-upload-area">
@@ -769,9 +797,8 @@ async function previewWork(input){
     const c=document.getElementById('work-upload');
     c.innerHTML='<span>Optimizing...</span>';
     const optimized=await optimizeImage(f,1600);
-    c.classList.add('has');
-    c.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><img src="'+optimized.dataUrl+'">';
     workImg={data:optimized.base64,type:optimized.type||'image/webp'};
+    showWorkImagePreview(optimized.dataUrl);
 }
 
 async function previewMultiple(input){
@@ -823,7 +850,7 @@ async function saveWorkDynamic(e){
             // Bulk upload for unfinished works
             addLog('Starting bulk upload: '+multiImgs.length+' images');
             btn.textContent='Uploading 0/'+multiImgs.length+'...';
-            let uploaded=0;
+            let uploaded=0;const bulkWorks=[];
             for(let i=0;i<multiImgs.length;i++){
                 btn.textContent='Uploading '+(i+1)+'/'+multiImgs.length+'...';
                 addLog('Processing image '+(i+1)+'/'+multiImgs.length);
@@ -831,8 +858,10 @@ async function saveWorkDynamic(e){
                 const imgPath=await uploadImg(multiImgs[i],folder);
                 const work={id,title:'Unfinished',collectionId,unfinished:true,image:imgPath};
                 await saveFile('data/'+folder+'/'+id+'.json',JSON.stringify(work,null,2),'Add unfinished work');
+                bulkWorks.push(work);
                 uploaded++;
             }
+            await updateWorksAggregate(folder,works=>[...works,...bulkWorks]);
             addLog('Bulk upload complete: '+uploaded+' images');
             msg(uploaded+' unfinished works added','ok');
             multiImgs=[];
@@ -871,6 +900,14 @@ async function saveWorkDynamic(e){
                 if(!text)throw new Error('Enter content');
                 work.text=text;
                 work.type='text';
+                // Optional image (e.g. handwritten photo)
+                if(workImg){
+                    btn.textContent='Uploading image...';
+                    const imgPath=await uploadImg(workImg,folder);
+                    work.image=imgPath;
+                }else if(isEditing&&editingWork.image){
+                    work.image=editingWork.image;
+                }
             }else{
                 // Image-based work
                 if(workImg){
@@ -901,17 +938,20 @@ async function saveWorkDynamic(e){
                 sha,
                 branch:'main'
             });
+            const cleanedWork=(({_file,_sha,...w})=>w)(work);
+            await updateWorksAggregate(folder,works=>{
+                if(isEditing){const idx=works.findIndex(w=>w.id===cleanedWork.id);if(idx>=0){works[idx]=cleanedWork;}else{works.push(cleanedWork);}return works;}
+                return [...works,cleanedWork];
+            });
             msg(title+(isEditing?' updated':' added'),'ok');
             editingWork=null;
         }
 
         document.getElementById('work-form').reset();
 
-        if(!isText){
-            const u=document.getElementById('work-upload');
-            if(u){u.classList.remove('has');u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';}
-            workImg=null;
-        }
+        workImg=null;
+        const u=document.getElementById('work-upload');
+        if(u){u.className='upload';u.style.cssText='';u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to '+(isText?'add image':'upload')+'</span>';}
         loadCategoryWorks(currentCategory);
     }catch(err){
         const errMsg=err?.message||err?.statusText||(typeof err==='string'?err:JSON.stringify(err))||'Unknown error';
@@ -969,24 +1009,30 @@ async function loadCategoryWorks(cat){
         // Show grouped by collection
         categoryCollections.forEach(col=>{
             const works=grouped[col.id]||[];
-            html+=`<div style="margin-bottom:1.5rem"><h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">${col.name} (${works.length})</h4>`;
-            if(works.length){
-                works.forEach(w=>{
-                    html+=renderWorkItem(w,cat,isText);
-                });
-            }else{
-                html+=`<p style="color:var(--light);font-size:.8rem;font-style:italic">No works in this ${collLabel.toLowerCase()}</p>`;
-            }
-            html+=`</div>`;
+            const stripHtml=!isText&&works.length?works.map(w=>`<div class="work-thumb" onclick="editWork('${cat.id}','${w._file}')"><img src="${w.image}" onerror="this.style.background='var(--border)'"><span>${w.title}</span></div>`).join(''):'';
+            const listHtml=works.length?works.map(w=>renderWorkItem(w,cat,isText)).join(''):`<p style="color:var(--light);font-size:.8rem;font-style:italic">No works in this ${collLabel.toLowerCase()}</p>`;
+            html+=`<div class="work-col-group${isText?' text-group':''}" id="wcg-${col.id}" style="margin-bottom:1.5rem">
+                <div class="work-col-hdr" onclick="toggleWorkColGroup('${col.id}')">
+                    <h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">${col.name} (${works.length})</h4>
+                    <span class="work-col-arrow">▾</span>
+                </div>
+                <div class="work-col-strip">${stripHtml}</div>
+                <div class="work-col-list">${listHtml}</div>
+            </div>`;
         });
 
         // Show uncategorized
         if(uncategorized.length){
-            html+=`<div style="margin-bottom:1.5rem"><h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Uncategorized (${uncategorized.length})</h4>`;
-            uncategorized.forEach(w=>{
-                html+=renderWorkItem(w,cat,isText);
-            });
-            html+=`</div>`;
+            const stripHtml=!isText?uncategorized.map(w=>`<div class="work-thumb" onclick="editWork('${cat.id}','${w._file}')"><img src="${w.image}" onerror="this.style.background='var(--border)'"><span>${w.title}</span></div>`).join(''):'';
+            const listHtml=uncategorized.map(w=>renderWorkItem(w,cat,isText)).join('');
+            html+=`<div class="work-col-group${isText?' text-group':''}" id="wcg-uncategorized" style="margin-bottom:1.5rem">
+                <div class="work-col-hdr" onclick="toggleWorkColGroup('uncategorized')">
+                    <h4 style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Uncategorized (${uncategorized.length})</h4>
+                    <span class="work-col-arrow">▾</span>
+                </div>
+                <div class="work-col-strip">${stripHtml}</div>
+                <div class="work-col-list">${listHtml}</div>
+            </div>`;
         }
 
         c.innerHTML=html||'<p style="color:var(--muted)">No works yet.</p>';
@@ -1065,21 +1111,26 @@ async function editWork(folder,file){
     workImg=null; // Clear any previous image
 
     // Populate form fields
-    document.getElementById('work-title').value=work.title||'';
-    document.getElementById('work-year').value=work.year||new Date().getFullYear();
-    document.getElementById('work-medium').value=work.medium||'';
-    document.getElementById('work-dimensions').value=work.dimensions||'';
-    document.getElementById('work-available').checked=work.available!==false;
+    const titleEl=document.getElementById('work-title');
+    if(titleEl)titleEl.value=work.title||'';
+    const textEl=document.getElementById('work-text');
+    if(textEl)textEl.value=work.text||'';
+    const yearEl=document.getElementById('work-year');
+    if(yearEl)yearEl.value=work.year||new Date().getFullYear();
+    const medEl=document.getElementById('work-medium');
+    if(medEl)medEl.value=work.medium||'';
+    const dimEl=document.getElementById('work-dimensions');
+    if(dimEl)dimEl.value=work.dimensions||'';
+    const avEl=document.getElementById('work-available');
+    if(avEl)avEl.checked=work.available!==false;
 
     // Set collection dropdown
     const colSelect=document.getElementById('work-collection');
     if(colSelect)colSelect.value=work.collectionId||'';
 
-    // Show current image in upload area
-    const uploadDiv=document.getElementById('work-upload');
-    if(uploadDiv&&work.image){
-        uploadDiv.classList.add('has');
-        uploadDiv.innerHTML=`<input type="file" accept="image/*" onchange="previewWork(this)"><img src="${work.image}?_=${Date.now()}"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:#fff;padding:.5rem;font-size:.75rem;text-align:center">Tap to replace image</div>`;
+    // Show current image in upload area with rotation controls
+    if(document.getElementById('work-upload')&&work.image){
+        showWorkImagePreview(work.image+'?_='+Date.now());
     }
 
     // Update button text
@@ -1098,20 +1149,131 @@ function cancelEdit(){
     document.getElementById('work-btn').textContent='Add to '+currentCategory.name;
     const uploadDiv=document.getElementById('work-upload');
     if(uploadDiv){
-        uploadDiv.classList.remove('has');
+        uploadDiv.className='upload';
+        uploadDiv.style.cssText='';
         uploadDiv.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to upload</span>';
     }
 }
 
+function showWorkImagePreview(src){
+    const c=document.getElementById('work-upload');
+    c.className='work-edit-img';
+    c.style.cssText='';
+    c.innerHTML=`<img src="${src}" style="width:100%;max-height:260px;object-fit:contain;display:block">
+        <div style="display:flex;gap:.5rem;padding:.5rem;background:var(--bg);border-top:1px solid var(--border)">
+            <button type="button" onclick="rotateWorkImg(-90)" style="flex:1;padding:.5rem;border:1px solid var(--border);background:0 0;font-family:inherit;font-size:1rem;cursor:pointer" title="Rotate left">↺</button>
+            <label style="flex:2;display:flex;align-items:center;justify-content:center;padding:.5rem;border:1px solid var(--border);cursor:pointer;font-size:.8rem;font-family:inherit">Replace<input type="file" accept="image/*" onchange="previewWork(this)" style="display:none"></label>
+            <button type="button" onclick="rotateWorkImg(90)" style="flex:1;padding:.5rem;border:1px solid var(--border);background:0 0;font-family:inherit;font-size:1rem;cursor:pointer" title="Rotate right">↻</button>
+        </div>`;
+}
+
+function rotateWorkImg(degrees){
+    const c=document.getElementById('work-upload');
+    const imgEl=c&&c.querySelector('img');
+    if(!imgEl)return;
+    const src=workImg?('data:'+workImg.type+';base64,'+workImg.data):imgEl.src;
+    const tempImg=new Image();
+    if(!src.startsWith('data:'))tempImg.crossOrigin='anonymous';
+    tempImg.onload=()=>{
+        try{
+            const canvas=document.createElement('canvas');
+            const ctx=canvas.getContext('2d');
+            const rad=degrees*Math.PI/180;
+            if(Math.abs(degrees)===90){canvas.width=tempImg.height;canvas.height=tempImg.width;}
+            else{canvas.width=tempImg.width;canvas.height=tempImg.height;}
+            ctx.translate(canvas.width/2,canvas.height/2);
+            ctx.rotate(rad);
+            ctx.drawImage(tempImg,-tempImg.width/2,-tempImg.height/2);
+            let dataUrl=canvas.toDataURL('image/webp',0.85);
+            let type='image/webp';
+            if(!dataUrl.startsWith('data:image/webp')){dataUrl=canvas.toDataURL('image/jpeg',0.85);type='image/jpeg';}
+            workImg={data:dataUrl.split(',')[1],type};
+            imgEl.src=dataUrl;
+            addLog('Image rotated '+(degrees>0?'clockwise':'counter-clockwise'));
+        }catch(e){addLog('Rotation error: '+e.message);msg('Cannot rotate image','err');}
+    };
+    tempImg.onerror=()=>{addLog('Rotation failed: image load error');msg('Cannot rotate image','err');};
+    tempImg.src=src;
+}
+
+function toggleWorkColGroup(id){
+    const el=document.getElementById('wcg-'+id);
+    if(el)el.classList.toggle('open');
+}
+
 async function delWorkDynamic(folder,file,sha){
     if(!confirm('Delete this work?'))return;
+    const work=allWorks.find(w=>w._file===file);
     try{
         await gh('/contents/data/'+folder+'/'+file,'DELETE',{message:'Delete',sha,branch:'main'});
+        if(work)await updateWorksAggregate(folder,works=>works.filter(w=>w.id!==work.id));
         msg('Deleted','ok');
         if(currentCategory)loadCategoryWorks(currentCategory);
     }catch(e){console.error(e);msg('Error deleting','err')}
 }
 
+
+async function updateWorksAggregate(folder,updateFn){
+    if(folder==='paintings'||folder==='photography')return;
+    try{
+        const existingFile=await getFile('data/'+folder+'.json');
+        let works=[];
+        if(existingFile){try{works=JSON.parse(decodeBase64(existingFile.content));}catch(e){}}
+        works=updateFn(works);
+        await gh('/contents/data/'+folder+'.json','PUT',{
+            message:'Update '+folder+' index',
+            content:btoa(unescape(encodeURIComponent(JSON.stringify(works,null,2)))),
+            sha:existingFile?.sha,
+            branch:'main'
+        });
+        addLog('Works index updated for '+folder);
+    }catch(e){addLog('Aggregate update failed: '+(e.message||e));}
+}
+
+function generateCategoryHtml(id,name){
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>${name} — Alchemy of Things</title>
+    <link rel="icon" type="image/svg+xml" href="/images/symbol.svg">
+    <link rel="apple-touch-icon" href="/images/icon-180.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Alchemy">
+    <meta name="theme-color" content="#faf9f7">
+    <meta property="og:title" content="${name} — Alchemy of Things">
+    <meta property="og:description" content="Works by Takura, between observation, emotion, and form.">
+    <meta property="og:image" content="/images/symbol.svg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-links"></div>
+    </nav>
+    <main class="main">
+        <section class="works" id="works"></section>
+    </main>
+    <footer class="footer">
+        <div class="footer-content">
+            <img src="/images/symbol.svg" alt="" class="symbol-footer">
+            <p class="footer-text">alchemy of things</p>
+        </div>
+    </footer>
+    <script src="/js/nav.js"><${'</'}script>
+    <script src="/js/main.js"><${'</'}script>
+    <script>loadCollections('${id}');<${'</'}script>
+</body>
+</html>`;
+}
 
 async function preview(input,type){
     const f=input.files[0];if(!f)return;
@@ -1366,7 +1528,46 @@ async function loadRatingsAdmin(){
 
     }catch(e){
         console.error('Load ratings error:',e);
-        c.innerHTML='<p style="color:var(--muted)">Ratings not available. The feature will activate once deployed.</p>';
+        c.innerHTML='<p style="color:var(--muted)">Could not load ratings. Check the Logs tab for details.</p>';
+    }
+}
+
+async function loadVisits(){
+    const c=document.getElementById('visits-list');
+    c.innerHTML='<div class="loading"></div>';
+    try{
+        const r=await fetch('/.netlify/functions/visit');
+        if(!r.ok)throw new Error('Failed');
+        const visits=await r.json();
+        if(!visits.length){
+            c.innerHTML='<p style="color:var(--muted)">No visits recorded yet. Visits appear once the site has been viewed.</p>';
+            return;
+        }
+        c.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+            <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Time</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Page</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Where</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Device</th>
+                <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">From</th>
+            </tr></thead>
+            <tbody>${visits.map(v=>{
+                const d=new Date(v.time);
+                const timeStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+                const where=[v.city,v.country].filter(Boolean).join(', ')||v.ip||'—';
+                const from=v.referer||'—';
+                return `<tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:.5rem .25rem;white-space:nowrap">${timeStr}</td>
+                    <td style="padding:.5rem .25rem;color:var(--muted)">${v.path}</td>
+                    <td style="padding:.5rem .25rem">${where}</td>
+                    <td style="padding:.5rem .25rem">${v.device||'—'} · ${v.browser||'—'}</td>
+                    <td style="padding:.5rem .25rem;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${from}">${from}</td>
+                </tr>`;
+            }).join('')}</tbody>
+        </table>`;
+    }catch(e){
+        console.error('Load visits error:',e);
+        c.innerHTML='<p style="color:var(--muted)">Could not load visits.</p>';
     }
 }
 
@@ -1401,7 +1602,8 @@ function renderCategories(){
     c.innerHTML=categories.map(cat=>`
         <div class="drag-item" draggable="true" data-id="${cat.id}" style="${cat.visible===false?'opacity:0.5':''}">
             <span class="drag-handle">☰</span>
-            <span class="drag-item-title" style="flex:1">${cat.name} <span style="font-size:.75rem;color:var(--light)">(${cat.collectionLabel||'Collection'})</span></span>
+            <span class="drag-item-title" style="flex:1">${cat.name} <span style="font-size:.75rem;color:var(--light)">(${cat.type||'image'} · ${cat.collectionLabel||'Collection'})</span></span>
+            <button onclick="editCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--muted)">✎</button>
             <button onclick="toggleCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:${cat.visible===false?'var(--light)':'var(--ok)'}">${cat.visible===false?'○':'●'}</button>
             <button onclick="deleteCategory('${cat.id}')" style="border:none;background:none;cursor:pointer;padding:.25rem;color:var(--light)">✕</button>
         </div>
@@ -1414,39 +1616,85 @@ async function saveCategory(e){
     e.preventDefault();
     const name=document.getElementById('cat-name').value.trim();
     const label=document.getElementById('cat-label').value.trim()||'Collection';
+    const type=document.getElementById('cat-type').value||'image';
     const visible=document.getElementById('cat-visible').checked;
     if(!name){alert('Enter a name');return}
 
-    const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-    if(categories.find(c=>c.id===id)){alert('Category already exists');return}
-
     const btn=document.getElementById('cat-btn');
+    const editingId=btn.dataset.editingId;
+
     btn.disabled=true;btn.textContent='Saving...';
 
     try{
-        const newCat={id,name,order:categories.length+1,visible,collectionLabel:label,file:id+'.html'};
-        categories.push(newCat);
-
-        const existing=await getFile('data/categories.json');
-        await gh('/contents/data/categories.json','PUT',{
-            message:'Add category: '+name,
-            content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
-            sha:existing?.sha,
-            branch:'main'
-        });
-
-        msg(name+' added - check tabs!','ok');
+        let savedId;
+        if(editingId){
+            // Update existing category
+            const cat=categories.find(c=>c.id===editingId);
+            if(cat){cat.name=name;cat.collectionLabel=label;cat.type=type;cat.visible=visible;}
+            const existing=await getFile('data/categories.json');
+            await gh('/contents/data/categories.json','PUT',{
+                message:'Update category: '+name,
+                content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+                sha:existing?.sha,
+                branch:'main'
+            });
+            msg(name+' updated','ok');
+            delete btn.dataset.editingId;
+            savedId=editingId;
+        }else{
+            // Add new category
+            const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            if(categories.find(c=>c.id===id)){btn.disabled=false;btn.textContent='Add Category';alert('Category already exists');return false;}
+            const newCat={id,name,type,order:categories.length+1,visible,collectionLabel:label};
+            categories.push(newCat);
+            const existing=await getFile('data/categories.json');
+            await gh('/contents/data/categories.json','PUT',{
+                message:'Add category: '+name,
+                content:btoa(unescape(encodeURIComponent(JSON.stringify(categories,null,2)))),
+                sha:existing?.sha,
+                branch:'main'
+            });
+            msg(name+' added','ok');
+            savedId=id;
+        }
+        // Ensure a page file exists for the category (handles both new and pre-existing-without-page cases)
+        if(savedId&&savedId!=='paintings'&&savedId!=='photography'){
+            const pageExists=await getFile(savedId+'.html');
+            if(!pageExists){
+                const pageHtml=generateCategoryHtml(savedId,name);
+                await gh('/contents/'+savedId+'.html','PUT',{
+                    message:'Add page for '+name,
+                    content:btoa(unescape(encodeURIComponent(pageHtml))),
+                    branch:'main'
+                });
+                addLog('Created page: /'+savedId+'.html');
+            }
+        }
         document.getElementById('cat-form').reset();
         document.getElementById('cat-label').value='Collection';
         buildTabs();
         renderCategories();
     }catch(err){
-        categories.pop();
+        if(!editingId)categories.pop();
         console.error(err);
         msg(err.message||'Error','err');
     }
     btn.disabled=false;btn.textContent='Add Category';
     return false;
+}
+
+function editCategory(id){
+    const cat=categories.find(c=>c.id===id);
+    if(!cat)return;
+    document.getElementById('cat-name').value=cat.name;
+    document.getElementById('cat-label').value=cat.collectionLabel||'Collection';
+    document.getElementById('cat-type').value=cat.type||'image';
+    document.getElementById('cat-visible').checked=cat.visible!==false;
+    const btn=document.getElementById('cat-btn');
+    btn.textContent='Update Category';
+    btn.dataset.editingId=id;
+    document.getElementById('cat-form').scrollIntoView({behavior:'smooth'});
+    msg('Editing: '+cat.name,'ok');
 }
 
 async function toggleCategory(id){

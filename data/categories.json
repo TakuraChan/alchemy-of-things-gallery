@@ -14,5 +14,22 @@
     "visible": true,
     "collectionLabel": "Observation",
     "file": "photography.html"
+  },
+  {
+    "id": "sketches",
+    "name": "Sketches",
+    "order": 3,
+    "visible": false,
+    "collectionLabel": "Collection",
+    "file": "sketches.html"
+  },
+  {
+    "id": "words",
+    "name": "Words",
+    "type": "text",
+    "order": 4,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "words.html"
   }
 ]
