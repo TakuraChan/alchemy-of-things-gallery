@@ -1,4 +1,4 @@
-// Renders thoughts.html to documents/alchemy-of-things.pdf
+// Renders thoughts/alchemy-of-things.html to documents/alchemy-of-things.pdf
 //
 //   node scripts/build-pdf.js
 //
@@ -55,7 +55,7 @@ function serve() {
 }
 
 (async () => {
-    const page = fs.readFileSync(path.join(ROOT, 'thoughts.html'), 'utf8')
+    const page = fs.readFileSync(path.join(ROOT, "thoughts", "alchemy-of-things.html"), 'utf8')
         .replace(/ *<link href="https:\/\/fonts\.googleapis\.com[^>]*>\n/, '')
         .replace('</head>', '<style>\n' + fontCss() + '\n</style>\n</head>');
     fs.writeFileSync(TEMP, page);

@@ -29,7 +29,9 @@ Images: WebP format, stored in /images/
 
 ### Frontend
 - `index.html` - Landing + hub (hub nav = categories.json + Thoughts + About)
-- `thoughts.html` - Writing section. Holds the full "Alchemy of Things" framework
+- `thoughts.html` - Index of thought experiments. Add a new `.thought-entry`
+  block per piece; numbering is manual (`Thought experiment 1`, 2, …).
+- `thoughts/alchemy-of-things.html` - Thought experiment 1, the full framework
   (static text, no CMS). Uses `body.reading` so the page scrolls; tables are
   rendered as stacked `.entry` blocks for mobile. PDF in `documents/`.
 - `about.html` - About + portfolio modal
@@ -136,7 +138,7 @@ sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /
 `saveCollectionsFile()` must match `loadCategoryCollections()` file selection logic
 
 ## The Thoughts PDF
-`thoughts.html` is the source of truth. Regenerate the PDF after editing it:
+`thoughts/alchemy-of-things.html` is the source of truth. Regenerate the PDF after editing it:
 ```bash
 node scripts/build-pdf.js   # -> documents/alchemy-of-things.pdf
 ```
