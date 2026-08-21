@@ -135,6 +135,16 @@ sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /
 ### Collection save/load mismatch
 `saveCollectionsFile()` must match `loadCategoryCollections()` file selection logic
 
+## The Thoughts PDF
+`thoughts.html` is the source of truth. Regenerate the PDF after editing it:
+```bash
+node scripts/build-pdf.js   # -> documents/alchemy-of-things-first-edition.pdf
+```
+Fonts must be fetched as static **TTF** (bare `Mozilla/5.0` user agent against the
+v1 Google Fonts API). Chromium's print pipeline silently drops woff2 web fonts and
+falls back to DejaVu, so the PDF would lose Jost entirely. Print styles live in the
+`@media print` block at the end of `css/style.css`.
+
 ## Build & Deploy
 - `netlify.toml` - Build config, headers, function settings
 - `scripts/build.js` - Build script (minimal)
