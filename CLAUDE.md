@@ -28,9 +28,13 @@ Images: WebP format, stored in /images/
 ## Critical Files
 
 ### Frontend
-- `index.html` - Main gallery page
+- `index.html` - Landing + hub (hub nav = categories.json + Thoughts + About)
+- `thoughts.html` - Writing section. Holds the full "Alchemy of Things" framework
+  (static text, no CMS). Uses `body.reading` so the page scrolls; tables are
+  rendered as stacked `.entry` blocks for mobile. PDF in `documents/`.
+- `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
-- `css/style.css` - All styles
+- `css/style.css` - All styles (`.thoughts*` block = long-form reading)
 
 ### Admin
 - `admin/index.html` - **SINGLE FILE** containing all admin HTML + JS (~1440 lines)

@@ -130,8 +130,59 @@ a:hover{opacity:.6}
 .loading{display:flex;justify-content:center;padding:4rem}
 .loading::after{content:'';width:20px;height:20px;border:1px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+body.reading{overflow-y:auto}
+body.reading .main{height:auto;overflow-y:visible}
+.thoughts{max-width:640px;margin:0 auto;padding:6vh 1.5rem 6rem}
+.thoughts-segment{font-family:var(--font-display);font-style:italic;font-size:1.3rem;color:var(--light);text-align:center;margin-bottom:4rem}
+.thoughts-title{font-family:var(--font-display);font-style:italic;font-size:1.85rem;font-weight:400;line-height:1.3;text-align:center;margin-bottom:.75rem}
+.thoughts-standfirst{font-family:var(--font-display);font-style:italic;text-align:center;color:var(--muted);font-size:1rem;margin-bottom:1.5rem}
+.thoughts-edition{text-align:center;color:var(--light);font-size:.8rem;margin-bottom:3.5rem}
+.thoughts p{margin-bottom:1.25rem}
+.thoughts p:last-child{margin-bottom:0}
+.thoughts-note{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2rem 0;margin-bottom:4rem;color:var(--muted);font-size:.9rem}
+.thoughts-note a{color:var(--muted);border-bottom:1px solid var(--border)}
+.thoughts-note a:hover{color:var(--text);opacity:1}
+.thoughts-contents{margin-bottom:5rem}
+.thoughts-part{font-family:var(--font-display);font-style:italic;font-size:.9rem;color:var(--light);margin:2rem 0 .75rem}
+.thoughts-contents a{display:block;color:var(--muted);font-size:.9rem;padding:.3rem 0}
+.thoughts-contents a:hover{color:var(--text);opacity:1}
+.thoughts section{margin-bottom:4.5rem;scroll-margin-top:70px}
+.thoughts h2{font-family:var(--font-display);font-style:italic;font-size:1.3rem;font-weight:400;margin-bottom:.5rem}
+.thoughts h3{font-family:var(--font-display);font-style:italic;font-size:1.05rem;font-weight:400;color:var(--muted);margin:2.5rem 0 1rem}
+.thoughts .numeral{color:var(--light);margin-right:.6rem}
+.thoughts .lede{font-family:var(--font-display);font-style:italic;color:var(--muted);font-size:.95rem;margin-bottom:1.75rem}
+.thoughts .law{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.75rem 0;margin:2.5rem 0;font-family:var(--font-display);font-style:italic;font-size:1.15rem;line-height:1.55}
+.thoughts .law p{margin-bottom:.75rem}
+.thoughts .law p:last-child{margin-bottom:0}
+.thoughts .entry{padding:1.25rem 0;border-top:1px solid var(--border)}
+.thoughts .entry:last-of-type{border-bottom:1px solid var(--border)}
+.thoughts .entry-term{font-family:var(--font-display);font-style:italic;font-size:1.05rem;margin-bottom:.4rem}
+.thoughts .entry-def{margin-bottom:.4rem}
+.thoughts .entry-note{color:var(--muted);font-size:.85rem;margin-bottom:.3rem}
+.thoughts .entry-note:last-child{margin-bottom:0}
+.thoughts .entry-label{color:var(--light)}
+.thoughts ol{margin:0 0 1.25rem 1.5rem}
+.thoughts ol li{margin-bottom:1rem;padding-left:.4rem}
+.thoughts-close{border-top:1px solid var(--border);padding-top:3.5rem;margin-top:1rem;text-align:center}
+.thoughts-close p{margin-bottom:1.25rem}
+.thoughts-email{display:inline-block;margin-top:.75rem;font-size:.95rem;color:var(--muted);border-bottom:1px solid var(--border)}
+.thoughts-email:hover{color:var(--text);opacity:1}
+.thoughts-pdf{display:block;margin-top:3rem;font-size:.85rem;color:var(--light)}
+.thoughts-pdf:hover{color:var(--text);opacity:1}
+.thoughts-colophon{margin-top:4rem;text-align:center;color:var(--light);font-size:.8rem;line-height:1.9}
 @media(max-width:768px){
     body{overflow-y:hidden}
+    body.reading{overflow-y:auto}
+    body.reading .main{height:auto;overflow-y:visible;margin-bottom:0}
+    .thoughts{padding:3vh 0 6rem}
+    .thoughts-segment{font-size:1.1rem;margin-bottom:2.5rem}
+    .thoughts-title{font-size:1.5rem}
+    .thoughts-edition{margin-bottom:2.5rem}
+    .thoughts-note{margin-bottom:3rem}
+    .thoughts-contents{margin-bottom:3.5rem}
+    .thoughts section{margin-bottom:3.5rem}
+    .thoughts h2{font-size:1.15rem}
+    .thoughts .law{font-size:1.05rem}
     .landing-symbol{width:30px;height:30px;top:2rem}
     .landing-image{max-width:90%;max-height:65vh}
     .landing-enter{bottom:3rem;padding:.9rem 2.5rem;font-size:.8rem}
