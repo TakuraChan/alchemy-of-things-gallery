@@ -28,7 +28,12 @@ function saveUserRating(workId,rating){
 async function loadRatings(){
     try{
         const r=await fetch(RATINGS_API);
-        if(r.ok)ratingsCache=await r.json();
+        if(r.ok){
+            const data=await r.json();
+            // The function reports storage trouble as {error}; ignore it rather than
+            // treating the error object as rating data.
+            ratingsCache=(data&&!data.error)?data:{};
+        }
     }catch(e){console.log('Ratings not available')}
 }
 
@@ -42,6 +47,7 @@ async function submitRating(workId,rating){
         });
         if(r.ok){
             const data=await r.json();
+            if(data&&data.error)return null;
             ratingsCache[workId]={avgSize:data.avgSize,count:data.count};
             return data;
         }

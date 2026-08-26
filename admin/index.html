@@ -233,7 +233,8 @@ const errorLog=[];
 const origConsoleError=console.error;
 console.error=function(...args){
     origConsoleError.apply(console,args);
-    const msg=args.map(a=>typeof a==='object'?JSON.stringify(a,null,2):String(a)).join(' ');
+    const msg=args.map(a=>a instanceof Error?(a.message||String(a))
+        :(typeof a==='object'&&a!==null?JSON.stringify(a,null,2):String(a))).join(' ');
     errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
     updateLogDisplay();
 };
@@ -1480,8 +1481,15 @@ async function loadRatingsAdmin(){
 
     try{
         const r=await fetch('/.netlify/functions/ratings');
-        if(!r.ok)throw new Error('Failed to load ratings');
-        const ratings=await r.json();
+        if(r.status===404)throw new Error('The ratings function is not deployed. Check the last Netlify build.');
+        if(!r.ok)throw new Error('Ratings request failed: HTTP '+r.status);
+        const payload=await r.json();
+        if(payload&&payload.error){
+            throw new Error(payload.error==='storage-unavailable'
+                ?'Netlify Blobs is not available to the site, so ratings cannot be stored. Setting NETLIFY_SITE_ID and NETLIFY_BLOBS_TOKEN in the Netlify environment fixes it.'
+                :'Ratings storage error: '+(payload.detail||'unknown'));
+        }
+        const ratings=payload;
 
         // Load all works to get titles
         const worksMap={};
@@ -1529,8 +1537,9 @@ async function loadRatingsAdmin(){
         }).join('');
 
     }catch(e){
-        console.error('Load ratings error:',e);
-        c.innerHTML='<p style="color:var(--muted)">Could not load ratings. Check the Logs tab for details.</p>';
+        const why=e&&e.message?e.message:String(e);
+        addLog('Load ratings error: '+why);
+        c.innerHTML='<p style="color:var(--err)">'+why+'</p>';
     }
 }
 
