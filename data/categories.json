@@ -1,8 +1,17 @@
 [
   {
+    "id": "thoughts",
+    "name": "Thoughts",
+    "type": "text",
+    "order": 1,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "thoughts.html"
+  },
+  {
     "id": "paintings",
     "name": "Paintings",
-    "order": 1,
+    "order": 2,
     "visible": true,
     "collectionLabel": "Collection",
     "file": "paintings.html"
@@ -10,7 +19,7 @@
   {
     "id": "photography",
     "name": "Photography",
-    "order": 2,
+    "order": 3,
     "visible": true,
     "collectionLabel": "Observation",
     "file": "photography.html"
@@ -18,7 +27,7 @@
   {
     "id": "sketches",
     "name": "Sketches",
-    "order": 3,
+    "order": 4,
     "visible": false,
     "collectionLabel": "Collection",
     "file": "sketches.html"
@@ -27,18 +36,9 @@
     "id": "words",
     "name": "Words",
     "type": "text",
-    "order": 4,
-    "visible": true,
-    "collectionLabel": "Collection",
-    "file": "words.html"
-  },
-  {
-    "id": "thoughts",
-    "name": "Thoughts",
-    "type": "text",
     "order": 5,
     "visible": true,
     "collectionLabel": "Collection",
-    "file": "thoughts.html"
+    "file": "words.html"
   }
 ]
