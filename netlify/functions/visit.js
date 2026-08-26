@@ -31,13 +31,14 @@ function safePath(v) {
 }
 // Regions carry a coarse point so they can be plotted. Coordinates are rounded
 // to half a degree — roughly 55km — so a dot marks a region, never a person.
-function bumpPlace(t, key, lat, lon, cap) {
+function bumpPlace(t, key, lat, lon, cc, cap) {
   if (!key) return;
   t.regions = t.regions || {};
   const seen = t.regions[key];
   if (!seen && Object.keys(t.regions).length >= cap) return;
   const rec = seen || { n: 0 };
   rec.n += 1;
+  if (cc) rec.cc = cc;
   if (typeof lat === 'number' && typeof lon === 'number' && isFinite(lat) && isFinite(lon)) {
     rec.lat = Math.round(lat * 2) / 2;
     rec.lon = Math.round(lon * 2) / 2;
@@ -221,7 +222,7 @@ exports.handler = async (event) => {
         bump(t, 'paths', visit.path, 500);
         bump(t, 'devices', visit.device, 10);
         const land = geo.country || geo.countryCode || 'Unknown';
-        bumpPlace(t, land + '|' + (geo.region || ''), geo.lat, geo.lon, 1000);
+        bumpPlace(t, land + '|' + (geo.region || ''), geo.lat, geo.lon, geo.countryCode, 1000);
       }
       await store.setJSON("totals", t);
 

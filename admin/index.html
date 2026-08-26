@@ -1769,10 +1769,48 @@ function visitsShade(n,max){
     return 'rgb('+v+','+v+','+v+')';
 }
 
-// A dot per region, sized by count. Dots rather than tinted countries: at this
-// resolution the Netherlands is a few pixels and Singapore is not drawn at all,
-// so filling a country cannot show a small one as visited.
-async function paintVisitsMap(regions){
+// One small dot per place. Uniform, not sized by count: the list below carries
+// the numbers, and a growing dot only smothers its neighbours.
+//
+// A dot sits on the region where the region's own point is known. Where it is
+// not — records made before points were captured, or a country Netlify gives no
+// subdivision for — it falls back to the country centroid and is drawn hollow,
+// so an approximate placement is never mistaken for an exact one.
+async function loadGeoIndex(){
+    if(loadGeoIndex.data)return loadGeoIndex.data;
+    try{
+        const r=await fetch('/admin/countries.json');
+        loadGeoIndex.data=r.ok?await r.json():{points:{},names:{}};
+    }catch(e){loadGeoIndex.data={points:{},names:{}}}
+    return loadGeoIndex.data;
+}
+
+function mapPlaces(totals,geo){
+    const places=[],withRegion={};
+    Object.entries((totals&&totals.regions)||{}).forEach(([key,v])=>{
+        const parts=String(key).split('|');
+        const land=parts[0]||'', region=parts[1]||'';
+        withRegion[land]=true;
+        let lat=v&&v.lat, lon=v&&v.lon, exact=typeof lat==='number'&&typeof lon==='number';
+        if(!exact){
+            const cc=(v&&v.cc)||geo.names[land];
+            const pt=cc&&geo.points[cc];
+            if(pt){lat=pt[0];lon=pt[1]}
+        }
+        if(typeof lat!=='number'||typeof lon!=='number')return;
+        places.push({label:region?land+' — '+region:land,n:(v&&v.n)||0,lat:lat,lon:lon,exact:exact});
+    });
+    // A country counted but with no region record at all still belongs on the map.
+    Object.entries((totals&&totals.countries)||{}).forEach(([land,n])=>{
+        if(withRegion[land])return;
+        const cc=geo.names[land];
+        const pt=cc&&geo.points[cc];
+        if(pt)places.push({label:land,n:n,lat:pt[0],lon:pt[1],exact:false});
+    });
+    return places;
+}
+
+async function paintVisitsMap(totals){
     const holder=document.getElementById('visits-map');
     if(!holder)return;
     try{
@@ -1784,29 +1822,38 @@ async function paintVisitsMap(regions){
         holder.innerHTML=paintVisitsMap.svg;
         const svg=holder.querySelector('svg');
         if(!svg)return;
+        const geo=await loadGeoIndex();
         const box=(svg.getAttribute('viewBox')||'0 0 1000 386').split(/\s+/).map(Number);
         const W=box[2],H=box[3];
         const top=parseFloat(svg.getAttribute('data-lat-top'))||83;
         const bottom=parseFloat(svg.getAttribute('data-lat-bottom'))||-56;
-        const places=Object.entries(regions||{}).filter(([,v])=>v&&typeof v.lat==='number'&&typeof v.lon==='number');
-        if(!places.length)return;
-        const max=Math.max(1,...places.map(([,v])=>v.n||0));
+        const places=mapPlaces(totals,geo);
+        const shown=document.getElementById('map-count');
+        if(shown)shown.textContent=places.length?places.length+(places.length===1?' place':' places'):'';
+        if(!places.length){enableMapZoom(svg);return}
         const ns='http://www.w3.org/2000/svg';
         const layer=document.createElementNS(ns,'g');
-        places.sort((a,b)=>(b[1].n||0)-(a[1].n||0)).forEach(([key,v])=>{
-            const cx=((v.lon+180)/360)*W;
-            const cy=((top-v.lat)/(top-bottom))*H;
+        const R=3.2;
+        places.forEach(pl=>{
+            const cx=((pl.lon+180)/360)*W;
+            const cy=((top-pl.lat)/(top-bottom))*H;
             if(cy<0||cy>H)return;
             const dot=document.createElementNS(ns,'circle');
             dot.setAttribute('cx',cx.toFixed(1));
             dot.setAttribute('cy',cy.toFixed(1));
-            const r0=2.5+9*Math.sqrt((v.n||1)/max);
-            dot.setAttribute('r',r0.toFixed(1));
-            dot.dataset.r=r0;
-            dot.setAttribute('fill','#4a4a4a');
-            dot.setAttribute('fill-opacity','0.55');
+            dot.setAttribute('r',R);
+            dot.dataset.r=R;
+            if(pl.exact){
+                dot.setAttribute('fill','#4a4a4a');
+                dot.setAttribute('fill-opacity','0.75');
+            }else{
+                dot.setAttribute('fill','none');
+                dot.setAttribute('stroke','#6b6b6b');
+                dot.setAttribute('stroke-width','1');
+                dot.dataset.sw=1;
+            }
             const t=document.createElementNS(ns,'title');
-            t.textContent=key.replace('|',' — ').replace(/ — $/,'')+' · '+(v.n||0);
+            t.textContent=pl.label+' · '+pl.n+(pl.exact?'':' · country only');
             dot.appendChild(t);
             layer.appendChild(dot);
         });
@@ -1837,6 +1884,7 @@ function enableMapZoom(svg){
         svg.querySelectorAll('circle').forEach(c=>{
             const r0=parseFloat(c.dataset.r||c.getAttribute('r'));
             c.setAttribute('r',(r0*k).toFixed(2));
+            if(c.dataset.sw)c.setAttribute('stroke-width',(parseFloat(c.dataset.sw)*k).toFixed(3));
         });
         const land=svg.querySelector('g[stroke-width]');
         if(land)land.setAttribute('stroke-width',(0.6*k).toFixed(3));
@@ -1933,29 +1981,51 @@ function visitRows(list){
     }).join('');
 }
 
-// id -> title, read from the deployed data files rather than the GitHub API.
-async function pageTitles(){
-    const titles={};
-    const files=['/data/works.json','/data/photography.json','/data/thoughts.json','/data/words.json'];
-    await Promise.all(files.map(async f=>{
+// What each page is, read from the deployed data files rather than one GitHub
+// call per work. Thought experiments carry their number; other works carry the
+// singular of their category, so a line reads "Painting — lost in release".
+function singularise(name){
+    const n=String(name||'');
+    if(/(ch|sh|x|s|z)es$/i.test(n))return n.replace(/es$/i,'');
+    if(/ies$/i.test(n))return n.replace(/ies$/i,'y');
+    if(/ss$/i.test(n))return n;
+    return n.replace(/s$/i,'');
+}
+
+async function siteIndex(){
+    const titles={},kinds={};
+    await Promise.all((categories||[]).map(async cat=>{
+        const file='/data/'+(cat.id==='paintings'?'works':cat.id)+'.json';
         try{
-            const r=await fetch(f+'?_='+Date.now());
+            const r=await fetch(file+'?_='+Date.now());
             if(!r.ok)return;
             const list=await r.json();
-            if(Array.isArray(list))list.forEach(w=>{if(w&&w.id)titles[w.id]=w.title||w.id});
+            if(!Array.isArray(list))return;
+            const ordered=list.slice().sort((a,b)=>((a&&a.order)??999)-((b&&b.order)??999));
+            ordered.forEach((w,i)=>{
+                if(!w||!w.id)return;
+                titles[w.id]=w.title||w.id;
+                kinds[w.id]=cat.id==='thoughts'?('Thought experiment '+(i+1)):singularise(cat.name);
+            });
         }catch(e){}
     }));
-    return titles;
+    return {titles:titles,kinds:kinds};
 }
 
 const KNOWN_PAGES={'/':'Home','/index.html':'Home','/thoughts.html':'Thoughts','/about.html':'About',
-    '/paintings.html':'Paintings','/photography.html':'Photography','/words.html':'Words','/sketches.html':'Sketches'};
+    '/paintings.html':'Paintings','/photography.html':'Photography','/words.html':'Words','/sketches.html':'Sketches',
+    '/inquire.html':'Inquiry'};
 
-function pageIdentity(path,titles){
+function pageIdentity(path,idx){
     const m=String(path).match(/[?&]id=([^&]*)/);
-    const id=m?decodeURIComponent(m[1]):'';
-    const label=(id&&titles[id])||KNOWN_PAGES[path]||path;
-    return {id:id,label:label};
+    let id='';
+    try{id=m?decodeURIComponent(m[1]):''}catch(e){id=m?m[1]:''}
+    if(id&&idx.titles[id]){
+        const kind=idx.kinds[id];
+        return {id:id,label:(kind?kind+' — ':'')+idx.titles[id]};
+    }
+    const bare=String(path).split('?')[0];
+    return {id:id,label:KNOWN_PAGES[path]||KNOWN_PAGES[bare]||path};
 }
 
 async function loadRatingsMap(){
@@ -2001,7 +2071,9 @@ async function loadVisits(){
             +(bots?'<br><span style="color:var(--light);font-size:.85rem">'+bots
                 +' automated visits, counted separately</span>':'')+'</p>'
             +'<div id="visits-map" class="visits-map"></div>'
-            +'<p style="text-align:right;margin:-.6rem 0 1rem"><a href="#" id="map-reset" style="display:none;font-size:.75rem;color:var(--light)">whole world</a></p>';
+            +'<p style="display:flex;justify-content:space-between;margin:-.6rem 0 1rem;font-size:.75rem;color:var(--light)">'
+            +'<span id="map-count"></span>'
+            +'<a href="#" id="map-reset" style="display:none;color:var(--light)">whole world</a></p>';
 
         // country, then the regions within it — the same shape one level down
         const byCountry={};
@@ -2025,11 +2097,11 @@ async function loadVisits(){
               :'<p style="color:var(--muted);font-size:.85rem">No locations recorded yet.</p>')
             +'</div></details>';
 
-        const [titles,ratings]=await Promise.all([pageTitles(),loadRatingsMap()]);
+        const [idx,ratings]=await Promise.all([siteIndex(),loadRatingsMap()]);
         const pages=Object.entries((totals&&totals.paths)||{}).sort((a,b)=>b[1]-a[1]);
         const seen={};
         let readRows=pages.map(([path,n])=>{
-            const who=pageIdentity(path,titles);
+            const who=pageIdentity(path,idx);
             if(who.id)seen[who.id]=true;
             const hearts=who.id&&ratings[who.id]?ratings[who.id].count:0;
             return '<div style="display:flex;align-items:baseline;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.85rem">'
@@ -2041,7 +2113,7 @@ async function loadVisits(){
         const orphans=Object.entries(ratings).filter(([id])=>!seen[id]);
         readRows+=orphans.map(([id,d])=>
             '<div style="display:flex;align-items:baseline;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.85rem">'
-            +'<span style="flex:1">'+esc(titles[id]||id)+'</span>'
+            +'<span style="flex:1">'+esc((idx.kinds[id]?idx.kinds[id]+' — ':'')+(idx.titles[id]||id))+'</span>'
             +'<span style="color:var(--muted)">♥ '+(d.count||0)+'</span>'
             +'<span style="color:var(--light);min-width:3rem;text-align:right">—</span></div>').join('');
 
@@ -2074,7 +2146,7 @@ async function loadVisits(){
             +'</div></details>';
 
         c.innerHTML=html;
-        paintVisitsMap(totals&&totals.regions);
+        paintVisitsMap(totals);
     }catch(e){
         const why=e&&e.message?e.message:String(e);
         addLog('Load visits error: '+why);
