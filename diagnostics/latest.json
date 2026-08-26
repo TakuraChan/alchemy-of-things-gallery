@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-26T08:18:07.112Z",
+  "time": "2026-08-26T08:24:00.249Z",
   "adminVersion": "2026-08-26.1",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
@@ -24,8 +24,8 @@
       "url": "/.netlify/functions/visit",
       "status": 200,
       "result": "ok",
-      "entries": 5,
-      "views": 5
+      "entries": 6,
+      "views": 6
     }
   ],
   "deployedData": [
@@ -48,48 +48,19 @@
       "entries": 14
     }
   ],
-  "errorCount": 113,
+  "errorCount": 11,
   "log": [
-    "[10:13:20 AM] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json",
-    "[10:13:21 AM] GitHub response: 200",
-    "[10:13:21 AM] GitHub response: 200",
-    "[10:13:28 AM] [diag] Saving diagnostics/latest.json...",
-    "[10:13:28 AM] [diag] GitHub API: GET /contents/diagnostics/latest.json",
-    "[10:13:28 AM] [diag] GitHub response: 200",
-    "[10:13:28 AM] [diag] GitHub API: PUT /contents/diagnostics/latest.json",
-    "[10:13:29 AM] [diag] GitHub response: 200",
-    "[10:13:29 AM] [diag] Saved: diagnostics/latest.json",
-    "[10:17:35 AM] Loading collections for sketches...",
-    "[10:17:35 AM] GitHub API: GET /contents/data/sketches-collections.json",
-    "[10:17:36 AM] Loading collections for photography...",
-    "[10:17:36 AM] GitHub API: GET /contents/data/photography-collections.json",
-    "[10:17:38 AM] Loading collections for paintings...",
-    "[10:17:38 AM] GitHub API: GET /contents/data/paintings-collections.json",
-    "[10:17:39 AM] Loading collections for thoughts...",
-    "[10:17:39 AM] GitHub API: GET /contents/data/thoughts-collections.json",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] GitHub API: GET /contents/data/thoughts",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] GitHub API: GET /contents/data/photography",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] GitHub API: GET /contents/data/sketches",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] Load collections error: Failed to fetch",
-    "[10:17:46 AM] GitHub API: GET /contents/data/paintings",
-    "[10:17:46 AM] Load works error: thoughts Failed to fetch",
-    "[10:17:46 AM] Load works error: photography Failed to fetch",
-    "[10:17:46 AM] Load works error: paintings Failed to fetch",
-    "[10:17:46 AM] Load works error: sketches Failed to fetch",
-    "[10:18:05 AM] GitHub API: GET /contents/data/thoughts",
-    "[10:18:05 AM] GitHub response: 200",
-    "[10:18:05 AM] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json",
-    "[10:18:06 AM] GitHub response: 200",
-    "[10:18:06 AM] GitHub API: GET /contents/data/paintings",
-    "[10:18:06 AM] [diag] GitHub response: 200",
-    "[10:18:06 AM] [diag] GitHub API: GET /contents/data/paintings/.json"
+    "[10:23:58 AM] GitHub API: GET /contents/data/categories.json",
+    "[10:23:58 AM] GitHub response: 200",
+    "[10:23:58 AM] Loading collections for thoughts...",
+    "[10:23:58 AM] GitHub API: GET /contents/data/thoughts-collections.json",
+    "[10:23:59 AM] [diag] GitHub response: 200",
+    "[10:23:59 AM] [diag] Tried thoughts-collections.json: status=200",
+    "[10:23:59 AM] [diag] Loaded 1 collections: thought-experiments",
+    "[10:23:59 AM] [diag] GitHub API: GET /contents/data/thoughts",
+    "[10:23:59 AM] [diag] GitHub response: 200",
+    "[10:23:59 AM] [diag] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json",
+    "[10:23:59 AM] [diag] GitHub response: 200"
   ],
-  "reason": "errors logged"
+  "reason": "admin opened"
 }
