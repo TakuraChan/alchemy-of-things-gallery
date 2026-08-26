@@ -1818,7 +1818,8 @@ function visitRows(list){
             +'<td style="padding:.45rem .25rem;white-space:nowrap">'+esc(when)+'</td>'
             +'<td style="padding:.45rem .25rem;color:var(--muted)">'+esc(v.path||'')+'</td>'
             +'<td style="padding:.45rem .25rem">'+esc(where)+'</td>'
-            +'<td style="padding:.45rem .25rem;color:var(--muted)">'+esc(v.device||'—')+'</td></tr>';
+            +'<td style="padding:.45rem .25rem;color:'+(v.bot?'var(--light)':'var(--muted)')+'">'
+                +esc(v.bot?v.bot:(v.device||'—'))+'</td></tr>';
     }).join('');
 }
 
@@ -1884,8 +1885,11 @@ async function loadVisits(){
         const countries=Object.entries((totals&&totals.countries)||{}).sort((a,b)=>b[1]-a[1]);
         const max=Math.max(1,...countries.map(x=>x[1]));
 
+        const bots=(totals&&totals.botCount)||0;
         let html='<p style="font-size:.9rem;margin-bottom:1rem">'
-            +((totals&&totals.count)||visits.length)+' page views'+(since?' since '+since:'')+'</p>'
+            +((totals&&totals.count)||visits.length)+' page views'+(since?' since '+since:'')
+            +(bots?'<br><span style="color:var(--light);font-size:.85rem">'+bots
+                +' automated visits, counted separately</span>':'')+'</p>'
             +'<div id="visits-map" class="visits-map"></div>';
 
         html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
@@ -1928,6 +1932,16 @@ async function loadVisits(){
             +'<th style="padding:.45rem .25rem;color:var(--muted);font-weight:400">Where</th>'
             +'<th style="padding:.45rem .25rem;color:var(--muted);font-weight:400">Device</th>'
             +'</tr></thead><tbody>'+visitRows(visits)+'</tbody></table></div></details>';
+
+        const agents=Object.entries((totals&&totals.agents)||{}).sort((a,b)=>b[1]-a[1]);
+        if(agents.length){
+            html+='<details class="panel"><summary>Automated<span class="panel-count">'+agents.length+'</span></summary><div class="panel-body">'
+                +'<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Crawlers, link previews and monitors. Kept out of the counts above.</p>'
+                +agents.map(([k,n])=>'<div style="display:flex;gap:.6rem;padding:.3rem 0;font-size:.85rem">'
+                    +'<span style="flex:1">'+esc(k)+'</span>'
+                    +'<span style="color:var(--muted)">'+n+'</span></div>').join('')
+                +'</div></details>';
+        }
 
         html+='<details class="panel"><summary>All-time record</summary><div class="panel-body">'
             +'<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Counts only, kept for ever. No addresses are stored.</p>'

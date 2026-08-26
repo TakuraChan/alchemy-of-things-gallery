@@ -67,6 +67,29 @@ function storageGap(event, connected) {
   };
 }
 
+// Crawlers, unfurlers and monitors are counted apart, so "how many people read
+// this" is not inflated by machines. Repeated hits from a datacentre city like
+// Ashburn are almost always one of these.
+const BOT_TOKENS = [
+  'bot', 'crawl', 'spider', 'slurp', 'archiver', 'scraper', 'fetcher', 'monitor',
+  'facebookexternalhit', 'whatsapp', 'telegram', 'discord', 'slack', 'twitter', 'linkedin',
+  'pinterest', 'redditbot', 'embedly', 'quora', 'applebot', 'yandex', 'baidu', 'duckduck',
+  'gptbot', 'claudebot', 'anthropic', 'perplexity', 'ccbot', 'ahrefs', 'semrush', 'mj12',
+  'dotbot', 'petal', 'uptime', 'pingdom', 'lighthouse', 'headlesschrome', 'phantomjs',
+  'python-requests', 'curl/', 'wget', 'go-http-client', 'node-fetch', 'axios', 'okhttp',
+  'java/', 'scrapy', 'prerender', 'validator', 'preview'
+];
+
+function botLabel(ua) {
+  if (!ua || ua.length < 10) return 'unknown agent';
+  const low = ua.toLowerCase();
+  const hit = BOT_TOKENS.find(t => low.indexOf(t) >= 0);
+  if (!hit) return '';
+  // Name it from the agent string where possible, e.g. "GPTBot/1.2" -> "GPTBot".
+  const m = ua.match(new RegExp('[A-Za-z0-9_.-]*' + hit.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&') + '[A-Za-z0-9_.-]*', 'i'));
+  return safeText(m ? m[0] : hit, 40) || hit;
+}
+
 function parseBrowser(ua) {
   if (/Edg\//i.test(ua)) return 'Edge';
   if (/OPR\//i.test(ua)) return 'Opera';
@@ -143,8 +166,10 @@ exports.handler = async (event) => {
       const geo = parseGeo(event.headers);
 
       // No address of any kind is kept: how many, from where, and what was read.
+      const bot = botLabel(ua);
       const visit = {
         time: new Date().toISOString(),
+        bot: bot || undefined,
         path: safePath(body.path),
         city: geo.city,
         region: geo.region,
@@ -161,15 +186,21 @@ exports.handler = async (event) => {
 
       // Counts only, and they outlive the log — this is the all-time record.
       const t = await store.get("totals", { type: 'json' }) || {};
-      t.count = (t.count || 0) + 1;
       t.since = t.since || visit.time;
       t.updated = visit.time;
-      bump(t, 'countries', geo.country || geo.countryCode || 'Unknown', 300);
-      bump(t, 'codes', geo.countryCode || 'ZZ', 300);
-      bump(t, 'cities', geo.city ? (geo.city + (geo.countryCode ? ', ' + geo.countryCode : '')) : 'Unknown', 1000);
-      bump(t, 'days', visit.time.slice(0, 10), 4000);
-      bump(t, 'paths', visit.path, 500);
-      bump(t, 'devices', visit.device, 10);
+      if (bot) {
+        // Kept, but never mixed into the counts of people.
+        t.botCount = (t.botCount || 0) + 1;
+        bump(t, 'agents', bot, 100);
+      } else {
+        t.count = (t.count || 0) + 1;
+        bump(t, 'countries', geo.country || geo.countryCode || 'Unknown', 300);
+        bump(t, 'codes', geo.countryCode || 'ZZ', 300);
+        bump(t, 'cities', geo.city ? (geo.city + (geo.countryCode ? ', ' + geo.countryCode : '')) : 'Unknown', 1000);
+        bump(t, 'days', visit.time.slice(0, 10), 4000);
+        bump(t, 'paths', visit.path, 500);
+        bump(t, 'devices', visit.device, 10);
+      }
       await store.setJSON("totals", t);
 
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
