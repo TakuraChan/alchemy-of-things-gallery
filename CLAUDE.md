@@ -33,10 +33,27 @@ Images: WebP format, stored in /images/
   Numbering is positional: entries sort by `order`, then count from one.
 - `thoughts/entry.html` - Generic reader for entries written in the admin
   (`?id=<entry-id>`). Renders title + text in the reading layout.
-- `thoughts/alchemy-of-things.html` - A hand-built entry. Its data file carries
-  `link`, so the index points here instead of the generic reader. Tables are
-  stacked `.entry` blocks for mobile. PDF in `documents/`.
-- `js/thoughts.js` - Shared loader: `loadThoughts()`, `thoughtHref()`, `thoughtBody()`.
+- `js/thoughts.js` - Loader and renderer: `loadThoughts()`, `thoughtHref()`,
+  `thoughtBody()`, `renderBlocks()`, `renderThought()`.
+
+An entry is either **short** (a `text` field) or **structured** (a `sections`
+array). A structured entry carries title, standfirst, edition, note, sections,
+closing, closeLine, email, pdf, colophon; each section has part, numeral,
+heading, id, lede, body. `renderThought()` produces the same markup the reading
+CSS and the print styles already expect, and derives the contents from the
+sections. An entry may still carry `link` to point at a hand-built page.
+
+Section bodies use a small set of marks, blank line between blocks:
+
+```
+### text      a subheading
+> line        a set-apart line; consecutive ones form one block
+1. item       a numbered procedure
+: term        a table entry — term, a definition line, then "Label — value" lines
+anything else a paragraph
+```
+Inline: `*emphasis*` and `[text](#section-id)`. Anchors are slugs of the heading,
+generated on save.
 - `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
 - `css/style.css` - All styles (`.thoughts*` block = long-form reading)
@@ -89,6 +106,11 @@ netlify/functions/
 ```
 
 ### Thoughts
+The admin edits structured entries: Front matter, a repeatable Sections panel
+(part, number, heading, subtitle, body) and Ending. `readSections()` reads the
+fields back before any re-render, so nothing typed is lost when a section is
+added, moved or removed.
+
 `thoughts` is a text category, so the admin manages it like Words: entries are
 written to `data/thoughts/<id>.json` and the admin keeps `data/thoughts.json` in
 step via `updateWorksAggregate()`. An entry with a `link` field opens that page
@@ -149,7 +171,8 @@ sed -n '/<script>/,/<\/script>/p' admin/index.html | tail -n +2 | head -n -1 > /
 `saveCollectionsFile()` must match `loadCategoryCollections()` file selection logic
 
 ## The Thoughts PDF
-`thoughts/alchemy-of-things.html` is the source of truth. Regenerate the PDF after editing it:
+The entry data is the source of truth; `scripts/build-pdf.js` renders
+`thoughts/entry.html?id=alchemy-of-things`. Regenerate after editing the entry:
 ```bash
 node scripts/build-pdf.js   # -> documents/alchemy-of-things.pdf
 ```
