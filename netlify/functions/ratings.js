@@ -15,6 +15,15 @@ function openStore(name) {
   return null;
 }
 
+// Which half of the manual fallback is present, so the admin can name the gap.
+function storageGap() {
+  return {
+    error: 'storage-unavailable',
+    hasSiteId: !!(process.env.NETLIFY_SITE_ID || process.env.SITE_ID),
+    hasToken: !!(process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_API_TOKEN)
+  };
+}
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -31,7 +40,7 @@ exports.handler = async (event, context) => {
   const store = openStore("ratings");
   if (!store) {
     // Say so rather than returning {}, which reads as "no appreciations yet".
-    return { statusCode: 200, headers, body: JSON.stringify({ error: 'storage-unavailable' }) };
+    return { statusCode: 200, headers, body: JSON.stringify(storageGap()) };
   }
 
   try {

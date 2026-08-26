@@ -19,6 +19,15 @@ function openStore(name) {
   return null;
 }
 
+// Which half of the manual fallback is present, so the admin can name the gap.
+function storageGap() {
+  return {
+    error: 'storage-unavailable',
+    hasSiteId: !!(process.env.NETLIFY_SITE_ID || process.env.SITE_ID),
+    hasToken: !!(process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_API_TOKEN)
+  };
+}
+
 function parseBrowser(ua) {
   if (/Edg\//i.test(ua)) return 'Edge';
   if (/OPR\//i.test(ua)) return 'Opera';
@@ -60,7 +69,7 @@ exports.handler = async (event) => {
     // Say so rather than returning an empty list, which reads as "no visitors".
     return {
       statusCode: 200, headers: CORS,
-      body: JSON.stringify({ error: 'storage-unavailable' })
+      body: JSON.stringify(storageGap())
     };
   }
 
