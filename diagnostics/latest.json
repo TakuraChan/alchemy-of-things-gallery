@@ -1,10 +1,16 @@
 {
-  "time": "2026-08-26T08:10:51.591Z",
+  "time": "2026-08-26T08:10:58.951Z",
   "adminVersion": "2026-08-26.1",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
   "repo": "TakuraChan/alchemy-of-things-gallery",
-  "categories": [],
+  "categories": [
+    "thoughts",
+    "paintings",
+    "photography",
+    "sketches",
+    "words"
+  ],
   "functions": [
     {
       "name": "ratings",
@@ -42,11 +48,18 @@
       "entries": 14
     }
   ],
-  "errorCount": 3,
+  "errorCount": 10,
   "log": [
-    "[10:10:03 AM] GitHub API: GET /contents/data/categories.json",
-    "[10:10:33 AM] GitHub timeout after 30s",
-    "[10:10:33 AM] Categories error: Request timed out - check your internet connection"
+    "[10:10:57 AM] GitHub API: GET /contents/data/categories.json",
+    "[10:10:58 AM] GitHub response: 200",
+    "[10:10:58 AM] Loading collections for thoughts...",
+    "[10:10:58 AM] GitHub API: GET /contents/data/thoughts-collections.json",
+    "[10:10:58 AM] [diag] GitHub response: 200",
+    "[10:10:58 AM] [diag] Tried thoughts-collections.json: status=200",
+    "[10:10:58 AM] [diag] Loaded 1 collections: thought-experiments",
+    "[10:10:58 AM] [diag] GitHub API: GET /contents/data/thoughts",
+    "[10:10:58 AM] [diag] GitHub response: 200",
+    "[10:10:58 AM] [diag] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json"
   ],
   "reason": "admin opened"
 }
