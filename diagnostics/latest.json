@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-26T08:10:58.951Z",
+  "time": "2026-08-26T08:13:05.742Z",
   "adminVersion": "2026-08-26.1",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
@@ -24,8 +24,8 @@
       "url": "/.netlify/functions/visit",
       "status": 200,
       "result": "ok",
-      "entries": 0,
-      "views": 0
+      "entries": 3,
+      "views": 3
     }
   ],
   "deployedData": [
@@ -48,7 +48,7 @@
       "entries": 14
     }
   ],
-  "errorCount": 10,
+  "errorCount": 18,
   "log": [
     "[10:10:57 AM] GitHub API: GET /contents/data/categories.json",
     "[10:10:58 AM] GitHub response: 200",
@@ -59,7 +59,15 @@
     "[10:10:58 AM] [diag] Loaded 1 collections: thought-experiments",
     "[10:10:58 AM] [diag] GitHub API: GET /contents/data/thoughts",
     "[10:10:58 AM] [diag] GitHub response: 200",
-    "[10:10:58 AM] [diag] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json"
+    "[10:10:58 AM] [diag] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json",
+    "[10:10:58 AM] [diag] Saving diagnostics/latest.json...",
+    "[10:10:58 AM] [diag] GitHub API: GET /contents/diagnostics/latest.json",
+    "[10:10:59 AM] [diag] GitHub response: 200",
+    "[10:10:59 AM] [diag] GitHub response: 200",
+    "[10:10:59 AM] [diag] GitHub API: PUT /contents/diagnostics/latest.json",
+    "[10:11:00 AM] [diag] GitHub response: 200",
+    "[10:11:00 AM] [diag] Saved: diagnostics/latest.json",
+    "[10:12:43 AM] Load visits error: Failed to fetch"
   ],
-  "reason": "admin opened"
+  "reason": "errors logged"
 }
