@@ -884,7 +884,9 @@ async function saveWorkDynamic(e){
                 // Editing existing work
                 id=editingWork.id;
                 title=document.getElementById('work-title').value.trim()||editingWork.title;
-                work={id,title,collectionId};
+                // keep fields the form does not manage (e.g. link, order)
+                work={...editingWork,id,title,collectionId};
+                delete work._file;delete work._sha;delete work._folder;
             }else{
                 // Normal work - title required
                 title=document.getElementById('work-title').value.trim();

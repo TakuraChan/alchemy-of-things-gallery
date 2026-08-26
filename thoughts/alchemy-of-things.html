@@ -30,7 +30,7 @@
     <main class="main">
         <article class="thoughts">
 
-            <p class="thoughts-segment"><a href="/thoughts.html">Thought experiment 1</a></p>
+            <p class="thoughts-segment"><a href="/thoughts.html" id="entry-number">Thought experiment 1</a></p>
 
             <h1 class="thoughts-title">Alchemy of Things</h1>
             <p class="thoughts-standfirst">A framework for recombination under constraint</p>
@@ -560,5 +560,12 @@
         </div>
     </footer>
     <script src="/js/nav.js"></script>
+    <script src="/js/thoughts.js"></script>
+    <script>
+        loadThoughts().then(entries=>{
+            const i=entries.findIndex(e=>e.id==='alchemy-of-things');
+            if(i>=0)document.getElementById('entry-number').textContent='Thought experiment '+(i+1);
+        });
+    </script>
 </body>
 </html>

@@ -29,11 +29,14 @@ Images: WebP format, stored in /images/
 
 ### Frontend
 - `index.html` - Landing + hub (hub nav = categories.json + Thoughts + About)
-- `thoughts.html` - Index of thought experiments. Add a new `.thought-entry`
-  block per piece; numbering is manual (`Thought experiment 1`, 2, …).
-- `thoughts/alchemy-of-things.html` - Thought experiment 1, the full framework
-  (static text, no CMS). Uses `body.reading` so the page scrolls; tables are
-  rendered as stacked `.entry` blocks for mobile. PDF in `documents/`.
+- `thoughts.html` - Index of thought experiments, rendered from `data/thoughts.json`.
+  Numbering is positional: entries sort by `order`, then count from one.
+- `thoughts/entry.html` - Generic reader for entries written in the admin
+  (`?id=<entry-id>`). Renders title + text in the reading layout.
+- `thoughts/alchemy-of-things.html` - A hand-built entry. Its data file carries
+  `link`, so the index points here instead of the generic reader. Tables are
+  stacked `.entry` blocks for mobile. PDF in `documents/`.
+- `js/thoughts.js` - Shared loader: `loadThoughts()`, `thoughtHref()`, `thoughtBody()`.
 - `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
 - `css/style.css` - All styles (`.thoughts*` block = long-form reading)
@@ -84,6 +87,14 @@ netlify/functions/
 ├── ratings.js            # Rating API (GET/POST)
 └── package.json          # Dependencies (@netlify/blobs)
 ```
+
+### Thoughts
+`thoughts` is a text category, so the admin manages it like Words: entries are
+written to `data/thoughts/<id>.json` and the admin keeps `data/thoughts.json` in
+step via `updateWorksAggregate()`. An entry with a `link` field opens that page
+instead of the generic reader — that is how the long-form pieces are attached.
+The admin form does not manage `link` or `order`, so `saveWorkDynamic()` spreads
+the existing work when editing to avoid dropping them.
 
 ## Key Patterns
 

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "alchemy-of-things",
+    "title": "The Alchemy of Things",
+    "type": "text",
+    "collectionId": "thought-experiments",
+    "order": 1,
+    "link": "/thoughts/alchemy-of-things.html",
+    "text": "A framework for recombination under constraint."
+  }
+]
