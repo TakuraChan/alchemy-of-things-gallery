@@ -34,7 +34,7 @@ if(!location.pathname.startsWith('/admin')){
     fetch('/.netlify/functions/visit',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({path:location.pathname})
+        body:JSON.stringify({path:location.pathname+location.search})
     }).catch(()=>{});
 }
 

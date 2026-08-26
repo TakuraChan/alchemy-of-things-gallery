@@ -3,6 +3,11 @@
 
 const { getStore, connectLambda } = require("@netlify/blobs");
 
+// workId becomes a blob key, so it is checked rather than trusted: without this
+// anyone could create unbounded storage under any name they liked.
+const WORK_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$/;
+const VISITOR_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
 // These handlers use the legacy `exports.handler` signature. With that signature
 // Netlify does not configure Blobs automatically — it passes the context on
 // event.blobs, and connectLambda() is what hands it to the client. Without this
@@ -41,8 +46,9 @@ function storageGap(event, connected) {
 }
 
 exports.handler = async (event, context) => {
+  const host = (event.headers && event.headers.host) || '';
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': host ? 'https://' + host : 'null',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Content-Type': 'application/json'
@@ -81,9 +87,12 @@ exports.handler = async (event, context) => {
 
     // POST - Submit a rating
     if (event.httpMethod === 'POST') {
-      const { workId, rating, visitorId } = JSON.parse(event.body);
+      const { workId, rating, visitorId } = JSON.parse(event.body || '{}');
 
-      if (!workId || !rating || rating < 1 || rating > 100) {
+      if (!WORK_ID.test(String(workId || '')) ||
+          !Number.isFinite(rating) || Math.floor(rating) !== rating ||
+          rating < 1 || rating > 100 ||
+          (visitorId !== undefined && !VISITOR_ID.test(String(visitorId || '')))) {
         return {
           statusCode: 400,
           headers,
