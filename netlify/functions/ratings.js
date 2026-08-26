@@ -3,6 +3,18 @@
 
 const { getStore } = require("@netlify/blobs");
 
+// Blobs normally configures itself from the runtime. If that fails, fall back to
+// explicit credentials so the site owner can fix it from the Netlify UI.
+function openStore(name) {
+  try { return getStore(name); } catch (e) {}
+  const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_API_TOKEN;
+  if (siteID && token) {
+    try { return getStore({ name, siteID, token }); } catch (e) {}
+  }
+  return null;
+}
+
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -16,12 +28,10 @@ exports.handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
-  let store;
-  try {
-    store = getStore("ratings");
-  } catch (initError) {
-    console.error('Blobs init error:', initError);
-    return { statusCode: 200, headers, body: JSON.stringify({}) };
+  const store = openStore("ratings");
+  if (!store) {
+    // Say so rather than returning {}, which reads as "no appreciations yet".
+    return { statusCode: 200, headers, body: JSON.stringify({ error: 'storage-unavailable' }) };
   }
 
   try {
@@ -104,9 +114,9 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('Ratings error:', error);
     return {
-      statusCode: 500,
+      statusCode: 200,
       headers,
-      body: JSON.stringify({ error: 'Server error' })
+      body: JSON.stringify({ error: 'storage-failed', detail: String(error && error.message || error) })
     };
   }
 };
