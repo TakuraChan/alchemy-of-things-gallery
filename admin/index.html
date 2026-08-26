@@ -232,7 +232,8 @@
         <div id="logs" class="tab-content hidden">
             <p style="color:var(--muted);margin-bottom:1rem;font-size:.85rem">Error log for troubleshooting. Tap to copy.</p>
             <div id="error-log" style="background:var(--card);border:1px solid var(--border);padding:1rem;font-family:monospace;font-size:.75rem;max-height:400px;overflow:auto;white-space:pre-wrap;word-break:break-all" onclick="copyLogs()">No errors yet.</div>
-            <button class="btn submit" style="margin-top:1rem" onclick="copyLogs()">Copy Logs</button>
+            <button class="btn submit" style="margin-top:1rem" onclick="saveDiagnostics('manual')">Send diagnostics</button>
+            <button class="logout" style="margin-top:.5rem" onclick="copyLogs()">Copy Logs</button>
             <button class="logout" style="margin-top:.5rem" onclick="clearLogs()">Clear Logs</button>
         </div>
 
@@ -264,6 +265,7 @@ console.error=function(...args){
         :(typeof a==='object'&&a!==null?JSON.stringify(a,null,2):String(a))).join(' ');
     errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
     updateLogDisplay();
+    noteProblem();
 };
 window.onerror=(msg,src,line)=>{errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg+' ('+src+':'+line+')');updateLogDisplay()};
 window.onunhandledrejection=e=>{errorLog.push('['+new Date().toLocaleTimeString()+'] Unhandled: '+(e.reason?.message||e.reason||'Promise rejected'));updateLogDisplay()};
@@ -275,8 +277,14 @@ function updateLogDisplay(){
     if(count){count.textContent=errorLog.length;count.style.display=errorLog.length?'inline':'none'}
 }
 function addLog(msg){
-    errorLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
+    // Lines written while posting a report are tagged, so the report cannot
+    // count its own noise as a change and post itself again.
+    const tag=(typeof savingDiagnostics!=='undefined'&&savingDiagnostics)?'[diag] ':'';
+    errorLog.push('['+new Date().toLocaleTimeString()+'] '+tag+msg);
     updateLogDisplay();
+}
+function noteProblem(){
+    if(typeof scheduleDiagnostics==='function')scheduleDiagnostics();
 }
 function decodeBase64(str){return decodeURIComponent(escape(atob(str)))}
 function storageAdvice(d){
@@ -1652,6 +1660,109 @@ async function loadAll(){
     if(categories.length){
         showTab(categories[0].id);
     }
+    saveDiagnostics('admin opened');
+}
+
+// --- Self diagnosis ----------------------------------------------------------
+// The admin can write to the repo, so it posts its own health report there and
+// Claude reads it from git. Saved only when something changed, to keep the
+// history quiet.
+
+const ADMIN_VERSION='2026-08-26.1';
+
+async function checkFunction(name,url){
+    const out={name:name,url:url};
+    try{
+        const r=await fetch(url);
+        out.status=r.status;
+        if(r.status===404){out.result='not-deployed';return out}
+        const body=await r.json().catch(()=>null);
+        if(body&&body.error){
+            out.result=body.error;
+            if(body.detail)out.detail=body.detail;
+            if('hasSiteId' in body){out.hasSiteId=body.hasSiteId;out.hasToken=body.hasToken}
+        }else if(Array.isArray(body)){out.result='ok';out.entries=body.length}
+        else if(body&&body.log){out.result='ok';out.entries=body.log.length;out.views=body.totals&&body.totals.count}
+        else{out.result='ok';out.entries=body?Object.keys(body).length:0}
+    }catch(e){out.result='unreachable';out.detail=String(e&&e.message||e)}
+    return out;
+}
+
+async function checkData(path){
+    const out={path:path};
+    try{
+        const r=await fetch(path+'?_='+Date.now());
+        out.status=r.status;
+        if(!r.ok){out.result='missing';return out}
+        const j=await r.json();
+        out.result='ok';
+        out.entries=Array.isArray(j)?j.length:Object.keys(j).length;
+    }catch(e){out.result='unparseable';out.detail=String(e&&e.message||e)}
+    return out;
+}
+
+async function runDiagnostics(){
+    const checks=await Promise.all([
+        checkFunction('ratings','/.netlify/functions/ratings'),
+        checkFunction('visits','/.netlify/functions/visit')
+    ]);
+    const data=await Promise.all([
+        checkData('/data/categories.json'),
+        checkData('/data/thoughts.json'),
+        checkData('/data/works.json')
+    ]);
+    return {
+        time:new Date().toISOString(),
+        adminVersion:ADMIN_VERSION,
+        origin:location.origin,
+        userAgent:navigator.userAgent,
+        repo:cfg&&cfg.repo,
+        categories:categories.map(c=>c.id),
+        functions:checks,
+        deployedData:data,
+        errorCount:errorLog.length,
+        log:errorLog.slice(-40)
+    };
+}
+
+// A signature of what matters. Writing the report logs lines of its own, so those
+// are excluded — otherwise saving would look like a change and save again, for ever.
+function isOwnLogLine(line){return line.indexOf('[diag] ')>=0||line.indexOf('diagnostics/latest.json')>=0}
+
+function diagnosticsSignature(d){
+    return JSON.stringify({
+        v:d.adminVersion,
+        f:d.functions.map(x=>[x.name,x.status,x.result,x.hasSiteId,x.hasToken]),
+        d:d.deployedData.map(x=>[x.path,x.result,x.entries]),
+        l:d.log.filter(x=>!isOwnLogLine(x)).map(x=>x.replace(/^\[[^\]]+\]\s*/,''))
+    });
+}
+
+let lastDiagnosticsSignature=null,diagnosticsTimer=null,savingDiagnostics=false;
+
+async function saveDiagnostics(reason){
+    if(!cfg||!cfg.token||savingDiagnostics)return;
+    savingDiagnostics=true;
+    try{
+        const report=await runDiagnostics();
+        report.reason=reason||'manual';
+        const sig=diagnosticsSignature(report);
+        if(sig===lastDiagnosticsSignature)return;
+        lastDiagnosticsSignature=sig;
+        await saveFile('diagnostics/latest.json',JSON.stringify(report,null,2),'Diagnostics: '+report.reason);
+    }catch(e){
+        origConsoleError('Diagnostics save failed',e);
+    }finally{
+        savingDiagnostics=false;
+        clearTimeout(diagnosticsTimer);
+    }
+}
+
+// Errors are worth reporting, but not one commit each, and never in a loop.
+function scheduleDiagnostics(){
+    if(!cfg||!cfg.token||savingDiagnostics)return;
+    clearTimeout(diagnosticsTimer);
+    diagnosticsTimer=setTimeout(()=>saveDiagnostics('errors logged'),20000);
 }
 
 async function loadRatingsAdmin(){

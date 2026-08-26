@@ -143,6 +143,18 @@ gh(path, method, body) // Calls api.github.com/repos/{repo}{path}
 - Display with 90% grayscale filter
 - No ratings shown
 
+## Checking status
+The admin posts a health report to `diagnostics/latest.json` in this repo — on
+open, after errors, and on demand from the Logs tab. Read it rather than asking
+for a screenshot:
+
+```bash
+git fetch origin main && git show origin/main:diagnostics/latest.json
+```
+It carries the admin version (stale cache shows up here), which Netlify
+functions answer and how, whether the deployed data files parse, and the last 40
+log lines. Netlify 404s `/diagnostics/*`, so it is not public.
+
 ## Common Issues & Fixes
 
 ### Images not loading
