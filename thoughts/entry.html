@@ -51,10 +51,15 @@
             }
             const e=entries[i];
             document.title=e.title+' — Alchemy of Things';
-            c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">Thought experiment '+(i+1)+'</a></p>'
-                +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
-                +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')
-                +'<section>'+thoughtBody(e.text)+'</section>';
+            if(e.sections&&e.sections.length){
+                c.innerHTML=renderThought(e,i+1);
+            }else{
+                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">Thought experiment '+(i+1)+'</a></p>'
+                    +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
+                    +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
+                    +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')
+                    +'<section>'+thoughtBody(e.text)+'</section>';
+            }
         })();
     </script>
 </body>

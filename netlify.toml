@@ -11,6 +11,11 @@
   to = "/documents/alchemy-of-things.pdf"
   status = 301
 
+[[redirects]]
+  from = "/thoughts/alchemy-of-things.html"
+  to = "/thoughts/entry.html?id=alchemy-of-things"
+  status = 301
+
 [[headers]]
   for = "/*"
   [headers.values]

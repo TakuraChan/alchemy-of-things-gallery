@@ -1,4 +1,5 @@
-// Renders thoughts/alchemy-of-things.html to documents/alchemy-of-things.pdf
+// Renders the Alchemy of Things entry to documents/alchemy-of-things.pdf.
+// The entry is data now, so this renders the reader page and waits for it.
 //
 //   node scripts/build-pdf.js
 //
@@ -19,6 +20,7 @@ catch { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'documents', 'alchemy-of-things.pdf');
 const TEMP = path.join(ROOT, '_print.html');
+const ENTRY = 'alchemy-of-things';
 const UA = 'Mozilla/5.0'; // a bare UA makes Google serve truetype rather than woff2
 
 const FAMILIES = ['Jost:300,400', 'Cormorant+Garamond:300,400,400italic'];
@@ -55,7 +57,7 @@ function serve() {
 }
 
 (async () => {
-    const page = fs.readFileSync(path.join(ROOT, "thoughts", "alchemy-of-things.html"), 'utf8')
+    const page = fs.readFileSync(path.join(ROOT, "thoughts", "entry.html"), 'utf8')
         .replace(/ *<link href="https:\/\/fonts\.googleapis\.com[^>]*>\n/, '')
         .replace('</head>', '<style>\n' + fontCss() + '\n</style>\n</head>');
     fs.writeFileSync(TEMP, page);
@@ -64,7 +66,8 @@ function serve() {
     const browser = await chromium.launch();
     try {
         const p = await browser.newPage();
-        await p.goto('http://127.0.0.1:' + server.address().port + '/_print.html', { waitUntil: 'networkidle' });
+        await p.goto('http://127.0.0.1:' + server.address().port + '/_print.html?id=' + ENTRY, { waitUntil: 'networkidle' });
+        await p.waitForSelector('.thoughts-title');
         await p.evaluate(() => document.fonts.ready);
         await p.emulateMedia({ media: 'print' });
         await p.pdf({

@@ -595,7 +595,23 @@ async function showCategoryContent(cat){
             </div>
             ${isText?`
                 <div class="field"><label>Title</label><input type="text" id="work-title"></div>
-                <div class="field"><label>Content</label><textarea id="work-text" style="min-height:200px;font-family:inherit" placeholder="Write your ${cat.name.toLowerCase()} here..." required></textarea></div>
+                <div class="field"><label>Content <span style="color:var(--light);font-size:.8rem">(a short piece; leave empty if you use sections)</span></label><textarea id="work-text" style="min-height:140px;font-family:inherit" placeholder="Write your ${cat.name.toLowerCase()} here..."></textarea></div>
+                <details class="panel"><summary>Front matter</summary><div class="panel-body">
+                    <div class="field"><label>Standfirst</label><input type="text" id="work-standfirst" placeholder="A framework for recombination under constraint"></div>
+                    <div class="field"><label>Edition</label><input type="text" id="work-edition" placeholder="Second draft · 2026 · Takura Changwa"></div>
+                    <div class="field"><label>Opening note</label><textarea id="work-note" style="min-height:120px;font-family:inherit" placeholder="A note on rigour…"></textarea></div>
+                </div></details>
+                <details class="panel" id="panel-sections"><summary>Sections<span class="panel-count" id="sections-count"></span></summary><div class="panel-body">
+                    <div id="sections-list"></div>
+                    <button type="button" class="btn" onclick="addSection()" style="width:100%;padding:.75rem;margin-top:.5rem">Add section</button>
+                </div></details>
+                <details class="panel"><summary>Ending</summary><div class="panel-body">
+                    <div class="field"><label>Closing passage</label><textarea id="work-closing" style="min-height:100px;font-family:inherit"></textarea></div>
+                    <div class="field"><label>Invitation</label><input type="text" id="work-closeline" placeholder="Please send your results…"></div>
+                    <div class="field"><label>Reply address</label><input type="text" id="work-email" placeholder="review@alchemyofthings.com"></div>
+                    <div class="field"><label>PDF path</label><input type="text" id="work-pdf" placeholder="/documents/…pdf"></div>
+                    <div class="field"><label>Colophon</label><textarea id="work-colophon" style="min-height:80px;font-family:inherit"></textarea></div>
+                </div></details>
                 <div class="field"><label>Image <span style="color:var(--light);font-size:.8rem">(optional — photograph a handwritten version)</span></label>
                     <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to add image</span></div>
                 </div>
@@ -632,6 +648,8 @@ async function showCategoryContent(cat){
         </details>
     `;
 
+    editSections=[];
+    renderSections();
     renderCollectionsList(cat);
     loadCategoryWorks(cat);
 }
@@ -802,6 +820,68 @@ async function saveCollectionsFile(){
 let workImg=null;
 let multiImgs=[];
 let editingWork=null; // Track work being edited
+let editSections=[];  // Sections of the long-form entry being written
+
+const BODY_HINT='Blank line between blocks. ### subheading · &gt; set-apart line · 1. numbered step · : table entry (term, then a definition line, then "Label — value" lines)';
+
+function slugify(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+
+// Read the fields back before any re-render, so nothing typed is lost.
+function readSections(){
+    editSections=editSections.map((sec,i)=>{
+        const v=id=>{const el=document.getElementById('sec-'+i+'-'+id);return el?el.value:''};
+        return {part:v('part'),numeral:v('numeral'),heading:v('heading'),lede:v('lede'),body:v('body')};
+    });
+    return editSections;
+}
+
+function renderSections(){
+    const c=document.getElementById('sections-list');
+    if(!c)return;
+    const n=document.getElementById('sections-count');
+    if(n)n.textContent=editSections.length||'';
+    if(!editSections.length){
+        c.innerHTML='<p style="color:var(--muted);font-size:.85rem">No sections. A short piece can just use Content above.</p>';
+        return;
+    }
+    c.innerHTML=editSections.map((sec,i)=>`
+        <details class="panel">
+            <summary>${(sec.numeral?sec.numeral+'. ':'')+(sec.heading||'Untitled section')}</summary>
+            <div class="panel-body">
+                <div class="field"><label>Part <span style="color:var(--light);font-size:.8rem">(repeat to continue a part)</span></label><input type="text" id="sec-${i}-part" value="${(sec.part||'').replace(/"/g,'&quot;')}"></div>
+                <div class="field"><label>Number</label><input type="text" id="sec-${i}-numeral" value="${(sec.numeral||'').replace(/"/g,'&quot;')}" placeholder="I"></div>
+                <div class="field"><label>Heading</label><input type="text" id="sec-${i}-heading" value="${(sec.heading||'').replace(/"/g,'&quot;')}"></div>
+                <div class="field"><label>Subtitle</label><input type="text" id="sec-${i}-lede" value="${(sec.lede||'').replace(/"/g,'&quot;')}"></div>
+                <div class="field"><label>Body</label><textarea id="sec-${i}-body" style="min-height:180px;font-family:inherit">${(sec.body||'').replace(/</g,'&lt;')}</textarea>
+                    <p style="color:var(--light);font-size:.72rem;margin-top:.4rem;line-height:1.5">${BODY_HINT}</p></div>
+                <div style="display:flex;gap:.5rem">
+                    <button type="button" class="logout" onclick="moveSection(${i},-1)" style="flex:1">Up</button>
+                    <button type="button" class="logout" onclick="moveSection(${i},1)" style="flex:1">Down</button>
+                    <button type="button" class="logout" onclick="removeSection(${i})" style="flex:1">Remove</button>
+                </div>
+            </div>
+        </details>`).join('');
+}
+
+function addSection(){
+    readSections();
+    const last=editSections[editSections.length-1];
+    editSections.push({part:last?last.part:'',numeral:'',heading:'',lede:'',body:''});
+    renderSections();
+}
+function removeSection(i){
+    readSections();
+    if(!confirm('Remove this section?'))return;
+    editSections.splice(i,1);
+    renderSections();
+}
+function moveSection(i,d){
+    readSections();
+    const j=i+d;
+    if(j<0||j>=editSections.length)return;
+    const t=editSections[i];editSections[i]=editSections[j];editSections[j]=t;
+    renderSections();
+}
 
 function isUnfinishedCollection(){
     const colId=document.getElementById('work-collection')?.value;
@@ -935,11 +1015,35 @@ async function saveWorkDynamic(e){
             }
 
             if(isText){
-                // Text-based work
+                // Text-based work: either a short piece, or sections.
                 const text=document.getElementById('work-text')?.value||'';
-                if(!text)throw new Error('Enter content');
-                work.text=text;
+                const secs=readSections().filter(x=>x.heading||x.body);
+                if(!text&&!secs.length)throw new Error('Write some content, or add a section');
                 work.type='text';
+                if(text)work.text=text; else delete work.text;
+
+                const get=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
+                const keep=(key,val)=>{if(val)work[key]=val;else delete work[key]};
+                keep('standfirst',get('work-standfirst'));
+                keep('edition',get('work-edition'));
+                keep('note',document.getElementById('work-note')?.value.trim()||'');
+                keep('closing',document.getElementById('work-closing')?.value.trim()||'');
+                keep('closeLine',get('work-closeline'));
+                keep('email',get('work-email'));
+                keep('pdf',get('work-pdf'));
+                keep('colophon',document.getElementById('work-colophon')?.value.trim()||'');
+
+                if(secs.length){
+                    // Anchors come from the headings, kept unique for the contents links.
+                    const used={};
+                    work.sections=secs.map((x,i)=>{
+                        let sid=slugify(x.heading)||('section-'+(i+1));
+                        if(used[sid])sid=sid+'-'+(++used[sid]); else used[sid]=1;
+                        return {part:x.part,numeral:x.numeral,heading:x.heading,id:sid,lede:x.lede,body:x.body};
+                    });
+                }else{
+                    delete work.sections;
+                }
                 // Optional image (e.g. handwritten photo)
                 if(workImg){
                     btn.textContent='Uploading image...';
@@ -1173,6 +1277,20 @@ async function editWork(folder,file){
     const colSelect=document.getElementById('work-collection');
     if(colSelect)colSelect.value=work.collectionId||'';
 
+    // Long-form fields, when the category is text
+    const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||''};
+    set('work-standfirst',work.standfirst);
+    set('work-edition',work.edition);
+    set('work-note',work.note);
+    set('work-closing',work.closing);
+    set('work-closeline',work.closeLine);
+    set('work-email',work.email);
+    set('work-pdf',work.pdf);
+    set('work-colophon',work.colophon);
+    editSections=(work.sections||[]).map(x=>({part:x.part||'',numeral:x.numeral||'',
+        heading:x.heading||'',lede:x.lede||'',body:x.body||''}));
+    renderSections();
+
     // Show current image in upload area with rotation controls
     if(document.getElementById('work-upload')&&work.image){
         showWorkImagePreview(work.image+'?_='+Date.now());
@@ -1194,6 +1312,8 @@ async function editWork(folder,file){
 function cancelEdit(){
     editingWork=null;
     workImg=null;
+    editSections=[];
+    renderSections();
     document.getElementById('work-form').reset();
     document.getElementById('work-btn').textContent='Add to '+currentCategory.name;
     const sum=document.getElementById('form-summary');
