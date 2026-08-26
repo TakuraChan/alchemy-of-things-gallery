@@ -70,6 +70,17 @@
         .btn-biometric{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1rem;width:100%}
         .login-divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;width:280px;color:var(--light);font-size:.85rem}
         .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+        .panel{border:1px solid var(--border);background:var(--card);margin-bottom:.6rem}
+        .panel>summary{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;cursor:pointer;font-size:.85rem;color:var(--muted);list-style:none}
+        .panel>summary::-webkit-details-marker{display:none}
+        .panel>summary::after{content:'+';color:var(--light);font-size:1rem;line-height:1}
+        .panel[open]>summary::after{content:'\2013'}
+        .panel[open]>summary{border-bottom:1px solid var(--border);color:var(--text)}
+        .panel-count{margin-left:auto;color:var(--light);font-size:.75rem}
+        .panel-body{padding:1rem;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .panel .item{padding:.7rem}
+        .panel .list{margin-top:0}
+        .panel .divider{margin:1.5rem 0 0;padding-top:1.25rem}
         @media(max-width:480px){.container{padding:1.5rem 1rem}.header{flex-direction:column;align-items:flex-start;gap:1rem}.tabs{overflow-x:auto}.tab{padding:1rem;white-space:nowrap}}
         .work-col-strip{display:none}
         .work-col-arrow{display:none}
@@ -153,6 +164,9 @@
         <div id="category-content" class="tab-content"></div>
 
         <div id="categories" class="tab-content hidden">
+            <details class="panel">
+                <summary>Add category</summary>
+                <div class="panel-body">
             <form id="cat-form" onsubmit="return saveCategory(event)">
                 <div class="field"><label>Name</label><input type="text" id="cat-name" placeholder="e.g. Architecture, Poetry" required></div>
                 <div class="field"><label>Collection Label</label><input type="text" id="cat-label" placeholder="e.g. Sketch, Series, Chapter, Poem" value="Collection"></div>
@@ -165,11 +179,15 @@
                 <div class="field"><label class="check"><input type="checkbox" id="cat-visible" checked><span>Visible</span></label></div>
                 <button type="submit" class="btn submit" id="cat-btn">Add Category</button>
             </form>
-            <div class="list" style="margin-top:2rem">
-                <h3>Existing Categories</h3>
-                <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">Drag to reorder. Tap ● to toggle visibility.</p>
-                <div id="cat-list"></div>
-            </div>
+                </div>
+            </details>
+            <details class="panel" open>
+                <summary>Existing categories</summary>
+                <div class="panel-body">
+                    <p style="color:var(--muted);font-size:.8rem;margin-bottom:1rem">Drag to reorder. Tap ● to toggle visibility.</p>
+                    <div id="cat-list"></div>
+                </div>
+            </details>
         </div>
 
         <div id="settings" class="tab-content hidden">
@@ -179,27 +197,36 @@
                 <button class="btn submit" onclick="setupBiometricFromSettings()" id="faceid-btn">Set up Face ID</button>
                 <div class="divider"></div>
             </div>
+            <details class="panel">
+                <summary>Symbol</summary>
+                <div class="panel-body">
             <form onsubmit="return saveSymbol(event)">
-                <div class="field"><label>Symbol</label>
+                <div class="field">
                     <div class="upload" id="symbol-upload"><input type="file" accept="image/svg+xml,image/png" onchange="preview(this,'symbol')"><span>Upload SVG</span></div>
                 </div>
                 <button type="submit" class="btn submit">Update Symbol</button>
             </form>
-            <div class="divider">
-                <h3>App Icon</h3>
-                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Upload an image to use as the home screen icon. Will auto-generate all required sizes.</p>
+                </div>
+            </details>
+            <details class="panel">
+                <summary>App icon</summary>
+                <div class="panel-body">
+                <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Upload an image to use as the home screen icon. All required sizes are generated.</p>
                 <form onsubmit="return saveAppIcons(event)">
                     <div class="field">
                         <div class="upload" id="appicon-upload"><input type="file" accept="image/*" onchange="previewAppIcon(this)"><span>Upload Icon (square image)</span></div>
                     </div>
                     <button type="submit" class="btn submit" id="appicon-btn">Save App Icons</button>
                 </form>
-            </div>
-            <div class="divider">
-                <h3>GitHub</h3>
-                <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
-                <button class="logout" onclick="resetConfig()">Reset Config</button>
-            </div>
+                </div>
+            </details>
+            <details class="panel">
+                <summary>GitHub</summary>
+                <div class="panel-body">
+                    <div class="field"><label>Repository</label><input type="text" id="cfg-repo" readonly></div>
+                    <button class="logout" onclick="resetConfig()">Reset Config</button>
+                </div>
+            </details>
         </div>
 
         <div id="logs" class="tab-content hidden">
@@ -546,17 +573,20 @@ async function showCategoryContent(cat){
         `<option value="">No ${collLabel}s yet</option>`;
 
     container.innerHTML=`
-        <!-- Collections Management -->
-        <div style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)">
-            <h3 style="font-size:.9rem;font-weight:400;color:var(--muted);margin-bottom:1rem">${collLabel}s</h3>
-            <div style="display:flex;gap:.5rem;margin-bottom:1rem">
-                <input type="text" id="new-collection" placeholder="New ${collLabel.toLowerCase()} name" style="flex:1;padding:.75rem;border:1px solid var(--border);font-family:inherit">
-                <button class="btn" onclick="addCollection()" style="padding:.75rem 1rem">Add</button>
+        <details class="panel" id="panel-collections">
+            <summary>${collLabel}s<span class="panel-count" id="collections-count"></span></summary>
+            <div class="panel-body">
+                <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+                    <input type="text" id="new-collection" placeholder="New ${collLabel.toLowerCase()} name" style="flex:1;padding:.75rem;border:1px solid var(--border);font-family:inherit">
+                    <button class="btn" onclick="addCollection()" style="padding:.75rem 1rem">Add</button>
+                </div>
+                <div id="collections-list"></div>
             </div>
-            <div id="collections-list"></div>
-        </div>
+        </details>
 
-        <!-- Add Work Form -->
+        <details class="panel" id="panel-form">
+            <summary id="form-summary">Add to ${cat.name}</summary>
+            <div class="panel-body">
         <form id="work-form" onsubmit="return saveWorkDynamic(event)">
             <div class="field"><label>${collLabel}</label>
                 <select id="work-collection" onchange="onCollectionChange()" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
@@ -593,7 +623,13 @@ async function showCategoryContent(cat){
             `}
             <button type="submit" class="btn submit" id="work-btn">Add to ${cat.name}</button>
         </form>
-        <div class="list"><h3>Existing Works</h3><div id="work-list"><div class="loading"></div></div></div>
+            </div>
+        </details>
+
+        <details class="panel" open id="panel-works">
+            <summary>Existing works<span class="panel-count" id="works-count"></span></summary>
+            <div class="panel-body"><div id="work-list"><div class="loading"></div></div></div>
+        </details>
     `;
 
     renderCollectionsList(cat);
@@ -642,6 +678,7 @@ async function loadCategoryCollections(cat){
 function renderCollectionsList(cat){
     const c=document.getElementById('collections-list');
     if(!c)return;
+    const n=document.getElementById('collections-count');if(n)n.textContent=categoryCollections.length||'';
     if(!categoryCollections.length){
         c.innerHTML='<p style="color:var(--muted);font-size:.85rem">No '+(cat.collectionLabel||'collection').toLowerCase()+'s yet.</p>';
         return;
@@ -964,6 +1001,8 @@ async function saveWorkDynamic(e){
     }
     btn.disabled=false;btn.textContent='Add to '+currentCategory.name;
     editingWork=null;
+    const sum=document.getElementById('form-summary');
+    if(sum)sum.textContent='Add to '+currentCategory.name;
     return false;
 }
 
@@ -991,6 +1030,9 @@ async function loadCategoryWorks(cat){
             w._sha=fd.sha;
             allWorks.push(w);
         }
+
+        const wc=document.getElementById('works-count');
+        if(wc)wc.textContent=allWorks.length||'';
 
         // Group by collection
         const collLabel=cat.collectionLabel||'Collection';
@@ -1139,8 +1181,12 @@ async function editWork(folder,file){
     // Update button text
     document.getElementById('work-btn').textContent='Update Work';
 
-    // Scroll to form
-    document.getElementById('work-form').scrollIntoView({behavior:'smooth'});
+    // Open the form panel and say what is being edited
+    const panel=document.getElementById('panel-form');
+    if(panel)panel.open=true;
+    const sum=document.getElementById('form-summary');
+    if(sum)sum.textContent='Editing: '+(work.title||'Untitled');
+    if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});
 
     msg('Editing: '+work.title,'ok');
 }
@@ -1150,6 +1196,10 @@ function cancelEdit(){
     workImg=null;
     document.getElementById('work-form').reset();
     document.getElementById('work-btn').textContent='Add to '+currentCategory.name;
+    const sum=document.getElementById('form-summary');
+    if(sum)sum.textContent='Add to '+currentCategory.name;
+    const panel=document.getElementById('panel-form');
+    if(panel)panel.open=false;
     const uploadDiv=document.getElementById('work-upload');
     if(uploadDiv){
         uploadDiv.className='upload';
