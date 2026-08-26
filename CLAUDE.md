@@ -149,6 +149,19 @@ gh(path, method, body) // Calls api.github.com/repos/{repo}{path}
 - Display with 90% grayscale filter
 - No ratings shown
 
+## Visits
+`netlify/functions/visit.js` keeps two blobs: `log` (the last 100 views) and
+`totals` (all-time counts — countries, ISO codes, cities, days, paths, devices).
+Totals are counts only and outlive the log. **No address is stored**: geography
+comes from the `x-nf-geo` header and nothing else identifying is kept.
+
+The admin tints `admin/world.svg` by country. Rebuild that basemap only if it
+changes:
+```bash
+npm i --no-save world-atlas@2 world-countries topojson-client
+node scripts/build-map.js
+```
+
 ## Checking status
 The admin posts a health report to `diagnostics/latest.json` in this repo — on
 open, after errors, and on demand from the Logs tab. Read it rather than asking

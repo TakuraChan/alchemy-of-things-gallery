@@ -14,6 +14,8 @@ function connectBlobs(event) {
   return false;
 }
 
+const LOG_SIZE = 100;
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -94,16 +96,15 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'GET') {
       const log = await store.get("log", { type: 'json' }) || [];
       const totals = await store.get("totals", { type: 'json' }) || { count: 0, countries: {} };
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ log, totals }) };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ log, totals, logSize: LOG_SIZE }) };
     }
 
     if (event.httpMethod === 'POST') {
       const body = JSON.parse(event.body || '{}');
       const ua = event.headers['user-agent'] || '';
-      const ip = (event.headers['x-nf-client-connection-ip'] ||
-                  (event.headers['x-forwarded-for'] || '').split(',')[0]).trim() || 'unknown';
       const geo = parseGeo(event.headers);
 
+      // No address of any kind is kept: how many, from where, and what was read.
       const visit = {
         time: new Date().toISOString(),
         path: body.path || '/',
@@ -111,24 +112,31 @@ exports.handler = async (event) => {
         region: geo.region,
         country: geo.country,
         countryCode: geo.countryCode,
-        ip: ip.replace(/(\d+\.\d+\.\d+)\.\d+/, '$1.xxx'),
         referer: (event.headers['referer'] || '').replace(/^https?:\/\/[^/]+/, '') || '',
         device: /Mobile|Android|iPhone|iPad/i.test(ua) ? 'Mobile' : 'Desktop',
         browser: parseBrowser(ua)
       };
 
       let log = await store.get("log", { type: 'json' }) || [];
-      log = [visit, ...log].slice(0, 50);
+      log = [visit, ...log].slice(0, LOG_SIZE);
       await store.setJSON("log", log);
 
-      // Running totals outlive the 50-entry log, so geography accumulates.
-      const totals = await store.get("totals", { type: 'json' }) || { count: 0, countries: {} };
-      totals.count = (totals.count || 0) + 1;
-      totals.countries = totals.countries || {};
-      const key = geo.country || geo.countryCode || 'Unknown';
-      totals.countries[key] = (totals.countries[key] || 0) + 1;
-      totals.since = totals.since || visit.time;
-      await store.setJSON("totals", totals);
+      // Counts only, and they outlive the log — this is the all-time record.
+      const t = await store.get("totals", { type: 'json' }) || {};
+      const bump = (key, name) => {
+        t[key] = t[key] || {};
+        if (name) t[key][name] = (t[key][name] || 0) + 1;
+      };
+      t.count = (t.count || 0) + 1;
+      t.since = t.since || visit.time;
+      t.updated = visit.time;
+      bump('countries', geo.country || geo.countryCode || 'Unknown');
+      bump('codes', geo.countryCode || 'ZZ');
+      bump('cities', geo.city ? (geo.city + (geo.countryCode ? ', ' + geo.countryCode : '')) : 'Unknown');
+      bump('days', visit.time.slice(0, 10));
+      bump('paths', visit.path);
+      bump('devices', visit.device);
+      await store.setJSON("totals", t);
 
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
