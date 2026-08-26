@@ -65,7 +65,6 @@
                     const href=c.id==='paintings'?'/paintings.html':c.id==='photography'?'/photography.html':'/'+c.id+'.html';
                     links+=`<a href="${href}">${c.name}</a>`;
                 });
-                links+='<a href="/thoughts.html">Thoughts</a>';
                 links+='<a href="/about.html">About</a>';
                 hubNav.innerHTML=links;
             }catch{
