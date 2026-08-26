@@ -279,6 +279,15 @@ function addLog(msg){
     updateLogDisplay();
 }
 function decodeBase64(str){return decodeURIComponent(escape(atob(str)))}
+function storageAdvice(d){
+    const missing=[];
+    if(!d.hasSiteId)missing.push('NETLIFY_SITE_ID');
+    if(!d.hasToken)missing.push('NETLIFY_BLOBS_TOKEN');
+    return 'Netlify Blobs is not reachable, so nothing can be recorded. '
+        +(missing.length
+            ?'Add '+missing.join(' and ')+' under Site configuration \u2192 Environment variables, then redeploy.'
+            :'Both credentials are set, so this is the Blobs service itself rejecting them \u2014 check the token is still valid.');
+}
 function copyLogs(){
     const text=errorLog.length?errorLog.join('\n\n'):'No errors';
     navigator.clipboard.writeText(text).then(()=>alert('Copied!')).catch(()=>{
@@ -1656,7 +1665,7 @@ async function loadRatingsAdmin(){
         const payload=await r.json();
         if(payload&&payload.error){
             throw new Error(payload.error==='storage-unavailable'
-                ?'Netlify Blobs is not available to the site, so ratings cannot be stored. Setting NETLIFY_SITE_ID and NETLIFY_BLOBS_TOKEN in the Netlify environment fixes it.'
+                ?storageAdvice(payload)
                 :'Ratings storage error: '+(payload.detail||'unknown'));
         }
         const ratings=payload;
@@ -1727,7 +1736,7 @@ async function loadVisits(){
         // Distinguish "nothing recorded" from "recording is broken".
         if(data&&data.error){
             const why=data.error==='storage-unavailable'
-                ?'Netlify Blobs is not available to the site, so nothing can be recorded. Setting NETLIFY_SITE_ID and NETLIFY_BLOBS_TOKEN in the Netlify environment fixes it.'
+                ?storageAdvice(data)
                 :'Visit storage returned an error: '+(data.detail||'unknown');
             c.innerHTML='<p style="color:var(--err)">'+why+'</p>';
             return;
