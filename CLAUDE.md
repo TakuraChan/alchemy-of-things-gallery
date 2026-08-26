@@ -61,7 +61,7 @@ generated on save.
 ### Admin
 - `admin/index.html` - **SINGLE FILE** containing all admin HTML + JS (~1440 lines)
   - Lines 1-215: HTML structure (login, setup, admin panels, forms)
-  - Lines 219-235: Logging (`updateLogDisplay`, `addLog`, `copyLogs`, `clearLogs`)
+  - Lines 254-312: Logging (`noteError`, `updateLogDisplay`, `addLog`, `copyLogs`, `clearLogs`)
   - Lines 237-270: `init()`, `show()`, `hashPass()`
   - Lines 281-405: Auth (`setupBiometric`, `loginWithBiometric`, `doLogin`, `forgotPassword`)
   - Lines 406-470: Config (`doLogout`, `migrateConfig`, `saveConfig`, `resetConfig`)
@@ -217,6 +217,12 @@ git fetch origin main && git show origin/main:diagnostics/latest.json
 It carries the admin version (stale cache shows up here), which Netlify
 functions answer and how, whether the deployed data files parse, and the last 40
 log lines. Netlify 404s `/diagnostics/*`, so it is not public.
+
+Two streams, not one: `errorCount`/`errors` are things that actually went wrong
+(`console.error`, `window.onerror`, rejected promises); `logCount`/`log` are
+everything that happened, activity included. Read `errorCount` — it was once the
+length of the whole log, so an ordinary session reported errors it never had.
+The red badge on the Logs tab counts faults for the same reason.
 
 ## Common Issues & Fixes
 
