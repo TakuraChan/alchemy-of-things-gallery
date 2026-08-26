@@ -186,6 +186,12 @@ country cannot show a small one as visited. `totals.regions` is keyed
 to place a region, never a person. The SVG carries `data-lat-top` /
 `data-lat-bottom` so the projection is not duplicated in the admin.
 
+The map zooms by moving the viewBox — no library. Dot radii and the border
+stroke are counter-scaled so they keep their size on screen; only the ratio
+between dots carries meaning. One finger scrolls the page (`touch-action:pan-y`),
+two fingers pinch and pan; wheel and drag on a desktop. A "whole world" link
+appears once zoomed.
+
 Rebuild that basemap only if it changes:
 ```bash
 npm i --no-save world-atlas@2 world-countries topojson-client

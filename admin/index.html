@@ -78,7 +78,7 @@
         .panel[open]>summary{border-bottom:1px solid var(--border);color:var(--text)}
         .panel-count{margin-left:auto;color:var(--light);font-size:.75rem}
         .visits-map{margin-bottom:1rem;background:var(--card);border:1px solid var(--border)}
-        .visits-map svg{display:block;width:100%;height:auto}
+        .visits-map svg{display:block;width:100%;height:auto;touch-action:pan-y}
         .panel-body{padding:1rem;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
         .panel .item{padding:.7rem}
         .panel .list{margin-top:0}
@@ -1800,7 +1800,9 @@ async function paintVisitsMap(regions){
             const dot=document.createElementNS(ns,'circle');
             dot.setAttribute('cx',cx.toFixed(1));
             dot.setAttribute('cy',cy.toFixed(1));
-            dot.setAttribute('r',(2.5+9*Math.sqrt((v.n||1)/max)).toFixed(1));
+            const r0=2.5+9*Math.sqrt((v.n||1)/max);
+            dot.setAttribute('r',r0.toFixed(1));
+            dot.dataset.r=r0;
             dot.setAttribute('fill','#4a4a4a');
             dot.setAttribute('fill-opacity','0.55');
             const t=document.createElementNS(ns,'title');
@@ -1809,7 +1811,92 @@ async function paintVisitsMap(regions){
             layer.appendChild(dot);
         });
         svg.appendChild(layer);
+        enableMapZoom(svg);
     }catch(e){holder.innerHTML=''}
+}
+
+// Zooming an SVG is just moving its viewBox, so no library is needed. Dots and
+// borders are counter-scaled to keep their size on screen: only the ratio
+// between dots should carry meaning, not how far you have zoomed in.
+function enableMapZoom(svg){
+    const vb=(svg.getAttribute('viewBox')||'0 0 1000 386').split(/\s+/).map(Number);
+    const base={x:vb[0],y:vb[1],w:vb[2],h:vb[3]};
+    const view={x:base.x,y:base.y,w:base.w,h:base.h};
+    const MIN_W=base.w/24;
+    const reset=document.getElementById('map-reset');
+
+    function clamp(){
+        view.w=Math.min(base.w,Math.max(MIN_W,view.w));
+        view.h=view.w*base.h/base.w;
+        view.x=Math.min(base.x+base.w-view.w,Math.max(base.x,view.x));
+        view.y=Math.min(base.y+base.h-view.h,Math.max(base.y,view.y));
+    }
+    function apply(){
+        svg.setAttribute('viewBox',view.x.toFixed(2)+' '+view.y.toFixed(2)+' '+view.w.toFixed(2)+' '+view.h.toFixed(2));
+        const k=view.w/base.w;
+        svg.querySelectorAll('circle').forEach(c=>{
+            const r0=parseFloat(c.dataset.r||c.getAttribute('r'));
+            c.setAttribute('r',(r0*k).toFixed(2));
+        });
+        const land=svg.querySelector('g[stroke-width]');
+        if(land)land.setAttribute('stroke-width',(0.6*k).toFixed(3));
+        if(reset)reset.style.display=k<0.999?'inline':'none';
+    }
+    function zoomAt(px,py,factor){
+        const rect=svg.getBoundingClientRect();
+        if(!rect.width||!rect.height)return;
+        const fx=view.x+((px-rect.left)/rect.width)*view.w;
+        const fy=view.y+((py-rect.top)/rect.height)*view.h;
+        const w=Math.min(base.w,Math.max(MIN_W,view.w*factor));
+        const s=w/view.w;
+        view.x=fx-(fx-view.x)*s;
+        view.y=fy-(fy-view.y)*s;
+        view.w=w;
+        clamp();apply();
+    }
+    function panBy(dxPx,dyPx){
+        const rect=svg.getBoundingClientRect();
+        if(!rect.width)return;
+        view.x-=dxPx/rect.width*view.w;
+        view.y-=dyPx/rect.height*view.h;
+        clamp();apply();
+    }
+
+    svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,e.deltaY>0?1.2:1/1.2)},{passive:false});
+    svg.addEventListener('dblclick',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,0.5)});
+
+    let drag=null;
+    svg.addEventListener('mousedown',e=>{drag={x:e.clientX,y:e.clientY};svg.style.cursor='grabbing'});
+    window.addEventListener('mousemove',e=>{
+        if(!drag)return;
+        panBy(e.clientX-drag.x,e.clientY-drag.y);
+        drag={x:e.clientX,y:e.clientY};
+    });
+    window.addEventListener('mouseup',()=>{drag=null;svg.style.cursor='grab'});
+
+    // One finger scrolls the page; two fingers work the map.
+    let pinch=null;
+    const spread=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+    const middle=t=>({x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2});
+    svg.addEventListener('touchstart',e=>{
+        if(e.touches.length!==2)return;
+        const t=[e.touches[0],e.touches[1]];
+        pinch={d:spread(t),m:middle(t)};
+    },{passive:true});
+    svg.addEventListener('touchmove',e=>{
+        if(e.touches.length!==2||!pinch)return;
+        e.preventDefault();
+        const t=[e.touches[0],e.touches[1]];
+        const d=spread(t),m=middle(t);
+        if(pinch.d>0)zoomAt(m.x,m.y,pinch.d/d);
+        panBy(m.x-pinch.m.x,m.y-pinch.m.y);
+        pinch={d:d,m:m};
+    },{passive:false});
+    svg.addEventListener('touchend',()=>{pinch=null},{passive:true});
+
+    if(reset)reset.onclick=()=>{view.x=base.x;view.y=base.y;view.w=base.w;view.h=base.h;apply()};
+    svg.style.cursor='grab';
+    apply();
 }
 
 function downloadVisits(kind){
@@ -1913,7 +2000,8 @@ async function loadVisits(){
             +((totals&&totals.count)||visits.length)+' page views'+(since?' since '+since:'')
             +(bots?'<br><span style="color:var(--light);font-size:.85rem">'+bots
                 +' automated visits, counted separately</span>':'')+'</p>'
-            +'<div id="visits-map" class="visits-map"></div>';
+            +'<div id="visits-map" class="visits-map"></div>'
+            +'<p style="text-align:right;margin:-.6rem 0 1rem"><a href="#" id="map-reset" style="display:none;font-size:.75rem;color:var(--light)">whole world</a></p>';
 
         // country, then the regions within it — the same shape one level down
         const byCountry={};
