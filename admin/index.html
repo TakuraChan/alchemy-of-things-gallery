@@ -239,16 +239,9 @@
             <button class="logout" style="margin-top:.5rem" onclick="clearLogs()">Clear Logs</button>
         </div>
 
-        <div id="ratings" class="tab-content hidden">
-            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Appreciations</h3>
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">See how visitors appreciate your work.</p>
-            <div id="ratings-list"><div class="loading"></div></div>
-            <button class="btn submit" style="margin-top:1rem" onclick="loadRatingsAdmin()">Refresh</button>
-        </div>
-
         <div id="visits" class="tab-content hidden">
-            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Recent Visits</h3>
-            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">Where people read from, counted for ever. The last 100 views are listed. No addresses are stored, and your own admin visits are not tracked.</p>
+            <h3 style="font-size:1rem;font-weight:400;margin-bottom:.5rem">Visits</h3>
+            <p style="color:var(--muted);margin-bottom:1.5rem;font-size:.85rem">Where people read from and what they read, counted for ever, with appreciations alongside. The last 100 views are listed. No addresses are stored, and your own admin visits are not tracked.</p>
             <div id="visits-list"><div class="loading"></div></div>
             <button class="btn submit" style="margin-top:1rem" onclick="loadVisits()">Refresh</button>
         </div>
@@ -289,6 +282,8 @@ function noteProblem(){
     if(typeof scheduleDiagnostics==='function')scheduleDiagnostics();
 }
 function decodeBase64(str){return decodeURIComponent(escape(atob(str)))}
+// Visit records come from a public endpoint. Nothing from them reaches innerHTML raw.
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function storageAdvice(d){
     const missing=[];
     if(!d.hasSiteId)missing.push('NETLIFY_SITE_ID');
@@ -569,7 +564,6 @@ function buildTabs(){
     });
     // Fixed tabs
     html+=`<button class="tab" data-tab="categories" onclick="showTab('categories')">Categories</button>`;
-    html+=`<button class="tab" data-tab="ratings" onclick="showTab('ratings');loadRatingsAdmin()">♥</button>`;
     html+=`<button class="tab" data-tab="visits" onclick="showTab('visits');loadVisits()">Visits</button>`;
     html+=`<button class="tab" data-tab="settings" onclick="showTab('settings')">Settings</button>`;
     html+=`<button class="tab" data-tab="logs" onclick="showTab('logs')">Logs <span id="log-count" style="display:none;background:var(--err);color:#fff;border-radius:50%;padding:0 .4rem;font-size:.7rem;margin-left:.3rem"></span></button>`;
@@ -1767,74 +1761,6 @@ function scheduleDiagnostics(){
     diagnosticsTimer=setTimeout(()=>saveDiagnostics('errors logged'),20000);
 }
 
-async function loadRatingsAdmin(){
-    const c=document.getElementById('ratings-list');
-    c.innerHTML='<div class="loading"></div>';
-
-    try{
-        const r=await fetch('/.netlify/functions/ratings');
-        if(r.status===404)throw new Error('The ratings function is not deployed. Check the last Netlify build.');
-        if(!r.ok)throw new Error('Ratings request failed: HTTP '+r.status);
-        const payload=await r.json();
-        if(payload&&payload.error){
-            throw new Error(payload.error==='storage-unavailable'
-                ?storageAdvice(payload)
-                :'Ratings storage error: '+(payload.detail||'unknown'));
-        }
-        const ratings=payload;
-
-        // Load all works to get titles
-        const worksMap={};
-        for(const cat of categories){
-            try{
-                const wr=await gh('/contents/data/'+cat.id);
-                if(wr.status===200){
-                    const files=await wr.json();
-                    for(const f of files){
-                        if(!f.name.endsWith('.json'))continue;
-                        const fr=await gh('/contents/data/'+cat.id+'/'+f.name);
-                        if(fr.status===200){
-                            const fd=await fr.json();
-                            const w=JSON.parse(decodeBase64(fd.content));
-                            worksMap[w.id]={title:w.title,category:cat.name,image:w.image};
-                        }
-                    }
-                }
-            }catch(e){}
-        }
-
-        // Build ratings display
-        const entries=Object.entries(ratings).sort((a,b)=>b[1].count-a[1].count);
-
-        if(!entries.length){
-            c.innerHTML='<p style="color:var(--muted)">No appreciations yet. Ratings will appear here when visitors interact with your work.</p>';
-            return;
-        }
-
-        c.innerHTML=entries.map(([workId,data])=>{
-            const work=worksMap[workId]||{title:workId,category:'Unknown'};
-            const avgPercent=Math.round(data.avgSize);
-            const heartSize=0.8+(avgPercent/100)*0.7;
-            return `<div class="item" style="padding:1rem">
-                ${work.image?`<img src="${work.image}" style="width:50px;height:50px;object-fit:cover">`:''}
-                <div class="item-info">
-                    <div class="item-title">${work.title||'Untitled'}</div>
-                    <div class="item-meta">${work.category}</div>
-                </div>
-                <div style="text-align:right">
-                    <div style="font-size:${heartSize}rem;color:#ff6b6b">♥</div>
-                    <div style="font-size:.75rem;color:var(--muted)">${data.count} ${data.count===1?'appreciation':'appreciations'}</div>
-                </div>
-            </div>`;
-        }).join('');
-
-    }catch(e){
-        const why=e&&e.message?e.message:String(e);
-        addLog('Load ratings error: '+why);
-        c.innerHTML='<p style="color:var(--err)">'+why+'</p>';
-    }
-}
-
 let visitsData=null;
 
 // Greys only, on a square-root scale so a single visit still reads.
@@ -1889,11 +1815,45 @@ function visitRows(list){
         const when=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
         const where=[v.city,v.region,v.country||v.countryCode].filter(Boolean).join(', ')||'—';
         return '<tr style="border-bottom:1px solid var(--border)">'
-            +'<td style="padding:.45rem .25rem;white-space:nowrap">'+when+'</td>'
-            +'<td style="padding:.45rem .25rem;color:var(--muted)">'+(v.path||'')+'</td>'
-            +'<td style="padding:.45rem .25rem">'+where+'</td>'
-            +'<td style="padding:.45rem .25rem;color:var(--muted)">'+(v.device||'—')+'</td></tr>';
+            +'<td style="padding:.45rem .25rem;white-space:nowrap">'+esc(when)+'</td>'
+            +'<td style="padding:.45rem .25rem;color:var(--muted)">'+esc(v.path||'')+'</td>'
+            +'<td style="padding:.45rem .25rem">'+esc(where)+'</td>'
+            +'<td style="padding:.45rem .25rem;color:var(--muted)">'+esc(v.device||'—')+'</td></tr>';
     }).join('');
+}
+
+// id -> title, read from the deployed data files rather than the GitHub API.
+async function pageTitles(){
+    const titles={};
+    const files=['/data/works.json','/data/photography.json','/data/thoughts.json','/data/words.json'];
+    await Promise.all(files.map(async f=>{
+        try{
+            const r=await fetch(f+'?_='+Date.now());
+            if(!r.ok)return;
+            const list=await r.json();
+            if(Array.isArray(list))list.forEach(w=>{if(w&&w.id)titles[w.id]=w.title||w.id});
+        }catch(e){}
+    }));
+    return titles;
+}
+
+const KNOWN_PAGES={'/':'Home','/index.html':'Home','/thoughts.html':'Thoughts','/about.html':'About',
+    '/paintings.html':'Paintings','/photography.html':'Photography','/words.html':'Words','/sketches.html':'Sketches'};
+
+function pageIdentity(path,titles){
+    const m=String(path).match(/[?&]id=([^&]*)/);
+    const id=m?decodeURIComponent(m[1]):'';
+    const label=(id&&titles[id])||KNOWN_PAGES[path]||path;
+    return {id:id,label:label};
+}
+
+async function loadRatingsMap(){
+    try{
+        const r=await fetch('/.netlify/functions/ratings');
+        if(!r.ok)return {};
+        const d=await r.json();
+        return (d&&!d.error)?d:{};
+    }catch(e){return {}}
 }
 
 async function loadVisits(){
@@ -1931,10 +1891,34 @@ async function loadVisits(){
         html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
             +(countries.length?countries.map(([k,n])=>
                 '<div style="display:flex;align-items:center;gap:.6rem;padding:.3rem 0;font-size:.85rem">'
-                +'<span style="flex:1">'+k+'</span>'
+                +'<span style="flex:1">'+esc(k)+'</span>'
                 +'<span style="width:'+Math.max(4,Math.round(n/max*90))+'px;height:6px;background:'+visitsShade(n,max)+'"></span>'
                 +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span></div>').join('')
               :'<p style="color:var(--muted);font-size:.85rem">No locations recorded yet.</p>')
+            +'</div></details>';
+
+        const [titles,ratings]=await Promise.all([pageTitles(),loadRatingsMap()]);
+        const pages=Object.entries((totals&&totals.paths)||{}).sort((a,b)=>b[1]-a[1]);
+        const seen={};
+        let readRows=pages.map(([path,n])=>{
+            const who=pageIdentity(path,titles);
+            if(who.id)seen[who.id]=true;
+            const hearts=who.id&&ratings[who.id]?ratings[who.id].count:0;
+            return '<div style="display:flex;align-items:baseline;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.85rem">'
+                +'<span style="flex:1">'+esc(who.label)+'</span>'
+                +(hearts?'<span style="color:var(--muted)">♥ '+hearts+'</span>':'')
+                +'<span style="color:var(--muted);min-width:3rem;text-align:right">'+n+'</span></div>';
+        }).join('');
+        // Anything appreciated before views were recorded still deserves a line.
+        const orphans=Object.entries(ratings).filter(([id])=>!seen[id]);
+        readRows+=orphans.map(([id,d])=>
+            '<div style="display:flex;align-items:baseline;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.85rem">'
+            +'<span style="flex:1">'+esc(titles[id]||id)+'</span>'
+            +'<span style="color:var(--muted)">♥ '+(d.count||0)+'</span>'
+            +'<span style="color:var(--light);min-width:3rem;text-align:right">—</span></div>').join('');
+
+        html+='<details class="panel" open><summary>What was read<span class="panel-count">'+(pages.length+orphans.length)+'</span></summary><div class="panel-body">'
+            +(readRows||'<p style="color:var(--muted);font-size:.85rem">Nothing recorded yet.</p>')
             +'</div></details>';
 
         html+='<details class="panel"><summary>Recent<span class="panel-count">'+visits.length+'</span></summary><div class="panel-body">'

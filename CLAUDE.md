@@ -150,10 +150,27 @@ gh(path, method, body) // Calls api.github.com/repos/{repo}{path}
 - No ratings shown
 
 ## Visits
-`netlify/functions/visit.js` keeps two blobs: `log` (the last 100 views) and
-`totals` (all-time counts — countries, ISO codes, cities, days, paths, devices).
-Totals are counts only and outlive the log. **No address is stored**: geography
-comes from the `x-nf-geo` header and nothing else identifying is kept.
+One tab covers views and appreciations together. `netlify/functions/visit.js`
+keeps two blobs: `log` (the last 100 views) and `totals` (all-time counts —
+countries, ISO codes, cities, days, paths, devices). Totals are counts only and
+outlive the log. **No address is stored**: geography comes from the `x-nf-geo`
+header and nothing else identifying is kept. `nav.js` sends `pathname + search`,
+so a work page is distinguishable and can be joined to its appreciations by id.
+
+### Visitor safety
+The functions are public, so nothing arriving from a visitor is trusted:
+- `safePath` / `safeText` / `safePlace` reduce paths, referers and place names to
+  a safe charset and cap their length — the geo header can be forged by a direct
+  caller, so it is sanitised too.
+- `bump()` caps distinct keys per bucket, so a flood cannot grow the record.
+- `ratings.js` validates `workId` against a pattern before using it as a blob
+  key, and requires an integer rating of 1–100.
+- Both functions answer only the site's own origin.
+- The admin renders visit data through `esc()`. **Never interpolate a visit field
+  into innerHTML raw** — `path` is attacker-controlled and reached the admin
+  unescaped once already.
+- `netlify.toml` sets CSP, Referrer-Policy, Permissions-Policy and HSTS; the
+  admin gets a separate CSP that allows `api.github.com` and is `noindex`.
 
 The admin tints `admin/world.svg` by country. Rebuild that basemap only if it
 changes:
