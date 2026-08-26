@@ -2131,8 +2131,11 @@ async function loadVisits(){
 
         const agents=Object.entries((totals&&totals.agents)||{}).sort((a,b)=>b[1]-a[1]);
         if(agents.length){
-            html+='<details class="panel"><summary>Automated<span class="panel-count">'+agents.length+'</span></summary><div class="panel-body">'
-                +'<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">Crawlers, link previews and monitors. Kept out of the counts above.</p>'
+            // The count is visits, not kinds — "1" beside "Recent 47" read as one visit.
+            html+='<details class="panel"><summary>Automated<span class="panel-count">'+bots+'</span></summary><div class="panel-body">'
+                +'<p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">'+bots+' automated '
+                +(bots===1?'visit':'visits')+' from '+agents.length+' '+(agents.length===1?'agent':'agents')
+                +' — crawlers, link previews, deploy checks and monitors. Kept out of the counts above, but still listed under Recent.</p>'
                 +agents.map(([k,n])=>'<div style="display:flex;gap:.6rem;padding:.3rem 0;font-size:.85rem">'
                     +'<span style="flex:1">'+esc(k)+'</span>'
                     +'<span style="color:var(--muted)">'+n+'</span></div>').join('')
