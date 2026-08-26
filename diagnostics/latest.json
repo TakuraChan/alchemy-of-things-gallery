@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-26T08:39:49.239Z",
+  "time": "2026-08-26T08:43:29.897Z",
   "adminVersion": "2026-08-26.1",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
@@ -24,7 +24,7 @@
       "url": "/.netlify/functions/visit",
       "status": 200,
       "result": "ok",
-      "entries": 16,
+      "entries": 18,
       "views": 15
     }
   ],
@@ -48,18 +48,16 @@
       "entries": 14
     }
   ],
-  "errorCount": 10,
+  "errorCount": 8,
   "log": [
-    "[10:39:47 AM] GitHub API: GET /contents/data/categories.json",
-    "[10:39:48 AM] GitHub response: 200",
-    "[10:39:48 AM] Loading collections for thoughts...",
-    "[10:39:48 AM] GitHub API: GET /contents/data/thoughts-collections.json",
-    "[10:39:48 AM] [diag] GitHub response: 200",
-    "[10:39:48 AM] [diag] Tried thoughts-collections.json: status=200",
-    "[10:39:48 AM] [diag] Loaded 1 collections: thought-experiments",
-    "[10:39:48 AM] [diag] GitHub API: GET /contents/data/thoughts",
-    "[10:39:49 AM] [diag] GitHub response: 200",
-    "[10:39:49 AM] [diag] GitHub API: GET /contents/data/thoughts/alchemy-of-things.json"
+    "[10:43:28 AM] GitHub API: GET /contents/data/categories.json",
+    "[10:43:29 AM] GitHub response: 200",
+    "[10:43:29 AM] Loading collections for thoughts...",
+    "[10:43:29 AM] GitHub API: GET /contents/data/thoughts-collections.json",
+    "[10:43:29 AM] [diag] GitHub response: 200",
+    "[10:43:29 AM] [diag] Tried thoughts-collections.json: status=200",
+    "[10:43:29 AM] [diag] Loaded 1 collections: thought-experiments",
+    "[10:43:29 AM] [diag] GitHub API: GET /contents/data/thoughts"
   ],
   "reason": "admin opened"
 }
