@@ -1539,13 +1539,35 @@ async function loadVisits(){
     c.innerHTML='<div class="loading"></div>';
     try{
         const r=await fetch('/.netlify/functions/visit');
-        if(!r.ok)throw new Error('Failed');
-        const visits=await r.json();
+        if(r.status===404){
+            c.innerHTML='<p style="color:var(--err)">The visit function is not deployed. Check the last Netlify build.</p>';
+            return;
+        }
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        const data=await r.json();
+        // Distinguish "nothing recorded" from "recording is broken".
+        if(data&&data.error){
+            const why=data.error==='storage-unavailable'
+                ?'Netlify Blobs is not available to the site, so nothing can be recorded. Setting NETLIFY_SITE_ID and NETLIFY_BLOBS_TOKEN in the Netlify environment fixes it.'
+                :'Visit storage returned an error: '+(data.detail||'unknown');
+            c.innerHTML='<p style="color:var(--err)">'+why+'</p>';
+            return;
+        }
+        const visits=Array.isArray(data)?data:(data.log||[]);
+        const totals=(Array.isArray(data)?null:data.totals)||null;
         if(!visits.length){
             c.innerHTML='<p style="color:var(--muted)">No visits recorded yet. Visits appear once the site has been viewed.</p>';
             return;
         }
-        c.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        let summary='';
+        if(totals&&totals.count){
+            const rows=Object.entries(totals.countries||{}).sort((a,b)=>b[1]-a[1]);
+            summary='<p style="margin-bottom:1rem;font-size:.85rem">'+totals.count+' page views'
+                +(totals.since?' since '+new Date(totals.since).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'')+'</p>'
+                +(rows.length?'<div style="margin-bottom:1.5rem;font-size:.85rem">'+rows.map(([k,n])=>
+                    '<div style="display:flex;justify-content:space-between;padding:.25rem 0;border-bottom:1px solid var(--border)"><span>'+k+'</span><span style="color:var(--muted)">'+n+'</span></div>').join('')+'</div>':'');
+        }
+        c.innerHTML=summary+`<table style="width:100%;border-collapse:collapse;font-size:.8rem">
             <thead><tr style="border-bottom:2px solid var(--border);text-align:left">
                 <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Time</th>
                 <th style="padding:.5rem .25rem;color:var(--muted);font-weight:400">Page</th>
@@ -1556,7 +1578,7 @@ async function loadVisits(){
             <tbody>${visits.map(v=>{
                 const d=new Date(v.time);
                 const timeStr=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-                const where=[v.city,v.country].filter(Boolean).join(', ')||v.ip||'—';
+                const where=[v.city,v.region,v.country||v.countryCode].filter(Boolean).join(', ')||v.ip||'—';
                 const from=v.referer||'—';
                 return `<tr style="border-bottom:1px solid var(--border)">
                     <td style="padding:.5rem .25rem;white-space:nowrap">${timeStr}</td>
