@@ -1,7 +1,21 @@
 // Netlify Function for handling artwork ratings
 // Uses Netlify Blobs for storage (free, built-in)
 
-const { getStore } = require("@netlify/blobs");
+const { getStore, connectLambda } = require("@netlify/blobs");
+
+// These handlers use the legacy `exports.handler` signature. With that signature
+// Netlify does not configure Blobs automatically — it passes the context on
+// event.blobs, and connectLambda() is what hands it to the client. Without this
+// call getStore() throws, which is why storage looked unavailable.
+function connectBlobs(event) {
+  try {
+    if (typeof connectLambda === 'function' && event && event.blobs) {
+      connectLambda(event);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
 
 // Blobs normally configures itself from the runtime. If that fails, fall back to
 // explicit credentials so the site owner can fix it from the Netlify UI.
@@ -16,9 +30,11 @@ function openStore(name) {
 }
 
 // Which half of the manual fallback is present, so the admin can name the gap.
-function storageGap() {
+function storageGap(event, connected) {
   return {
     error: 'storage-unavailable',
+    lambdaContext: connected,
+    contextOnEvent: !!(event && event.blobs),
     hasSiteId: !!(process.env.NETLIFY_SITE_ID || process.env.SITE_ID),
     hasToken: !!(process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_API_TOKEN)
   };
@@ -37,10 +53,11 @@ exports.handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
+  const connected = connectBlobs(event);
   const store = openStore("ratings");
   if (!store) {
     // Say so rather than returning {}, which reads as "no appreciations yet".
-    return { statusCode: 200, headers, body: JSON.stringify(storageGap()) };
+    return { statusCode: 200, headers, body: JSON.stringify(storageGap(event, connected)) };
   }
 
   try {
