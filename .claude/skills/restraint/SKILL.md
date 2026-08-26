@@ -1,6 +1,6 @@
 ---
 name: restraint
-description: Design and write UI in the "Alchemy of Things" house style — a restrained, gallery-grade aesthetic built on silence, serif italics, and generous space. Use whenever building or reviewing a page, component, layout, colour choice, microcopy, or visual treatment for this site, or when asked for something "in my style", "restrained", "minimal", "quiet", or "dignified". Also use to audit an existing screen for promotional or commercial creep.
+description: Design and write UI in the "Alchemy of Things" house style — a restrained, gallery-grade aesthetic built on silence, serif italics, and generous space. Use whenever building or reviewing a page, component, layout, colour choice, microcopy, or visual treatment for this site, or when asked for something "in my style", "restrained", "minimal", "quiet", or "dignified". Also use to audit an existing screen for promotional or commercial creep, or before adding a page, section or navigation level — the site repeats one shape at every scale and §2 governs that.
 ---
 
 # Restraint
@@ -27,7 +27,27 @@ Apply in order. When two conflict, the earlier one wins.
 
 ---
 
-## 2. Tokens — use these, do not invent new ones
+## 2. The fractal
+
+**One shape, repeated at every scale.** This is not decoration; it is how the site is navigated, and it holds whether there are three works or three hundred.
+
+    symbol  →  hub  →  section  →  collection / index  →  the thing itself
+
+Every level is the same move: **a name, a quiet list of names, and nothing else.** No descriptions, no counts, no previews, no summaries. You descend by choosing a name. Nothing announces what you will find.
+
+The document repeats it inside itself — parts, then numbered sections, then entries — which is why a piece of writing belongs here at all. A thought experiment that could not be read at three depths is probably an essay, not a thought experiment.
+
+**Rules that follow**
+
+- **Reuse the level's shape.** Before designing a new page, find the level it sits at and take that level's existing form (`.hub-nav`, `.thought-entry`, `.collection-header` + `.work-thumb`). A new navigation idiom at one level breaks every other.
+- **Ascend by name.** The line at the top of a page states the level you are in and links up — *Thoughts*, *Thought experiment 1*. The name is the way back; a page does not need an arrow as well.
+- **Number, do not date.** Positional numbering (`Thought experiment 1`, `I. The Thesis`) survives reordering and says nothing about frequency. Dates imply a feed and go stale.
+- **Depth over breadth.** When a level gets crowded, add a level rather than widening the list. When a level holds one thing, it still keeps its shape — it does not collapse into its parent.
+- **Same page, one level up or down.** Swap the content of any index for its parent's or its child's: the layout should still be right. If it is not, the shape has drifted.
+
+---
+
+## 3. Tokens — use these, do not invent new ones
 
 ```css
 :root{
@@ -64,7 +84,7 @@ Apply in order. When two conflict, the earlier one wins.
 
 ---
 
-## 3. Language
+## 4. Language
 
 Write like a catalogue, not a website.
 
@@ -83,7 +103,7 @@ Microcopy is lowercase where it is an action (`enter`), sentence case where it i
 
 ---
 
-## 4. Layout patterns already in the system — reuse, don't reinvent
+## 5. Layout patterns already in the system — reuse, don't reinvent
 
 Defined in `css/style.css`:
 
@@ -100,14 +120,15 @@ Defined in `css/style.css`:
 
 ---
 
-## 5. Checklist before shipping any screen
+## 6. Checklist before shipping any screen
 
 - [ ] Would this survive unchanged for five years?
+- [ ] Does this repeat the shape of its level, or invent a new one?
 - [ ] Is anything here explaining, selling, or convincing? → delete it
 - [ ] Can any sentence be shorter? Can it be removed entirely?
 - [ ] Does any element call attention to itself rather than the work?
 - [ ] Is there a colour that isn't the artwork's?
-- [ ] Is there a shadow, radius, gradient, or animation that isn't in §2?
+- [ ] Is there a shadow, radius, gradient, or animation that isn't in §3?
 - [ ] Does the page still make sense with all copy removed?
 - [ ] Have I added a feature because it's expected of artist websites, rather than because it's needed?
 
@@ -115,7 +136,7 @@ If a change fails any line, subtract rather than adjust.
 
 ---
 
-## 6. When extending the system
+## 7. When extending the system
 
 **Add slowly.** New work is added only when resolved. New *features* are added only when the absence causes a real failure — never because a category of site usually has one.
 

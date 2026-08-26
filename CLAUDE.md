@@ -170,9 +170,16 @@ No local server needed for frontend (static files). Admin requires:
 2. CORS handled by GitHub API
 
 ## Design Skill
-`.claude/skills/restraint/SKILL.md` — the house design system (tokens, language rules,
-layout patterns, ship checklist). Invoke with `/restraint` before any UI, copy, or
-visual change. Source philosophy: `PHILOSOPHY.md`.
+`.claude/skills/restraint/SKILL.md` — the house design system (the fractal, tokens,
+language rules, layout patterns, ship checklist). Invoke with `/restraint` before any
+UI, copy, or visual change, and before adding a page or navigation level. Source
+philosophy: `PHILOSOPHY.md`.
+
+**The site is fractal and must stay that way.** symbol → hub → section →
+collection/index → the thing, and the same shape again inside a long document
+(parts → sections → entries). Every level is a name, a list of names, nothing else;
+you ascend by the name of the level you are in. Reuse a level's existing form rather
+than inventing a new one. See §2 of the skill.
 
 ## Branch Convention
 Feature branches: `claude/description-{sessionId}`
