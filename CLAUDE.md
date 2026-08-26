@@ -157,6 +157,12 @@ outlive the log. **No address is stored**: geography comes from the `x-nf-geo`
 header and nothing else identifying is kept. `nav.js` sends `pathname + search`,
 so a work page is distinguishable and can be joined to its appreciations by id.
 
+### People vs machines
+`botLabel()` classifies the user agent. A match (crawler, unfurler, monitor,
+headless browser, empty agent) is counted in `botCount` / `agents` and kept out
+of `count`, `countries`, `cities`, `paths` and `days` — so the figures are people.
+Repeated hits from a datacentre city such as Ashburn are almost always these.
+
 ### Visitor safety
 The functions are public, so nothing arriving from a visitor is trusted:
 - `safePath` / `safeText` / `safePlace` reduce paths, referers and place names to
