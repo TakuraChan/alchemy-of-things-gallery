@@ -1652,10 +1652,9 @@ async function uploadImg(data,folder){
 async function loadAll(){
     await loadCategories();
     buildTabs();
-    // Show first category by default
-    if(categories.length){
-        showTab(categories[0].id);
-    }
+    // Visits is what you want to see first
+    showTab('visits');
+    loadVisits();
     saveDiagnostics('admin opened');
 }
 
@@ -1770,7 +1769,10 @@ function visitsShade(n,max){
     return 'rgb('+v+','+v+','+v+')';
 }
 
-async function paintVisitsMap(codes){
+// A dot per region, sized by count. Dots rather than tinted countries: at this
+// resolution the Netherlands is a few pixels and Singapore is not drawn at all,
+// so filling a country cannot show a small one as visited.
+async function paintVisitsMap(regions){
     const holder=document.getElementById('visits-map');
     if(!holder)return;
     try{
@@ -1780,12 +1782,33 @@ async function paintVisitsMap(codes){
             paintVisitsMap.svg=await r.text();
         }
         holder.innerHTML=paintVisitsMap.svg;
-        const entries=Object.entries(codes||{}).filter(([c])=>/^[A-Z]{2}$/.test(c));
-        const max=Math.max(1,...entries.map(x=>x[1]));
-        entries.forEach(([code,n])=>{
-            const el=holder.querySelector('#c-'+code);
-            if(el)el.setAttribute('fill',visitsShade(n,max));
+        const svg=holder.querySelector('svg');
+        if(!svg)return;
+        const box=(svg.getAttribute('viewBox')||'0 0 1000 386').split(/\s+/).map(Number);
+        const W=box[2],H=box[3];
+        const top=parseFloat(svg.getAttribute('data-lat-top'))||83;
+        const bottom=parseFloat(svg.getAttribute('data-lat-bottom'))||-56;
+        const places=Object.entries(regions||{}).filter(([,v])=>v&&typeof v.lat==='number'&&typeof v.lon==='number');
+        if(!places.length)return;
+        const max=Math.max(1,...places.map(([,v])=>v.n||0));
+        const ns='http://www.w3.org/2000/svg';
+        const layer=document.createElementNS(ns,'g');
+        places.sort((a,b)=>(b[1].n||0)-(a[1].n||0)).forEach(([key,v])=>{
+            const cx=((v.lon+180)/360)*W;
+            const cy=((top-v.lat)/(top-bottom))*H;
+            if(cy<0||cy>H)return;
+            const dot=document.createElementNS(ns,'circle');
+            dot.setAttribute('cx',cx.toFixed(1));
+            dot.setAttribute('cy',cy.toFixed(1));
+            dot.setAttribute('r',(2.5+9*Math.sqrt((v.n||1)/max)).toFixed(1));
+            dot.setAttribute('fill','#4a4a4a');
+            dot.setAttribute('fill-opacity','0.55');
+            const t=document.createElementNS(ns,'title');
+            t.textContent=key.replace('|',' — ').replace(/ — $/,'')+' · '+(v.n||0);
+            dot.appendChild(t);
+            layer.appendChild(dot);
         });
+        svg.appendChild(layer);
     }catch(e){holder.innerHTML=''}
 }
 
@@ -1892,12 +1915,25 @@ async function loadVisits(){
                 +' automated visits, counted separately</span>':'')+'</p>'
             +'<div id="visits-map" class="visits-map"></div>';
 
+        // country, then the regions within it — the same shape one level down
+        const byCountry={};
+        Object.entries((totals&&totals.regions)||{}).forEach(([key,v])=>{
+            const parts=String(key).split('|');
+            const land=parts[0]||'Unknown', region=parts[1]||'';
+            (byCountry[land]=byCountry[land]||[]).push([region,(v&&v.n)||0]);
+        });
         html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
-            +(countries.length?countries.map(([k,n])=>
-                '<div style="display:flex;align-items:center;gap:.6rem;padding:.3rem 0;font-size:.85rem">'
-                +'<span style="flex:1">'+esc(k)+'</span>'
-                +'<span style="width:'+Math.max(4,Math.round(n/max*90))+'px;height:6px;background:'+visitsShade(n,max)+'"></span>'
-                +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span></div>').join('')
+            +(countries.length?countries.map(([k,n])=>{
+                const regions=(byCountry[k]||[]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]);
+                return '<div style="padding:.35rem 0">'
+                    +'<div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem">'
+                    +'<span style="flex:1">'+esc(k)+'</span>'
+                    +'<span style="width:'+Math.max(4,Math.round(n/max*90))+'px;height:6px;background:'+visitsShade(n,max)+'"></span>'
+                    +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span></div>'
+                    +regions.map(([r,rn])=>'<div style="display:flex;gap:.6rem;font-size:.8rem;color:var(--muted);padding:.15rem 0 0 1rem">'
+                        +'<span style="flex:1">'+esc(r)+'</span><span>'+rn+'</span></div>').join('')
+                    +'</div>';
+              }).join('')
               :'<p style="color:var(--muted);font-size:.85rem">No locations recorded yet.</p>')
             +'</div></details>';
 
@@ -1950,7 +1986,7 @@ async function loadVisits(){
             +'</div></details>';
 
         c.innerHTML=html;
-        paintVisitsMap(totals&&totals.codes);
+        paintVisitsMap(totals&&totals.regions);
     }catch(e){
         const why=e&&e.message?e.message:String(e);
         addLog('Load visits error: '+why);
