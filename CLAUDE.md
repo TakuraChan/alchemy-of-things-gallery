@@ -178,10 +178,18 @@ The functions are public, so nothing arriving from a visitor is trusted:
 - `netlify.toml` sets CSP, Referrer-Policy, Permissions-Policy and HSTS; the
   admin gets a separate CSP that allows `api.github.com` and is `noindex`.
 
-The admin opens on Visits and plots a dot per **region** on `admin/world.svg`,
-sized by count. Dots rather than tinted countries: at 110m resolution the
+The admin opens on Visits and plots one small **uniform** dot per place on
+`admin/world.svg`. Dots rather than tinted countries: at 110m resolution the
 Netherlands is a few pixels and Singapore is not drawn at all, so filling a
-country cannot show a small one as visited. `totals.regions` is keyed
+country cannot show a small one as visited. Uniform rather than sized by count:
+the list carries the numbers, and a growing dot smothers its neighbours.
+
+A dot is **filled** when the region's own point is known and **hollow** when it
+falls back to a country centroid from `admin/countries.json` (built by
+`scripts/build-map.js`, which also maps ~1000 country-name aliases to ISO codes
+so records made before points were captured can still be placed). A country
+counted with no region record at all still gets a dot. Every counted country
+must appear: if the dot count and the Where list disagree, that is the bug. `totals.regions` is keyed
 `Country|Region` and carries a point rounded to half a degree (≈55km) — enough
 to place a region, never a person. The SVG carries `data-lat-top` /
 `data-lat-bottom` so the projection is not duplicated in the admin.
