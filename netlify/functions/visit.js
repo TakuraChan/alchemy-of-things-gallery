@@ -1,4 +1,18 @@
-const { getStore } = require("@netlify/blobs");
+const { getStore, connectLambda } = require("@netlify/blobs");
+
+// These handlers use the legacy `exports.handler` signature. With that signature
+// Netlify does not configure Blobs automatically — it passes the context on
+// event.blobs, and connectLambda() is what hands it to the client. Without this
+// call getStore() throws, which is why storage looked unavailable.
+function connectBlobs(event) {
+  try {
+    if (typeof connectLambda === 'function' && event && event.blobs) {
+      connectLambda(event);
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -20,9 +34,11 @@ function openStore(name) {
 }
 
 // Which half of the manual fallback is present, so the admin can name the gap.
-function storageGap() {
+function storageGap(event, connected) {
   return {
     error: 'storage-unavailable',
+    lambdaContext: connected,
+    contextOnEvent: !!(event && event.blobs),
     hasSiteId: !!(process.env.NETLIFY_SITE_ID || process.env.SITE_ID),
     hasToken: !!(process.env.NETLIFY_BLOBS_TOKEN || process.env.NETLIFY_API_TOKEN)
   };
@@ -64,12 +80,13 @@ function parseGeo(headers) {
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };
 
+  const connected = connectBlobs(event);
   const store = openStore("visits");
   if (!store) {
     // Say so rather than returning an empty list, which reads as "no visitors".
     return {
       statusCode: 200, headers: CORS,
-      body: JSON.stringify(storageGap())
+      body: JSON.stringify(storageGap(event, connected))
     };
   }
 

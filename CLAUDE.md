@@ -102,8 +102,14 @@ images/
 ```
 netlify/functions/
 ├── ratings.js            # Rating API (GET/POST)
+├── visit.js              # Visit log + per-country totals
 └── package.json          # Dependencies (@netlify/blobs)
 ```
+Both use the legacy `exports.handler` signature. With that signature Netlify does
+**not** configure Blobs automatically: it passes the context on `event.blobs`, and
+`connectLambda(event)` must be called before `getStore()`. Skip it and `getStore()`
+throws, which reads as "storage unavailable" no matter what credentials are set.
+Geography comes from the `x-nf-geo` header (base64 JSON), not `x-country`.
 
 ### Thoughts
 The admin edits structured entries: Front matter, a repeatable Sections panel
