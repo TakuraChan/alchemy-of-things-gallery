@@ -29,6 +29,22 @@ function safePath(v) {
   if (!clean) return '/';
   return clean.charAt(0) === '/' ? clean : '/' + clean;
 }
+// Regions carry a coarse point so they can be plotted. Coordinates are rounded
+// to half a degree — roughly 55km — so a dot marks a region, never a person.
+function bumpPlace(t, key, lat, lon, cap) {
+  if (!key) return;
+  t.regions = t.regions || {};
+  const seen = t.regions[key];
+  if (!seen && Object.keys(t.regions).length >= cap) return;
+  const rec = seen || { n: 0 };
+  rec.n += 1;
+  if (typeof lat === 'number' && typeof lon === 'number' && isFinite(lat) && isFinite(lon)) {
+    rec.lat = Math.round(lat * 2) / 2;
+    rec.lon = Math.round(lon * 2) / 2;
+  }
+  t.regions[key] = rec;
+}
+
 // A flood of distinct values must not grow the record without bound.
 function bump(t, bucket, name, cap) {
   if (!name) return;
@@ -120,7 +136,9 @@ function parseGeo(headers) {
         city: safePlace(g.city),
         region: safePlace(g.subdivision && g.subdivision.name),
         country: safePlace(g.country && g.country.name),
-        countryCode: safeCode(g.country && g.country.code)
+        countryCode: safeCode(g.country && g.country.code),
+        lat: typeof g.latitude === 'number' ? g.latitude : undefined,
+        lon: typeof g.longitude === 'number' ? g.longitude : undefined
       };
     } catch (e) {}
   }
@@ -129,7 +147,9 @@ function parseGeo(headers) {
     city: safePlace(headers['x-nf-city'] || headers['x-city']),
     region: safePlace(headers['x-nf-subdivision']),
     country: '',
-    countryCode: safeCode(headers['x-nf-country'] || headers['x-country'] || headers['x-geo-country'])
+    countryCode: safeCode(headers['x-nf-country'] || headers['x-country'] || headers['x-geo-country']),
+    lat: undefined,
+    lon: undefined
   };
 }
 
@@ -200,6 +220,8 @@ exports.handler = async (event) => {
         bump(t, 'days', visit.time.slice(0, 10), 4000);
         bump(t, 'paths', visit.path, 500);
         bump(t, 'devices', visit.device, 10);
+        const land = geo.country || geo.countryCode || 'Unknown';
+        bumpPlace(t, land + '|' + (geo.region || ''), geo.lat, geo.lon, 1000);
       }
       await store.setJSON("totals", t);
 

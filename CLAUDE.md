@@ -178,8 +178,15 @@ The functions are public, so nothing arriving from a visitor is trusted:
 - `netlify.toml` sets CSP, Referrer-Policy, Permissions-Policy and HSTS; the
   admin gets a separate CSP that allows `api.github.com` and is `noindex`.
 
-The admin tints `admin/world.svg` by country. Rebuild that basemap only if it
-changes:
+The admin opens on Visits and plots a dot per **region** on `admin/world.svg`,
+sized by count. Dots rather than tinted countries: at 110m resolution the
+Netherlands is a few pixels and Singapore is not drawn at all, so filling a
+country cannot show a small one as visited. `totals.regions` is keyed
+`Country|Region` and carries a point rounded to half a degree (≈55km) — enough
+to place a region, never a person. The SVG carries `data-lat-top` /
+`data-lat-bottom` so the projection is not duplicated in the admin.
+
+Rebuild that basemap only if it changes:
 ```bash
 npm i --no-save world-atlas@2 world-countries topojson-client
 node scripts/build-map.js
