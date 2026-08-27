@@ -77,14 +77,16 @@
         portfolioLink.addEventListener('click',e=>{
             e.preventDefault();
             portfolioModal.classList.add('active');
+            lockScroll(true);
         });
 
         portfolioClose.addEventListener('click',()=>{
             portfolioModal.classList.remove('active');
+            lockScroll(false);
         });
 
         portfolioModal.addEventListener('click',e=>{
-            if(e.target===portfolioModal)portfolioModal.classList.remove('active');
+            if(e.target===portfolioModal){portfolioModal.classList.remove('active');lockScroll(false)}
         });
     </script>
 </body>

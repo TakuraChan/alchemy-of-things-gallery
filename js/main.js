@@ -1,3 +1,6 @@
+// The document scrolls on a phone, so anything laid over it holds it still.
+function lockScroll(on){document.body.classList.toggle('locked',on)}
+
 // Content cache to avoid redundant fetches
 let contentCache=null;
 
@@ -131,7 +134,16 @@ function initHeartRating(container){
         heart.addEventListener('mouseenter',()=>preview(val));
         heart.addEventListener('mouseleave',()=>preview(0));
         heart.addEventListener('click',()=>rate(val));
-        heart.addEventListener('touchend',(e)=>{e.preventDefault();rate(val);});
+        // A tap, not a scroll that happened to begin on a heart: with the page
+        // scrolling under the finger, a swipe from here would otherwise appreciate.
+        let start=null;
+        heart.addEventListener('touchstart',(e)=>{const t=e.touches[0];start=t?{x:t.clientX,y:t.clientY}:null},{passive:true});
+        heart.addEventListener('touchend',(e)=>{
+            const t=e.changedTouches[0];
+            if(start&&t&&Math.abs(t.clientY-start.y)+Math.abs(t.clientX-start.x)>12)return;
+            e.preventDefault();
+            rate(val);
+        });
     });
 }
 
@@ -290,6 +302,7 @@ async function loadCollections(type){
                     </div>
                 `;
                 lightbox.classList.add('active');
+                lockScroll(true);
                 // Initialize heart rating interaction
                 initHeartRating(content);
             });
@@ -298,6 +311,7 @@ async function loadCollections(type){
         lightbox.addEventListener('click',e=>{
             if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
                 lightbox.classList.remove('active');
+                lockScroll(false);
             }
         });
 
@@ -438,7 +452,9 @@ async function loadSingleWork(){
             document.querySelector('.footer').style.display='none';
             document.querySelector('.main').style.marginTop='0';
             document.querySelector('.main').style.marginBottom='0';
-            document.querySelector('.main').style.height='100vh';
+            // A floor, not a ceiling: a fixed 100vh is taller than the visible
+            // window on a phone, so the meta below the image became unreachable.
+            document.querySelector('.main').style.minHeight='100dvh';
             document.querySelector('.main').style.padding='1.5rem';
         }
 
@@ -473,10 +489,11 @@ async function loadSingleWork(){
         lightbox.innerHTML=`<img src="${w.image}${cacheBust}" alt="${w.title}"><button class="lightbox-close" aria-label="Close">×</button>`;
         document.body.appendChild(lightbox);
 
-        img.addEventListener('click',()=>lightbox.classList.add('active'));
+        img.addEventListener('click',()=>{lightbox.classList.add('active');lockScroll(true)});
         lightbox.addEventListener('click',(e)=>{
             if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
                 lightbox.classList.remove('active');
+                lockScroll(false);
             }
         });
     }catch{c.innerHTML='<p class="empty">Error loading work.</p>'}

@@ -1,6 +1,6 @@
 :root{--bg:#faf9f7;--text:#1a1a1a;--muted:#6b6b6b;--light:#999;--border:#e8e6e3;--font-display:'Cormorant Garamond',serif;--font-body:'Jost',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.7;color:var(--text);background:var(--bg);min-height:100vh;display:flex;flex-direction:column;overflow-y:hidden}
+body{font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.7;color:var(--text);background:var(--bg);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;overflow-y:hidden}
 a{color:inherit;text-decoration:none;transition:opacity .3s}
 a:hover{opacity:.6}
 .work-link:hover{opacity:1}
@@ -137,6 +137,8 @@ a:hover{opacity:.6}
 .loading::after{content:'';width:20px;height:20px;border:1px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 body.reading{overflow-y:auto}
+/* The page scrolls on a phone, so a modal must hold it still while it is open. */
+body.locked{overflow:hidden}
 body.reading .main{height:auto;overflow-y:visible}
 .thoughts-list{max-width:640px;margin:0 auto;padding:8vh 1.5rem 6rem;text-align:center}
 .thoughts-list .thoughts-segment{margin-bottom:5rem}
@@ -187,8 +189,8 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts-pdf:hover{color:var(--text);opacity:1}
 .thoughts-colophon{margin-top:4rem;text-align:center;color:var(--light);font-size:.8rem;line-height:1.9}
 @media(max-width:768px){
-    body{overflow-y:hidden}
-    body.reading{overflow-y:auto}
+    body{overflow-y:visible}
+    body.reading{overflow-y:visible}
     body.reading .main{height:auto;overflow-y:visible;margin-bottom:0}
     .thoughts-list{padding:5vh 0 4rem}
     .thoughts-list .thoughts-segment{margin-bottom:3.5rem}
@@ -207,15 +209,15 @@ body.reading .main{height:auto;overflow-y:visible}
     .landing-enter{bottom:3rem;padding:.9rem 2.5rem;font-size:.8rem}
     .nav{padding:0.75rem 1.5rem}
     .symbol{width:24px;height:24px}
-    .main{padding:0 1.5rem;margin-top:45px;margin-bottom:60px;overflow-y:auto;height:calc(100vh - 105px)}
+    .main{padding:0 1.5rem;margin-top:45px;margin-bottom:60px;overflow-y:visible;min-height:calc(100vh - 105px);min-height:calc(100dvh - 105px)}
     .footer{position:fixed;bottom:0;left:0;right:0;padding:1rem;background:var(--bg);z-index:90}
     .footer-text{font-size:.75rem}
     .about{text-align:center;padding-top:4vh}
     .section-note{font-size:0.75rem;padding:0.5rem 0 1rem}
     .works{display:block;overflow-x:visible;overflow-y:visible;scroll-snap-type:none;height:auto;max-width:100%}
-    .works.collections-view{overflow-y:visible;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;height:100%;min-height:calc(100vh - 105px)}
+    .works.collections-view{overflow-y:visible;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;height:auto;min-height:calc(100vh - 105px);min-height:calc(100dvh - 105px)}
     .works.collections-view .work-item{height:auto;min-height:auto;margin-bottom:0}
-    .works.collection-artworks-view{display:flex;height:calc(100vh - 140px);position:relative}
+    .works.collection-artworks-view{display:flex;height:calc(100vh - 140px);height:calc(100dvh - 140px);position:relative}
     .works.collection-artworks-view .work-item{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1rem 1.5rem;margin:0}
     .work-item{min-width:auto;height:auto;margin-bottom:6rem;padding:0}
     .work-link{display:block;width:auto;height:auto}
