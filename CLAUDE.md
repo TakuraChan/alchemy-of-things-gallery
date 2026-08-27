@@ -129,6 +129,21 @@ the existing work when editing to avoid dropping them.
 ### Image Paths
 All images use `.webp` format. Paths stored as `/images/{category}/{timestamp}.webp`
 
+### Scrolling on a phone
+The document scrolls; nothing pins it shut. It used to: `body{overflow-y:hidden}`
+with the scrolling done by an inner `.main` sized `calc(100vh - 105px)`. On a phone
+`100vh` is the **large** viewport — the height the page would have with the address
+bar hidden — and the bar only retracts when the document itself scrolls. So the box
+was always ~120px taller than the window, its content fitted inside it, and the
+overflow sat under the fixed footer, unreachable. The paintings page would not move
+at all.
+
+So on mobile: `body{overflow-y:visible}`, `.main` takes `min-height:calc(100dvh - 105px)`
+(with a `100vh` fallback first) and no fixed height. Use `dvh` for any full-viewport
+height, never a bare `vh`. Anything laid over the page — the two lightboxes, the
+portfolio modal — calls `lockScroll(true)` (`body.locked{overflow:hidden}`) so the
+page holds still behind it, and `lockScroll(false)` on close.
+
 ### Admin Authentication
 - Password hash stored in `localStorage.alchemy_cfg`
 - Session auth in `sessionStorage.alchemy_auth`
