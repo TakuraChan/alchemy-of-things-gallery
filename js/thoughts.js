@@ -73,6 +73,14 @@ function renderBlocks(body){
     }).join('');
 }
 
+// A closed block named by what it holds. Printing opens it; see the print styles.
+function fold(name,inner,cls,tag){
+    const t=tag||'div';
+    return '<details class="thoughts-fold"><summary>'+escapeText(name)+'</summary>'
+        +'<'+t+' class="'+cls+'">'+inner+'</'+t+'>'
+        +'</details>';
+}
+
 function sectionLabel(s){
     return (s.numeral?s.numeral+'. ':'')+(s.heading||'');
 }
@@ -83,17 +91,18 @@ function renderThought(e,number){
     h+='<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>';
     if(e.standfirst)h+='<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>';
     if(e.edition)h+='<p class="thoughts-edition">'+escapeText(e.edition)+'</p>';
-    if(e.note)h+='<div class="thoughts-note">'+thoughtBody(e.note)+'</div>';
+    // The note and the contents are folded shut, so the piece opens with the piece.
+    // A fold is the site's ordinary move: a name that opens into what it names.
+    if(e.note)h+=fold(e.noteLabel||'A note',thoughtBody(e.note),'thoughts-note');
 
     const sections=(e.sections||[]).filter(s=>s.heading||s.body);
     if(sections.length>1){
-        let part='';
-        h+='<nav class="thoughts-contents">';
+        let part='',list='';
         sections.forEach(s=>{
-            if(s.part&&s.part!==part){part=s.part;h+='<p class="thoughts-part">'+escapeText(part)+'</p>'}
-            h+='<a href="#'+escapeText(s.id||'')+'">'+escapeText(sectionLabel(s))+'</a>';
+            if(s.part&&s.part!==part){part=s.part;list+='<p class="thoughts-part">'+escapeText(part)+'</p>'}
+            list+='<a href="#'+escapeText(s.id||'')+'">'+escapeText(sectionLabel(s))+'</a>';
         });
-        h+='</nav>';
+        h+=fold('Contents',list,'thoughts-contents','nav');
     }
 
     sections.forEach(s=>{

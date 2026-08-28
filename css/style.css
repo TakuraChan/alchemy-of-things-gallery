@@ -161,6 +161,15 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts-note a{color:var(--muted);border-bottom:1px solid var(--border)}
 .thoughts-note a:hover{color:var(--text);opacity:1}
 .thoughts-contents{margin-bottom:5rem}
+.thoughts-fold{border-top:1px solid var(--border)}
+.thoughts-fold+.thoughts-fold{border-top:0}
+.thoughts-fold:last-of-type{border-bottom:1px solid var(--border);margin-bottom:4rem}
+.thoughts-fold>summary{list-style:none;cursor:pointer;text-align:center;padding:1.1rem 0;font-family:var(--font-display);font-style:italic;font-size:.95rem;color:var(--light);transition:color .3s}
+.thoughts-fold>summary::-webkit-details-marker{display:none}
+.thoughts-fold>summary:hover{color:var(--text)}
+.thoughts-fold[open]>summary{color:var(--muted)}
+.thoughts-fold .thoughts-note{border:0;padding:0 0 2rem;margin:0}
+.thoughts-fold .thoughts-contents{margin:0;padding-bottom:1.5rem}
 .thoughts-part{font-family:var(--font-display);font-style:italic;font-size:.9rem;color:var(--light);margin:2rem 0 .75rem}
 .thoughts-contents a{display:block;color:var(--muted);font-size:.9rem;padding:.3rem 0}
 .thoughts-contents a:hover{color:var(--text);opacity:1}
@@ -201,6 +210,8 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts-edition{margin-bottom:2.5rem}
     .thoughts-note{margin-bottom:3rem}
     .thoughts-contents{margin-bottom:3.5rem}
+    .thoughts-fold:last-of-type{margin-bottom:3rem}
+    .thoughts-fold>summary{padding:1rem 0}
     .thoughts section{margin-bottom:3.5rem}
     .thoughts h2{font-size:1.15rem}
     .thoughts .law{font-size:1.05rem}
@@ -258,6 +269,11 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts-title{font-size:22pt;margin-top:32vh}
     .thoughts-standfirst{font-size:12pt}
     .thoughts-edition{margin-bottom:0;break-after:page}
+    .thoughts-fold,.thoughts-fold:last-of-type{border:0;margin:0}
+    .thoughts-fold>summary{display:none}
+    .thoughts-fold::details-content{content-visibility:visible;block-size:auto}
+    .thoughts-fold .thoughts-note{padding:0;margin:0 0 3rem}
+    .thoughts-fold .thoughts-contents{padding:0}
     .thoughts-note{border:0;padding:0;margin:0 0 3rem}
     .thoughts-contents{margin-bottom:0;break-after:page}
     .thoughts-contents a{color:var(--muted)}

@@ -43,6 +43,11 @@ heading, id, lede, body. `renderThought()` produces the same markup the reading
 CSS and the print styles already expect, and derives the contents from the
 sections. An entry may still carry `link` to point at a hand-built page.
 
+The note and the contents open the page folded shut — `<details class="thoughts-fold">`,
+a centred italic name on the hairline, no marker — so a reader meets the piece first.
+Print opens both and drops the names, so the PDF is unchanged; `build-pdf.js` sets
+`details.open` before rendering as well.
+
 Section bodies use a small set of marks, blank line between blocks:
 
 ```
