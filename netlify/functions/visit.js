@@ -87,24 +87,49 @@ function storageGap(event, connected) {
 // Crawlers, unfurlers and monitors are counted apart, so "how many people read
 // this" is not inflated by machines. Repeated hits from a datacentre city like
 // Ashburn are almost always one of these.
+// Unambiguous machines: a browser never calls itself any of these.
 const BOT_TOKENS = [
   'bot', 'crawl', 'spider', 'slurp', 'archiver', 'scraper', 'fetcher', 'monitor',
-  'facebookexternalhit', 'whatsapp', 'telegram', 'discord', 'slack', 'twitter', 'linkedin',
-  'pinterest', 'redditbot', 'embedly', 'quora', 'applebot', 'yandex', 'baidu', 'duckduck',
+  'facebookexternalhit', 'redditbot', 'embedly', 'applebot', 'yandex', 'baidu', 'duckduck',
   'gptbot', 'claudebot', 'anthropic', 'perplexity', 'ccbot', 'ahrefs', 'semrush', 'mj12',
   'dotbot', 'petal', 'uptime', 'pingdom', 'lighthouse', 'headlesschrome', 'phantomjs',
   'python-requests', 'curl/', 'wget', 'go-http-client', 'node-fetch', 'axios', 'okhttp',
-  'java/', 'scrapy', 'prerender', 'validator', 'preview'
+  'java/', 'scrapy', 'prerender', 'validator'
 ];
+
+// Brand names shared by an unfurler and the app's own in-app browser. WhatsApp/2.x
+// fetching a link preview is a machine; a reader who opened the link inside the
+// LinkedIn or X app is a person, and their country belongs in the record. These
+// count as machines ONLY when the agent is not shaped like a browser — otherwise
+// every reader arriving from a shared link was filed away as a crawler and their
+// country never counted, which is how the list of countries stopped growing.
+const BRAND_TOKENS = [
+  'whatsapp', 'telegram', 'discord', 'slack', 'twitter', 'linkedin', 'pinterest',
+  'quora', 'preview'
+];
+
+// An iOS in-app browser often omits Safari and identifies itself only by its
+// WebKit build — "Mobile/15E148" — so that counts as a browser marker too.
+function looksLikeBrowser(ua) {
+  return /Mozilla\/5\.0/i.test(ua)
+    && /AppleWebKit|Gecko\//i.test(ua)
+    && /(Safari|Chrome|CriOS|FxiOS|Firefox|Version|Mobile)\//i.test(ua);
+}
+
+function nameFrom(ua, hit) {
+  // Name it from the agent string where possible, e.g. "GPTBot/1.2" -> "GPTBot".
+  const m = ua.match(new RegExp('[A-Za-z0-9_.-]*' + hit.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&') + '[A-Za-z0-9_.-]*', 'i'));
+  return safeText(m ? m[0] : hit, 40) || hit;
+}
 
 function botLabel(ua) {
   if (!ua || ua.length < 10) return 'unknown agent';
   const low = ua.toLowerCase();
-  const hit = BOT_TOKENS.find(t => low.indexOf(t) >= 0);
-  if (!hit) return '';
-  // Name it from the agent string where possible, e.g. "GPTBot/1.2" -> "GPTBot".
-  const m = ua.match(new RegExp('[A-Za-z0-9_.-]*' + hit.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&') + '[A-Za-z0-9_.-]*', 'i'));
-  return safeText(m ? m[0] : hit, 40) || hit;
+  const hard = BOT_TOKENS.find(t => low.indexOf(t) >= 0);
+  if (hard) return nameFrom(ua, hard);
+  if (looksLikeBrowser(ua)) return '';
+  const brand = BRAND_TOKENS.find(t => low.indexOf(t) >= 0);
+  return brand ? nameFrom(ua, brand) : '';
 }
 
 function parseBrowser(ua) {

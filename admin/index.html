@@ -619,8 +619,8 @@ async function showCategoryContent(cat){
                 <div class="field"><label>Title</label><input type="text" id="work-title"></div>
                 <div class="field"><label>Content <span style="color:var(--light);font-size:.8rem">(a short piece; leave empty if you use sections)</span></label><textarea id="work-text" style="min-height:140px;font-family:inherit" placeholder="Write your ${cat.name.toLowerCase()} here..."></textarea></div>
                 <details class="panel"><summary>Front matter</summary><div class="panel-body">
-                    <div class="field"><label>Standfirst</label><input type="text" id="work-standfirst" placeholder="A framework for recombination under constraint"></div>
-                    <div class="field"><label>Edition</label><input type="text" id="work-edition" placeholder="Second draft · 2026 · Takura Changwa"></div>
+                    <div class="field"><label>Standfirst</label><input type="text" id="work-standfirst" placeholder="one line under the title"></div>
+                    <div class="field"><label>Edition</label><input type="text" id="work-edition" placeholder="draft · year · name"></div>
                     <div class="field"><label>Opening note</label><textarea id="work-note" style="min-height:120px;font-family:inherit" placeholder="A note on rigour…"></textarea></div>
                 </div></details>
                 <details class="panel" id="panel-sections"><summary>Sections<span class="panel-count" id="sections-count"></span></summary><div class="panel-body">
@@ -630,7 +630,7 @@ async function showCategoryContent(cat){
                 <details class="panel"><summary>Ending</summary><div class="panel-body">
                     <div class="field"><label>Closing passage</label><textarea id="work-closing" style="min-height:100px;font-family:inherit"></textarea></div>
                     <div class="field"><label>Invitation</label><input type="text" id="work-closeline" placeholder="Please send your results…"></div>
-                    <div class="field"><label>Reply address</label><input type="text" id="work-email" placeholder="review@alchemyofthings.com"></div>
+                    <div class="field"><label>Reply address</label><input type="text" id="work-email" placeholder="address for replies"></div>
                     <div class="field"><label>PDF path</label><input type="text" id="work-pdf" placeholder="/documents/…pdf"></div>
                     <div class="field"><label>Colophon</label><textarea id="work-colophon" style="min-height:80px;font-family:inherit"></textarea></div>
                 </div></details>
@@ -842,6 +842,14 @@ async function saveCollectionsFile(){
 let workImg=null;
 let multiImgs=[];
 let editingWork=null; // Track work being edited
+// The entry exactly as it was loaded, and whether anything has been typed since.
+// Without these a save could write the stored text back and still report success:
+// GitHub accepts it, commits an empty tree, and a lost edit looks like a saved one.
+let editingOriginal=null,formDirty=false;
+document.addEventListener('input',e=>{
+    if(e.target&&e.target.closest&&e.target.closest('#work-form'))formDirty=true;
+},true);
+const serializeWork=w=>JSON.stringify((({_file,_sha,_folder,...rest})=>rest)(w),null,2);
 let editSections=[];  // Sections of the long-form entry being written
 
 const BODY_HINT='Blank line between blocks. ### subheading · &gt; set-apart line · 1. numbered step · : table entry (term, then a definition line, then "Label — value" lines)';
@@ -982,6 +990,7 @@ async function saveWorkDynamic(e){
     const isText=currentCategory.type==='text';
     const isUnfinished=isUnfinishedCollection();
     const collectionId=document.getElementById('work-collection')?.value||'';
+    let keepEditing=false;
 
     try{
         const folder=currentCategory.id;
@@ -1098,9 +1107,14 @@ async function saveWorkDynamic(e){
             btn.textContent='Saving...';
             const fileName=isEditing?editingWork._file:id+'.json';
             const sha=isEditing?editingWork._sha:undefined;
-            await gh('/contents/data/'+folder+'/'+fileName,'PUT',{
+            const payload=serializeWork(work);
+            // An unchanged payload is not a save. GitHub would take it, commit an
+            // empty tree, and the admin would say "updated" over a lost edit.
+            if(isEditing&&editingOriginal!==null&&payload===editingOriginal)
+                throw new Error('Nothing changed, so nothing was written. The form held the stored text — retype the change and save again.');
+            const put=await gh('/contents/data/'+folder+'/'+fileName,'PUT',{
                 message:(isEditing?'Update ':'Add ')+title,
-                content:btoa(unescape(encodeURIComponent(JSON.stringify(work,null,2)))),
+                content:btoa(unescape(encodeURIComponent(payload))),
                 sha,
                 branch:'main'
             });
@@ -1110,10 +1124,21 @@ async function saveWorkDynamic(e){
                 return [...works,cleanedWork];
             });
             msg(title+(isEditing?' updated':' added'),'ok');
-            editingWork=null;
+            if(isEditing){
+                // Stay on the entry, with the new sha, so a second Update updates
+                // this entry rather than minting a duplicate from a reset form.
+                keepEditing=true;
+                editingWork={...work,_file:fileName,_sha:(put&&put.content&&put.content.sha)||sha,_folder:folder};
+                editingOriginal=payload;
+                formDirty=false;
+            }else{
+                editingWork=null;
+            }
         }
 
-        document.getElementById('work-form').reset();
+        // Resetting while editing would put the stored values back in the form,
+        // which reads as the edit being undone.
+        if(!keepEditing)document.getElementById('work-form').reset();
 
         workImg=null;
         const u=document.getElementById('work-upload');
@@ -1124,11 +1149,15 @@ async function saveWorkDynamic(e){
         console.error('Save work error:',errMsg,err);
         addLog('Save error: '+errMsg);
         msg(errMsg,'err');
+        // Hold on to the entry being edited: dropping it turned a retry into a
+        // second, duplicate file.
+        keepEditing=!!editingWork;
     }
-    btn.disabled=false;btn.textContent='Add to '+currentCategory.name;
-    editingWork=null;
+    btn.disabled=false;
+    btn.textContent=keepEditing?('Update '+(editingWork&&editingWork.title||'entry')):('Add to '+currentCategory.name);
+    if(!keepEditing)editingWork=null;
     const sum=document.getElementById('form-summary');
-    if(sum)sum.textContent='Add to '+currentCategory.name;
+    if(sum)sum.textContent=keepEditing?('Editing '+(editingWork&&editingWork.title||'entry')):('Add to '+currentCategory.name);
     return false;
 }
 
@@ -1277,8 +1306,14 @@ async function editWork(folder,file){
     const work=allWorks.find(w=>w._file===file);
     if(!work)return;
 
+    // This repopulates every field from the stored copy. Doing that over typing
+    // that has not been saved is how an edit disappeared with no sign of it.
+    if(formDirty&&!confirm('You have typed changes that are not saved. Open '+(work.title||'this entry')+' and discard them?'))return;
+
     // Store editing state
     editingWork={...work,_folder:folder};
+    editingOriginal=serializeWork(work);
+    formDirty=false;
     workImg=null; // Clear any previous image
 
     // Populate form fields
@@ -1333,6 +1368,8 @@ async function editWork(folder,file){
 
 function cancelEdit(){
     editingWork=null;
+    editingOriginal=null;
+    formDirty=false;
     workImg=null;
     editSections=[];
     renderSections();
@@ -1422,7 +1459,13 @@ async function updateWorksAggregate(folder,updateFn){
             branch:'main'
         });
         addLog('Works index updated for '+folder);
-    }catch(e){addLog('Aggregate update failed: '+(e.message||e));}
+    }catch(e){
+        // The entry file is written by now; if the index is not, the site keeps
+        // showing the old text. Swallowing this made that look like a success.
+        const detail=e&&e.message||e;
+        console.error('Index update failed for '+folder+':',detail);
+        throw new Error('The entry was saved, but the '+folder+' index did not update ('+detail+'). The site will show the old text until it does.');
+    }
 }
 
 function generateCategoryHtml(id,name){
@@ -2086,16 +2129,28 @@ async function loadVisits(){
             +'<span id="map-count"></span>'
             +'<a href="#" id="map-reset" style="display:none;color:var(--light)">whole world</a></p>';
 
-        // country, then the regions within it — the same shape one level down
-        const byCountry={};
+        // country, then the regions within it — the same shape one level down.
+        // A visit Netlify could not narrow to a region is kept and named as such:
+        // dropping those rows is why a country never seemed to gain a region.
+        const byCountry={},ccOf={};
         Object.entries((totals&&totals.regions)||{}).forEach(([key,v])=>{
             const parts=String(key).split('|');
             const land=parts[0]||'Unknown', region=parts[1]||'';
-            (byCountry[land]=byCountry[land]||[]).push([region,(v&&v.n)||0]);
+            if(v&&v.cc)ccOf[land]=v.cc;
+            (byCountry[land]=byCountry[land]||[]).push([region||'region not given',(v&&v.n)||0]);
+        });
+        // Cities are recorded on every visit and were shown nowhere.
+        const citiesOf={};
+        Object.entries((totals&&totals.cities)||{}).forEach(([key,n])=>{
+            const m=String(key).match(/^(.*),\s*([A-Z]{2})$/);
+            const city=m?m[1]:String(key), cc=m?m[2]:'';
+            if(city==='Unknown')return;
+            (citiesOf[cc]=citiesOf[cc]||[]).push([city,n]);
         });
         html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
             +(countries.length?countries.map(([k,n])=>{
-                const regions=(byCountry[k]||[]).filter(x=>x[0]).sort((a,b)=>b[1]-a[1]);
+                const regions=(byCountry[k]||[]).sort((a,b)=>b[1]-a[1]);
+                const cities=(citiesOf[ccOf[k]]||[]).sort((a,b)=>b[1]-a[1]);
                 return '<div style="padding:.35rem 0">'
                     +'<div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem">'
                     +'<span style="flex:1">'+esc(k)+'</span>'
@@ -2103,6 +2158,8 @@ async function loadVisits(){
                     +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span></div>'
                     +regions.map(([r,rn])=>'<div style="display:flex;gap:.6rem;font-size:.8rem;color:var(--muted);padding:.15rem 0 0 1rem">'
                         +'<span style="flex:1">'+esc(r)+'</span><span>'+rn+'</span></div>').join('')
+                    +cities.map(([c,cn])=>'<div style="display:flex;gap:.6rem;font-size:.75rem;color:var(--light);padding:.1rem 0 0 2rem">'
+                        +'<span style="flex:1">'+esc(c)+'</span><span>'+cn+'</span></div>').join('')
                     +'</div>';
               }).join('')
               :'<p style="color:var(--muted);font-size:.85rem">No locations recorded yet.</p>')

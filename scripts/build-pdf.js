@@ -68,6 +68,8 @@ function serve() {
         const p = await browser.newPage();
         await p.goto('http://127.0.0.1:' + server.address().port + '/_print.html?id=' + ENTRY, { waitUntil: 'networkidle' });
         await p.waitForSelector('.thoughts-title');
+        // The note and the contents are folded on screen; a page has no folds.
+        await p.evaluate(() => document.querySelectorAll('details').forEach(d => { d.open = true }));
         await p.evaluate(() => document.fonts.ready);
         await p.emulateMedia({ media: 'print' });
         await p.pdf({

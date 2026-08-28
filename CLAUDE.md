@@ -43,6 +43,11 @@ heading, id, lede, body. `renderThought()` produces the same markup the reading
 CSS and the print styles already expect, and derives the contents from the
 sections. An entry may still carry `link` to point at a hand-built page.
 
+The note and the contents open the page folded shut — `<details class="thoughts-fold">`,
+a centred italic name on the hairline, no marker — so a reader meets the piece first.
+Print opens both and drops the names, so the PDF is unchanged; `build-pdf.js` sets
+`details.open` before rendering as well.
+
 Section bodies use a small set of marks, blank line between blocks:
 
 ```
@@ -159,6 +164,25 @@ gh(path, method, body) // Calls api.github.com/repos/{repo}{path}
 1. Try `data/{category}-collections.json`
 2. Fallback to legacy names (`collections.json` for paintings, `observations.json` for photography)
 
+### Saving a work in the admin
+GitHub accepts a PUT whose content equals the current blob and commits an empty
+tree, so an edit that never reached the payload used to commit twice and report
+success. Three things keep that from happening again:
+
+- `editWork()` stores `editingOriginal` (the entry as loaded). `saveWorkDynamic()`
+  refuses to write an identical payload and says so — a lost edit is now visible.
+- Typing sets `formDirty`. Re-opening any entry over unsaved typing asks first;
+  `editWork()` repopulates every field from the stored copy, which is one way the
+  typed value disappeared with no sign of it.
+- After a successful edit the form is **not** reset (that put the stored values
+  back on screen) and `editingWork` is kept with the new sha, so a second Update
+  updates the same entry instead of minting `work-<timestamp>` as a duplicate.
+  A failed save keeps the editing state too, for the same reason.
+
+`updateWorksAggregate()` throws on failure instead of swallowing it: the entry
+file is already written by then, and a stale index means the site keeps showing
+the old text.
+
 ### Unfinished Works
 - Detected by `collectionId === 'unfinished'` OR `w.unfinished === true`
 - Display with 90% grayscale filter
@@ -178,6 +202,15 @@ headless browser, empty agent) is counted in `botCount` / `agents` and kept out
 of `count`, `countries`, `cities`, `paths` and `days` — so the figures are people.
 Repeated hits from a datacentre city such as Ashburn are almost always these.
 
+Two lists, not one. `BOT_TOKENS` are unambiguous — a browser never calls itself
+`crawl`, `headlesschrome` or `python-requests`. `BRAND_TOKENS` (whatsapp, telegram,
+linkedin, twitter, slack, discord…) name *both* an unfurler and the app's own
+in-app browser, so they count as a machine only when `looksLikeBrowser()` is false.
+Miss that and every reader who opened a shared link inside LinkedIn or X is filed
+as a crawler and their country is never recorded — which is how the country list
+stopped growing while the view count rose. An iOS in-app browser often omits
+`Safari`, so `Mobile/<build>` counts as a browser marker too.
+
 ### Visitor safety
 The functions are public, so nothing arriving from a visitor is trusted:
 - `safePath` / `safeText` / `safePlace` reduce paths, referers and place names to
@@ -192,6 +225,12 @@ The functions are public, so nothing arriving from a visitor is trusted:
   unescaped once already.
 - `netlify.toml` sets CSP, Referrer-Policy, Permissions-Policy and HSTS; the
   admin gets a separate CSP that allows `api.github.com` and is `noindex`.
+
+Every visit is shown at the finest place known: a country, its regions, then its
+cities. A visit Netlify could not narrow is kept and labelled *region not given* —
+the admin used to filter those rows out (`.filter(x=>x[0])`), so a country could
+never appear to gain a region. `totals.cities` is recorded on every visit and was
+rendered nowhere.
 
 The admin opens on Visits and plots one small **uniform** dot per place on
 `admin/world.svg`. Dots rather than tinted countries: at 110m resolution the
