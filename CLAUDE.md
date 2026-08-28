@@ -227,7 +227,7 @@ The functions are public, so nothing arriving from a visitor is trusted:
   admin gets a separate CSP that allows `api.github.com` and is `noindex`.
 
 Every visit is shown at the finest place known: a country, its regions, then its
-cities. A visit Netlify could not narrow is kept and labelled *region not given* —
+cities. The list opens folded — the count sits on its name — since it is long. A visit Netlify could not narrow is kept and labelled *region not given* —
 the admin used to filter those rows out (`.filter(x=>x[0])`), so a country could
 never appear to gain a region. `totals.cities` is recorded on every visit and was
 rendered nowhere.

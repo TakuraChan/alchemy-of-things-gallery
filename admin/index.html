@@ -2147,7 +2147,9 @@ async function loadVisits(){
             if(city==='Unknown')return;
             (citiesOf[cc]=citiesOf[cc]||[]).push([city,n]);
         });
-        html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
+        // Closed on arrival: the count is on the summary, and the list — countries,
+        // their regions, their cities — is long enough to be asked for.
+        html+='<details class="panel"><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
             +(countries.length?countries.map(([k,n])=>{
                 const regions=(byCountry[k]||[]).sort((a,b)=>b[1]-a[1]);
                 const cities=(citiesOf[ccOf[k]]||[]).sort((a,b)=>b[1]-a[1]);
