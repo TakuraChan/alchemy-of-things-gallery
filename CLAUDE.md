@@ -60,9 +60,19 @@ anything else a paragraph
 Inline: `*emphasis*` and `[text](#section-id)`. Anchors are slugs of the heading,
 generated on save.
 - `moments.html` - Index of moments, a list of names, from `data/moments.json`.
-- `moments/entry.html` - One moment: the video holds the page, its name quiet
-  beneath, and `sound` toggles the audio. `js/moments.js` has the loader and
-  `renderMoment()` / `wireMoment()`.
+- `moments/entry.html` - One moment and nothing else: no symbol, no footer. The
+  video holds the page, its name quiet beneath, and a small horn turns the sound
+  on. `js/moments.js` has the loader, `renderMoment()` and `wireMoment()`.
+
+Moving between moments is by gesture, as a phone expects: swipe left or right for
+the next and the previous, up for the list of names. Arrow keys and Escape do the
+same on a desktop, and the ascent line still reads *Moments*. Each swap fades,
+pushes history (so browser-back walks it) and warms the neighbouring posters.
+
+The order is **shuffled once per visit** and kept in `sessionStorage`, so what
+comes next is not the upload order but swiping back still returns you to what you
+just saw. The horn is hidden on a moment with no audio, and asking for sound is
+remembered across one that has none.
 
 A moment is `{id,title,video,image,width,height,duration,hasAudio,order}`; `image`
 is the poster (first frame), named `image` so the admin's own lists show it. The
