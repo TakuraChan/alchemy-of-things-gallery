@@ -640,7 +640,7 @@ async function showCategoryContent(cat){
                     <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to add image</span></div>
                 </div>
             `:isVideo?`
-                <div class="field"><label>Video <span style="color:var(--light);font-size:.8rem">(up to ${MOMENT_MAX_SECONDS}s; converted here before it goes up)</span></label>
+                <div class="field"><label>Video <span style="color:var(--light);font-size:.8rem">(load any clip, then cut it to the moment — ${MOMENT_IDEAL}s or so reads best)</span></label>
                     <div class="upload" id="work-upload"><input type="file" accept="video/*" onchange="previewMoment(this)"><span>Tap to choose a video</span></div>
                 </div>
                 <div id="moment-preview" style="display:none;margin-bottom:1rem"></div>
@@ -1059,7 +1059,7 @@ async function saveWorkDynamic(e){
                 if(momentFile){
                     btn.textContent='Converting...';
                     addLog('Converting '+momentFile.name+' ('+(momentFile.size/1048576).toFixed(1)+'MB)');
-                    const out=await prepareMoment(momentFile,pct=>{btn.textContent='Converting '+Math.round(pct*100)+'%'});
+                    const out=await prepareMoment(momentFile,pct=>{btn.textContent='Converting '+Math.round(pct*100)+'%'},momentTrim);
                     btn.textContent='Uploading...';
                     const stamp=Date.now();
                     const video64=await blobToBase64(out.blob);
@@ -1567,7 +1567,11 @@ async function preview(input,type){
 // be re-encoded. The canvas is drawn from the playing video and captured, which
 // is the one route that works on iOS as well — video.captureStream() does not.
 // Re-encoding also drops the phone's metadata, GPS included.
-const MOMENT_MAX_SECONDS=45, MOMENT_LONG=1920, MOMENT_SHORT=1080, MOMENT_TARGET_MB=8;
+// A long clip can be loaded and cut down; what is published is the window.
+// Eight to fifteen seconds is where a loop reads as a held moment rather than a
+// video waiting to end, and where the file stays light.
+const MOMENT_MAX_IN=180, MOMENT_MAX_OUT=30, MOMENT_MIN_OUT=3, MOMENT_IDEAL=12;
+const MOMENT_LONG=1920, MOMENT_SHORT=1080, MOMENT_TARGET_MB=8;
 
 function pickVideoMime(){
     const want=['video/mp4;codecs=avc1.4d002a,mp4a.40.2','video/mp4;codecs=avc1','video/mp4',
@@ -1598,7 +1602,7 @@ function canvasToPoster(canvas){
     return {dataUrl,base64:dataUrl.split(',')[1],type};
 }
 
-async function prepareMoment(file,onProgress){
+async function prepareMoment(file,onProgress,trim){
     const mime=pickVideoMime();
     if(!mime)throw new Error('This browser cannot encode video. Try Safari or Chrome.');
     const url=URL.createObjectURL(file);
@@ -1611,7 +1615,11 @@ async function prepareMoment(file,onProgress){
         });
         const duration=v.duration;
         if(!isFinite(duration)||duration<=0)throw new Error('This video has no readable length.');
-        if(duration>MOMENT_MAX_SECONDS)throw new Error('That is '+Math.round(duration)+' seconds. A moment runs up to '+MOMENT_MAX_SECONDS+'.');
+        if(duration>MOMENT_MAX_IN)throw new Error('That is '+Math.round(duration)+' seconds. Load something under '+MOMENT_MAX_IN+' and cut it down.');
+        // The window, not the whole clip.
+        const start=Math.max(0,Math.min(trim&&trim.start||0,duration-MOMENT_MIN_OUT));
+        const length=Math.max(MOMENT_MIN_OUT,Math.min(trim&&trim.length||Math.min(duration,MOMENT_IDEAL),duration-start,MOMENT_MAX_OUT));
+        const end=start+length;
         const [w,h]=momentSize(v.videoWidth,v.videoHeight);
         if(!w||!h)throw new Error('This video has no readable size.');
 
@@ -1635,31 +1643,44 @@ async function prepareMoment(file,onProgress){
             }
         }catch(e){addLog('No audio captured: '+(e.message||e))}
 
-        const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:momentBitrate(duration),audioBitsPerSecond:96000});
+        const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:momentBitrate(length),audioBitsPerSecond:96000});
         const chunks=[];
         rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
         const stopped=new Promise(r=>{rec.onstop=r});
 
-        let poster=null;
+        let poster=null,finished=false;
         const drawFrame=()=>{
             ctx.drawImage(v,0,0,w,h);
             if(!poster)poster=canvasToPoster(canvas);
-            if(onProgress)onProgress(Math.min(1,v.currentTime/duration));
+            if(onProgress)onProgress(Math.min(1,(v.currentTime-start)/length));
         };
+        const done=new Promise(res=>{
+            const stop=()=>{if(!finished){finished=true;v.pause();res()}};
+            v.onended=stop;
+            v.ontimeupdate=()=>{if(v.currentTime>=end)stop()};
+        });
         let pump;
         if(v.requestVideoFrameCallback){
-            const step=()=>{drawFrame();if(!v.ended)v.requestVideoFrameCallback(step)};
+            const step=()=>{
+                if(finished)return;
+                if(v.currentTime>=end){v.ontimeupdate&&v.ontimeupdate();return}
+                drawFrame();v.requestVideoFrameCallback(step);
+            };
             pump=()=>v.requestVideoFrameCallback(step);
         }else{
-            const id=setInterval(()=>{if(!v.ended)drawFrame();else clearInterval(id)},1000/30);
+            const id=setInterval(()=>{finished?clearInterval(id):drawFrame()},1000/30);
             pump=()=>{};
         }
 
+        // Start where the window starts, not where the clip does.
+        if(start>0){
+            await new Promise(res=>{v.onseeked=()=>{v.onseeked=null;res()};v.currentTime=start});
+        }
         rec.start(1000);
         v.muted=false;v.volume=1;
         await v.play();
         pump();
-        await new Promise(res=>{v.onended=res});
+        await done;
         drawFrame();
         rec.stop();
         await stopped;
@@ -1670,7 +1691,7 @@ async function prepareMoment(file,onProgress){
         const hasAudio=stream.getAudioTracks().length>0
             &&(v.webkitAudioDecodedByteCount===undefined||v.webkitAudioDecodedByteCount>0);
         return {blob,ext:mime.indexOf('mp4')>=0?'mp4':'webm',type:blob.type,
-                width:w,height:h,duration:Math.round(duration*10)/10,hasAudio,poster};
+                width:w,height:h,duration:Math.round(length*10)/10,hasAudio,poster};
     }finally{URL.revokeObjectURL(url)}
 }
 
@@ -1683,8 +1704,17 @@ function blobToBase64(blob){
     });
 }
 
-// The chosen file, shown before it is converted, so nothing is a surprise.
-let momentFile=null;
+// The chosen file, and the window cut from it. A long clip is loaded whole and
+// then narrowed: the preview loops only the selection, so the seam — where the
+// last frame meets the first again — can be judged before anything is encoded.
+let momentFile=null,momentTrim={start:0,length:MOMENT_IDEAL};
+
+function fmtSeconds(n){return (Math.round(n*10)/10).toFixed(1)+'s'}
+
+function momentEstimate(length){
+    return (momentBitrate(length)*length/8/1048576).toFixed(1)+'MB';
+}
+
 function previewMoment(input){
     const f=input.files&&input.files[0];
     const box=document.getElementById('moment-preview');
@@ -1692,10 +1722,46 @@ function previewMoment(input){
     momentFile=f;formDirty=true;
     const url=URL.createObjectURL(f);
     box.style.display='block';
-    box.innerHTML='<video src="'+url+'" muted playsinline loop autoplay '
+    box.innerHTML='<video id="moment-scrub" src="'+esc(url)+'" muted playsinline '
         +'style="max-height:220px;max-width:100%;display:block;margin:0 auto"></video>'
-        +'<p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:.5rem">'
-        +esc(f.name)+' — '+(f.size/1024/1024).toFixed(1)+'MB, converted on saving</p>';
+        +'<div id="moment-trim" style="margin-top:.75rem"></div>'
+        +'<p id="moment-note" style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:.5rem">'
+        +esc(f.name)+' — '+(f.size/1048576).toFixed(1)+'MB</p>';
+    const v=document.getElementById('moment-scrub');
+    v.onloadedmetadata=()=>{
+        const dur=v.duration;
+        if(!isFinite(dur)||dur<=0)return;
+        // Open on the middle of the clip: the beginning is usually the hand settling.
+        const length=Math.min(dur,MOMENT_IDEAL);
+        momentTrim={start:Math.max(0,(dur-length)/2),length};
+        document.getElementById('moment-trim').innerHTML=
+            '<label style="display:block;font-size:.75rem;color:var(--light);margin-bottom:.2rem">Start <span id="trim-start"></span></label>'
+            +'<input type="range" id="trim-start-range" min="0" max="'+Math.max(0,dur-MOMENT_MIN_OUT).toFixed(1)+'" step="0.1" value="'+momentTrim.start.toFixed(1)+'" style="width:100%">'
+            +'<label style="display:block;font-size:.75rem;color:var(--light);margin:.5rem 0 .2rem">Length <span id="trim-length"></span></label>'
+            +'<input type="range" id="trim-length-range" min="'+MOMENT_MIN_OUT+'" max="'+Math.min(MOMENT_MAX_OUT,dur).toFixed(1)+'" step="0.5" value="'+momentTrim.length.toFixed(1)+'" style="width:100%">';
+        const startEl=document.getElementById('trim-start-range');
+        const lenEl=document.getElementById('trim-length-range');
+        const sync=(seek)=>{
+            let st=parseFloat(startEl.value),len=parseFloat(lenEl.value);
+            if(st+len>dur){len=Math.max(MOMENT_MIN_OUT,dur-st);lenEl.value=len}
+            momentTrim={start:st,length:len};
+            document.getElementById('trim-start').textContent=fmtSeconds(st);
+            document.getElementById('trim-length').textContent=fmtSeconds(len)
+                +(len>15?' — long for a loop':len<8?' — brief':'')+' · at most '+momentEstimate(len);
+            document.getElementById('moment-note').textContent=
+                esc(f.name)+' — '+fmtSeconds(dur)+' loaded, '+fmtSeconds(len)+' published';
+            if(seek)v.currentTime=st;
+        };
+        // Loop the selection, so what you see is what is published.
+        v.ontimeupdate=()=>{
+            if(v.currentTime>=momentTrim.start+momentTrim.length||v.currentTime<momentTrim.start-0.3)
+                v.currentTime=momentTrim.start;
+        };
+        startEl.oninput=()=>sync(true);
+        lenEl.oninput=()=>sync(false);
+        sync(true);
+        v.play().catch(()=>{});
+    };
 }
 
 function optimizeImage(file,maxSize){
