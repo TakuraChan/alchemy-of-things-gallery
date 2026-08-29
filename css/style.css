@@ -145,22 +145,32 @@ body.reading .main{height:auto;overflow-y:visible}
 .thought-entry{display:block;margin-bottom:3.5rem}
 .thought-empty{font-family:var(--font-display);font-style:italic;color:var(--light);text-align:center}
 .thought-image{display:block;max-width:100%;margin:0 auto 2.5rem}
-/* A moment: one portrait video, holding the page. The frame takes whatever the
-   name and the ascent leave, and the video is contained inside it — so the video
-   is as large as it can be without ever being cropped or pushing the title off
-   the screen, at any window. dvh, never vh — see the scrolling note. */
+/* A moment: one portrait video and its name, and nothing else — no symbol, no
+   footer. The frame takes whatever the ascent and the name leave, and the video
+   is contained inside it, so it is as large as it can be at any window without
+   ever being cropped. dvh, never vh — see the scrolling note. */
+.moment-page .main{margin:0;padding:0;height:auto;min-height:0}
 .moment{display:flex;flex-direction:column;max-width:640px;margin:0 auto;
-    height:calc(100vh - 200px);height:calc(100dvh - 200px);
-    padding:3vh 1.5rem 1.5rem;text-align:center}
+    height:100vh;height:100dvh;text-align:center;
+    padding:calc(3vh + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
+            calc(2.5vh + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left))}
 .moment .thoughts-segment{margin-bottom:2rem}
-.moment-frame{flex:1 1 auto;min-height:0;position:relative;margin-bottom:1.5rem}
+.moment-frame{flex:1 1 auto;min-height:0;position:relative;margin-bottom:1.5rem;touch-action:none}
 .moment-video{position:absolute;inset:0;margin:auto;width:auto;height:auto;
     max-width:100%;max-height:100%;object-fit:contain;background:var(--bg);cursor:pointer}
 .moment-title{font-family:var(--font-display);font-style:italic;font-size:1.05rem;color:var(--muted)}
-.moment-sound{margin-top:1.25rem}
-.moment-sound button{background:none;border:0;padding:0;font-family:var(--font-body);font-weight:300;
-    font-size:.75rem;color:var(--light);cursor:pointer;transition:color .3s}
+/* One moment gives way to the next: a fade, nothing that draws the eye. */
+.moment-frame,.moment-title{transition:opacity .3s ease}
+.moment.swapping .moment-frame,.moment.swapping .moment-title{opacity:0}
+.moment-sound{margin-top:1.1rem}
+.moment-sound button{background:none;border:0;padding:.4rem;line-height:0;color:var(--light);
+    cursor:pointer;transition:color .3s}
 .moment-sound button:hover{color:var(--text)}
+.moment-sound svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.2;
+    stroke-linecap:round;stroke-linejoin:round}
+.moment-sound .wave{opacity:0;transition:opacity .3s ease}
+.moment-sound button.on{color:var(--muted)}
+.moment-sound button.on .wave{opacity:1}
 .thoughts .thoughts-title+section{margin-top:3rem}
 .thought-entry:hover{opacity:.6}
 .thought-number{display:block;font-size:.8rem;color:var(--light);margin-bottom:.6rem}
@@ -218,7 +228,9 @@ body.reading .main{height:auto;overflow-y:visible}
     body.reading{overflow-y:visible}
     body.reading .main{height:auto;overflow-y:visible;margin-bottom:0}
     .thoughts-list{padding:5vh 0 4rem}
-    .moment{padding:2vh 0 1rem;height:calc(100vh - 105px);height:calc(100dvh - 105px)}
+    .moment{height:100vh;height:100dvh;
+        padding:calc(2vh + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+                calc(2vh + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left))}
     .thoughts-list .thoughts-segment{margin-bottom:3.5rem}
     .thought-title{font-size:1.3rem}
     .thoughts{padding:3vh 0 6rem}
