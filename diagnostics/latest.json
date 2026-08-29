@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-29T06:44:11.304Z",
+  "time": "2026-08-29T17:46:59.982Z",
   "adminVersion": "2026-08-26.2",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
@@ -26,7 +26,7 @@
       "status": 200,
       "result": "ok",
       "entries": 100,
-      "views": 78
+      "views": 92
     }
   ],
   "deployedData": [
@@ -49,48 +49,12 @@
       "entries": 14
     }
   ],
-  "errorCount": 1,
-  "errors": [
-    "[08:43:47] Save work error: Request timed out - check your internet connection Request timed out - check your internet connection"
-  ],
-  "logCount": 36,
+  "errorCount": 0,
+  "errors": [],
+  "logCount": 2,
   "log": [
-    "[08:36:00] GitHub API: GET /contents/data/categories.json",
-    "[08:36:03] GitHub response: 200",
-    "[08:36:05] [diag] Saving diagnostics/latest.json...",
-    "[08:36:05] [diag] GitHub API: GET /contents/diagnostics/latest.json",
-    "[08:36:07] [diag] GitHub response: 200",
-    "[08:36:07] [diag] GitHub API: PUT /contents/diagnostics/latest.json",
-    "[08:36:08] [diag] GitHub response: 200",
-    "[08:36:08] [diag] Saved: diagnostics/latest.json",
-    "[08:39:24] Loading collections for moments...",
-    "[08:39:24] GitHub API: GET /contents/data/moments-collections.json",
-    "[08:39:28] GitHub response: 404",
-    "[08:39:28] Tried moments-collections.json: status=404",
-    "[08:39:28] No collections file found",
-    "[08:39:28] GitHub API: GET /contents/data/moments",
-    "[08:39:32] GitHub response: 404",
-    "[08:42:17] Saving work to moments...",
-    "[08:42:17] isUnfinishedCollection: colId=, found=false, result=false",
-    "[08:42:17] Converting IMG_9399.mov (27.7MB)",
-    "[08:42:19] WebP not supported, poster as JPEG",
-    "[08:42:31] Encoded 1080x1920 12s -> 10.1MB mp4",
-    "[08:42:31] Uploading videos/moments/1787985751170.mp4...",
-    "[08:42:31] GitHub API: PUT /contents/videos/moments/1787985751170.mp4",
-    "[08:42:50] GitHub response: 201",
-    "[08:42:50] Uploaded: videos/moments/1787985751170.mp4",
-    "[08:42:50] Uploading images/moments/1787985751170.jpg...",
-    "[08:42:50] GitHub API: PUT /contents/images/moments/1787985751170.jpg",
-    "[08:43:47] GitHub timeout after 30s",
-    "[08:43:47] Save work error: Request timed out - check your internet connection Request timed out - check your internet connection",
-    "[08:43:47] Save error: Request timed out - check your internet connection",
-    "[08:43:51] Saving work to moments...",
-    "[08:43:51] isUnfinishedCollection: colId=, found=false, result=false",
-    "[08:43:51] Converting IMG_9399.mov (27.7MB)",
-    "[08:43:53] WebP not supported, poster as JPEG",
-    "[08:44:05] Encoded 1080x1920 12s -> 10.2MB mp4",
-    "[08:44:05] Uploading videos/moments/1787985845268.mp4...",
-    "[08:44:05] GitHub API: PUT /contents/videos/moments/1787985845268.mp4"
+    "[19:46:58] GitHub API: GET /contents/data/categories.json",
+    "[19:46:59] GitHub response: 200"
   ],
-  "reason": "errors logged"
+  "reason": "admin opened"
 }
