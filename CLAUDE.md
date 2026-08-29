@@ -59,6 +59,30 @@ anything else a paragraph
 ```
 Inline: `*emphasis*` and `[text](#section-id)`. Anchors are slugs of the heading,
 generated on save.
+- `moments.html` - Index of moments, a list of names, from `data/moments.json`.
+- `moments/entry.html` - One moment: the video holds the page, its name quiet
+  beneath, and `sound` toggles the audio. `js/moments.js` has the loader and
+  `renderMoment()` / `wireMoment()`.
+
+A moment is `{id,title,video,image,width,height,duration,hasAudio,order}`; `image`
+is the poster (first frame), named `image` so the admin's own lists show it. The
+video plays `autoplay muted loop playsinline` — every browser requires all four —
+and the poster covers the case iOS refuses to autoplay in Low Power Mode. The page
+is a flex column of a fixed viewport height, so the frame takes what the name and
+the ascent leave and the video is contained inside it: as large as it can be, never
+cropped, never pushing the title off screen.
+
+### Moments are converted in the browser
+A phone records HEVC in a `.mov` that Chrome cannot play, so `prepareMoment()`
+(admin) re-encodes before upload: the playing video is drawn into a canvas,
+`canvas.captureStream()` is recorded by `MediaRecorder`, and the audio is routed
+through a silent gain so it is captured without being played aloud. It has to be
+the canvas — `video.captureStream()` does not exist on iOS. Re-encoding also drops
+the phone's metadata, GPS included. Output is mp4 where the browser can (Safari,
+Chromium), webm otherwise; the extension is stored in the entry. It runs in real
+time: a 30s clip takes about 30s. Long edge 1920, short edge 1080, even numbers,
+1.8–4 Mbps aimed at ~8MB, up to 45s.
+
 - `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
 - `css/style.css` - All styles (`.thoughts*` block = long-form reading)
@@ -97,8 +121,11 @@ data/
 
 ### Images
 ```
+videos/
+└── moments/*.mp4         # Moments (immutable cache; filenames are timestamps)
 images/
 ├── landing.webp          # Hero image
+├── moments/*.webp        # Moment posters (first frame)
 ├── paintings/*.webp      # Painting images (17 files)
 └── photography/*.webp    # Photography images (3 files)
 ```

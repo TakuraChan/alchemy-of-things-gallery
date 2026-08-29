@@ -145,6 +145,22 @@ body.reading .main{height:auto;overflow-y:visible}
 .thought-entry{display:block;margin-bottom:3.5rem}
 .thought-empty{font-family:var(--font-display);font-style:italic;color:var(--light);text-align:center}
 .thought-image{display:block;max-width:100%;margin:0 auto 2.5rem}
+/* A moment: one portrait video, holding the page. The frame takes whatever the
+   name and the ascent leave, and the video is contained inside it — so the video
+   is as large as it can be without ever being cropped or pushing the title off
+   the screen, at any window. dvh, never vh — see the scrolling note. */
+.moment{display:flex;flex-direction:column;max-width:640px;margin:0 auto;
+    height:calc(100vh - 200px);height:calc(100dvh - 200px);
+    padding:3vh 1.5rem 1.5rem;text-align:center}
+.moment .thoughts-segment{margin-bottom:2rem}
+.moment-frame{flex:1 1 auto;min-height:0;position:relative;margin-bottom:1.5rem}
+.moment-video{position:absolute;inset:0;margin:auto;width:auto;height:auto;
+    max-width:100%;max-height:100%;object-fit:contain;background:var(--bg);cursor:pointer}
+.moment-title{font-family:var(--font-display);font-style:italic;font-size:1.05rem;color:var(--muted)}
+.moment-sound{margin-top:1.25rem}
+.moment-sound button{background:none;border:0;padding:0;font-family:var(--font-body);font-weight:300;
+    font-size:.75rem;color:var(--light);cursor:pointer;transition:color .3s}
+.moment-sound button:hover{color:var(--text)}
 .thoughts .thoughts-title+section{margin-top:3rem}
 .thought-entry:hover{opacity:.6}
 .thought-number{display:block;font-size:.8rem;color:var(--light);margin-bottom:.6rem}
@@ -202,6 +218,7 @@ body.reading .main{height:auto;overflow-y:visible}
     body.reading{overflow-y:visible}
     body.reading .main{height:auto;overflow-y:visible;margin-bottom:0}
     .thoughts-list{padding:5vh 0 4rem}
+    .moment{padding:2vh 0 1rem;height:calc(100vh - 105px);height:calc(100dvh - 105px)}
     .thoughts-list .thoughts-segment{margin-bottom:3.5rem}
     .thought-title{font-size:1.3rem}
     .thoughts{padding:3vh 0 6rem}
@@ -262,6 +279,10 @@ body.reading .main{height:auto;overflow-y:visible}
     .gallery-arrow-right{right:0.5rem}
 }
 @media print{
+    .moment{display:block;height:auto}
+    .moment-frame{position:static}
+    .moment-video{position:static;max-height:none}
+    .moment-sound{display:none}
     .nav,.footer,.thoughts-segment,.thoughts-pdf{display:none!important}
     body,body.reading{display:block;overflow:visible;background:#fff;font-size:10.5pt;line-height:1.6}
     .main{margin:0;padding:0;height:auto;overflow:visible}
