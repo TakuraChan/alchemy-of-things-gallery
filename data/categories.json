@@ -25,9 +25,18 @@
     "file": "photography.html"
   },
   {
+    "id": "moments",
+    "name": "Moments",
+    "type": "video",
+    "order": 4,
+    "visible": true,
+    "collectionLabel": "Collection",
+    "file": "moments.html"
+  },
+  {
     "id": "sketches",
     "name": "Sketches",
-    "order": 4,
+    "order": 5,
     "visible": false,
     "collectionLabel": "Collection",
     "file": "sketches.html"
@@ -36,7 +45,7 @@
     "id": "words",
     "name": "Words",
     "type": "text",
-    "order": 5,
+    "order": 6,
     "visible": true,
     "collectionLabel": "Collection",
     "file": "words.html"

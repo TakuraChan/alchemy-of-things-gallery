@@ -176,6 +176,7 @@
                     <select id="cat-type" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
                         <option value="image">Image-based (paintings, photos, sketches)</option>
                         <option value="text">Text-based (poetry, writing, stories)</option>
+                        <option value="video">Video (moments)</option>
                     </select>
                 </div>
                 <div class="field"><label class="check"><input type="checkbox" id="cat-visible" checked><span>Visible</span></label></div>
@@ -585,6 +586,7 @@ let categoryCollections=[];
 async function showCategoryContent(cat){
     const container=document.getElementById('category-content');
     const isText=cat.type==='text';
+    const isVideo=cat.type==='video';
     const collLabel=cat.collectionLabel||'Collection';
 
     // Load collections for this category
@@ -637,6 +639,12 @@ async function showCategoryContent(cat){
                 <div class="field"><label>Image <span style="color:var(--light);font-size:.8rem">(optional — photograph a handwritten version)</span></label>
                     <div class="upload" id="work-upload"><input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to add image</span></div>
                 </div>
+            `:isVideo?`
+                <div class="field"><label>Video <span style="color:var(--light);font-size:.8rem">(up to ${MOMENT_MAX_SECONDS}s; converted here before it goes up)</span></label>
+                    <div class="upload" id="work-upload"><input type="file" accept="video/*" onchange="previewMoment(this)"><span>Tap to choose a video</span></div>
+                </div>
+                <div id="moment-preview" style="display:none;margin-bottom:1rem"></div>
+                <div class="field"><label>Title</label><input type="text" id="work-title" placeholder="what this is"></div>
             `:`
                 <!-- Single image upload (normal) -->
                 <div id="single-upload-area">
@@ -988,6 +996,7 @@ async function saveWorkDynamic(e){
     addLog('Saving work to '+currentCategory.id+'...');
 
     const isText=currentCategory.type==='text';
+    const isVideo=currentCategory.type==='video';
     const isUnfinished=isUnfinishedCollection();
     const collectionId=document.getElementById('work-collection')?.value||'';
     let keepEditing=false;
@@ -1045,7 +1054,28 @@ async function saveWorkDynamic(e){
                 work={id,title,collectionId};
             }
 
-            if(isText){
+            if(isVideo){
+                work.type='video';
+                if(momentFile){
+                    btn.textContent='Converting...';
+                    addLog('Converting '+momentFile.name+' ('+(momentFile.size/1048576).toFixed(1)+'MB)');
+                    const out=await prepareMoment(momentFile,pct=>{btn.textContent='Converting '+Math.round(pct*100)+'%'});
+                    btn.textContent='Uploading...';
+                    const stamp=Date.now();
+                    const video64=await blobToBase64(out.blob);
+                    addLog('Encoded '+out.width+'x'+out.height+' '+out.duration+'s -> '+(video64.length*0.75/1048576).toFixed(1)+'MB '+out.ext);
+                    work.video=await uploadBinary(video64,'videos/'+folder+'/'+stamp+'.'+out.ext,'Add moment '+stamp);
+                    work.image=await uploadBinary(out.poster.base64,
+                        'images/'+folder+'/'+stamp+(out.poster.type==='image/webp'?'.webp':'.jpg'),'Add poster '+stamp);
+                    work.width=out.width;work.height=out.height;
+                    work.duration=out.duration;work.hasAudio=out.hasAudio;
+                }else if(isEditing&&editingWork.video){
+                    work.video=editingWork.video;
+                }else{
+                    throw new Error('Choose a video first');
+                }
+                if(!work.title)throw new Error('Give it a name');
+            }else if(isText){
                 // Text-based work: either a short piece, or sections.
                 const text=document.getElementById('work-text')?.value||'';
                 const secs=readSections().filter(x=>x.heading||x.body);
@@ -1140,9 +1170,14 @@ async function saveWorkDynamic(e){
         // which reads as the edit being undone.
         if(!keepEditing)document.getElementById('work-form').reset();
 
-        workImg=null;
+        workImg=null;momentFile=null;
+        const mp=document.getElementById('moment-preview');
+        if(mp){mp.style.display='none';mp.innerHTML=''}
         const u=document.getElementById('work-upload');
-        if(u){u.className='upload';u.style.cssText='';u.innerHTML='<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to '+(isText?'add image':'upload')+'</span>';}
+        if(u){u.className='upload';u.style.cssText='';
+            u.innerHTML=isVideo
+                ?'<input type="file" accept="video/*" onchange="previewMoment(this)"><span>Tap to choose a video</span>'
+                :'<input type="file" accept="image/*" onchange="previewWork(this)"><span>Tap to '+(isText?'add image':'upload')+'</span>';}
         loadCategoryWorks(currentCategory);
     }catch(err){
         const errMsg=err?.message||err?.statusText||(typeof err==='string'?err:JSON.stringify(err))||'Unknown error';
@@ -1258,7 +1293,9 @@ function renderWorkItem(w,cat,isText){
     }else{
         return `<div class="item">
             <img src="${w.image}" onerror="this.style.background='var(--border)'">
-            <div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${w.year||''} · ${w.available?'Available':'Sold'}</div></div>
+            <div class="item-info"><div class="item-title">${w.title}</div><div class="item-meta">${
+                w.type==='video'?((w.duration?w.duration+'s':'')+(w.hasAudio?' · sound':'')):(w.year||'')+' · '+(w.available?'Available':'Sold')
+            }</div></div>
             <select onchange="updateWorkCollection('${cat.id}','${w._file}','${w._sha}',this.value)" style="padding:.25rem;border:1px solid var(--border);font-size:.75rem">${collSelect}<option value="">Uncategorized</option></select>
             <button class="item-del" onclick="editWork('${cat.id}','${w._file}')">Edit</button>
             <button class="item-del" onclick="delWorkDynamic('${cat.id}','${w._file}','${w._sha}')">✕</button>
@@ -1525,6 +1562,142 @@ async function preview(input,type){
     img[type]={data:optimized.base64,type:optimized.type||'image/webp'};
 }
 
+// A moment is converted here, in the browser, before it is uploaded: a phone
+// records HEVC in a .mov that Chrome cannot play, so the file that goes up must
+// be re-encoded. The canvas is drawn from the playing video and captured, which
+// is the one route that works on iOS as well — video.captureStream() does not.
+// Re-encoding also drops the phone's metadata, GPS included.
+const MOMENT_MAX_SECONDS=45, MOMENT_LONG=1920, MOMENT_SHORT=1080, MOMENT_TARGET_MB=8;
+
+function pickVideoMime(){
+    const want=['video/mp4;codecs=avc1.4d002a,mp4a.40.2','video/mp4;codecs=avc1','video/mp4',
+                'video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    for(const m of want)if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m))return m;
+    return '';
+}
+
+function momentSize(w,h){
+    const long=Math.max(w,h),short=Math.min(w,h);
+    const scale=Math.min(1,MOMENT_LONG/long,MOMENT_SHORT/short);
+    // even numbers: an odd dimension breaks 4:2:0 encoders
+    return [Math.round(w*scale/2)*2,Math.round(h*scale/2)*2];
+}
+
+// Quality first, within a weight the repo and a phone can carry.
+function momentBitrate(seconds){
+    const forTarget=Math.round(MOMENT_TARGET_MB*8*1024*1024/Math.max(1,seconds));
+    return Math.min(4000000,Math.max(1800000,forTarget));
+}
+
+function canvasToPoster(canvas){
+    let dataUrl=canvas.toDataURL('image/webp',0.85),type='image/webp';
+    if(!dataUrl.startsWith('data:image/webp')){
+        addLog('WebP not supported, poster as JPEG');
+        dataUrl=canvas.toDataURL('image/jpeg',0.85);type='image/jpeg';
+    }
+    return {dataUrl,base64:dataUrl.split(',')[1],type};
+}
+
+async function prepareMoment(file,onProgress){
+    const mime=pickVideoMime();
+    if(!mime)throw new Error('This browser cannot encode video. Try Safari or Chrome.');
+    const url=URL.createObjectURL(file);
+    const v=document.createElement('video');
+    v.src=url;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.crossOrigin='anonymous';
+    try{
+        await new Promise((res,rej)=>{
+            v.onloadedmetadata=()=>res();
+            v.onerror=()=>rej(new Error('This video could not be read by the browser.'));
+        });
+        const duration=v.duration;
+        if(!isFinite(duration)||duration<=0)throw new Error('This video has no readable length.');
+        if(duration>MOMENT_MAX_SECONDS)throw new Error('That is '+Math.round(duration)+' seconds. A moment runs up to '+MOMENT_MAX_SECONDS+'.');
+        const [w,h]=momentSize(v.videoWidth,v.videoHeight);
+        if(!w||!h)throw new Error('This video has no readable size.');
+
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d',{alpha:false});
+        const stream=canvas.captureStream(30);
+
+        // The sound travels with the file. It is routed through a silent gain so
+        // the admin does not play it aloud while it records.
+        let audioCtx=null;
+        try{
+            const AC=window.AudioContext||window.webkitAudioContext;
+            if(AC){
+                audioCtx=new AC();
+                const src=audioCtx.createMediaElementSource(v);
+                const dest=audioCtx.createMediaStreamDestination();
+                const gain=audioCtx.createGain();gain.gain.value=0;
+                src.connect(dest);src.connect(gain);gain.connect(audioCtx.destination);
+                dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+            }
+        }catch(e){addLog('No audio captured: '+(e.message||e))}
+
+        const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:momentBitrate(duration),audioBitsPerSecond:96000});
+        const chunks=[];
+        rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+        const stopped=new Promise(r=>{rec.onstop=r});
+
+        let poster=null;
+        const drawFrame=()=>{
+            ctx.drawImage(v,0,0,w,h);
+            if(!poster)poster=canvasToPoster(canvas);
+            if(onProgress)onProgress(Math.min(1,v.currentTime/duration));
+        };
+        let pump;
+        if(v.requestVideoFrameCallback){
+            const step=()=>{drawFrame();if(!v.ended)v.requestVideoFrameCallback(step)};
+            pump=()=>v.requestVideoFrameCallback(step);
+        }else{
+            const id=setInterval(()=>{if(!v.ended)drawFrame();else clearInterval(id)},1000/30);
+            pump=()=>{};
+        }
+
+        rec.start(1000);
+        v.muted=false;v.volume=1;
+        await v.play();
+        pump();
+        await new Promise(res=>{v.onended=res});
+        drawFrame();
+        rec.stop();
+        await stopped;
+        if(audioCtx)audioCtx.close().catch(()=>{});
+
+        const blob=new Blob(chunks,{type:mime.split(';')[0]});
+        if(!blob.size)throw new Error('Nothing was encoded. Try again, or use a shorter clip.');
+        const hasAudio=stream.getAudioTracks().length>0
+            &&(v.webkitAudioDecodedByteCount===undefined||v.webkitAudioDecodedByteCount>0);
+        return {blob,ext:mime.indexOf('mp4')>=0?'mp4':'webm',type:blob.type,
+                width:w,height:h,duration:Math.round(duration*10)/10,hasAudio,poster};
+    }finally{URL.revokeObjectURL(url)}
+}
+
+function blobToBase64(blob){
+    return new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=()=>res(String(r.result).split(',')[1]);
+        r.onerror=()=>rej(new Error('Could not read the encoded video'));
+        r.readAsDataURL(blob);
+    });
+}
+
+// The chosen file, shown before it is converted, so nothing is a surprise.
+let momentFile=null;
+function previewMoment(input){
+    const f=input.files&&input.files[0];
+    const box=document.getElementById('moment-preview');
+    if(!f||!box)return;
+    momentFile=f;formDirty=true;
+    const url=URL.createObjectURL(f);
+    box.style.display='block';
+    box.innerHTML='<video src="'+url+'" muted playsinline loop autoplay '
+        +'style="max-height:220px;max-width:100%;display:block;margin:0 auto"></video>'
+        +'<p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:.5rem">'
+        +esc(f.name)+' — '+(f.size/1024/1024).toFixed(1)+'MB, converted on saving</p>';
+}
+
 function optimizeImage(file,maxSize){
     return new Promise((resolve)=>{
         const reader=new FileReader();
@@ -1678,6 +1851,18 @@ async function saveFile(p,content,commitMsg){
         addLog('Save error: '+(e.message||e));
         throw e;
     }
+}
+
+// Any file, at a path we choose. uploadImg only ever wrote into images/.
+async function uploadBinary(base64,path,message){
+    addLog('Uploading '+path+'...');
+    const res=await gh('/contents/'+path,'PUT',{message:message||('Add '+path),content:base64,branch:'main'});
+    if(res&&res.ok===false){
+        const body=await res.text().catch(()=>'');
+        throw new Error('Upload failed: '+(body||res.status));
+    }
+    addLog('Uploaded: '+path);
+    return '/'+path;
 }
 
 async function uploadImg(data,folder){
