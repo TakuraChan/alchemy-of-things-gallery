@@ -60,6 +60,8 @@ anything else a paragraph
 Inline: `*emphasis*` and `[text](#section-id)`. Anchors are slugs of the heading,
 generated on save.
 - `moments.html` - Index of moments, a list of names, from `data/moments.json`.
+  Bare like the moment itself (`body.bare`: no nav, no footer); the name of the
+  level, *Moments*, is the link up to the hub.
 - `moments/entry.html` - One moment and nothing else: no symbol, no footer. The
   video holds the page, its name quiet beneath, and a small horn turns the sound
   on. `js/moments.js` has the loader, `renderMoment()` and `wireMoment()`.

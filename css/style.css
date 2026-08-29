@@ -149,7 +149,11 @@ body.reading .main{height:auto;overflow-y:visible}
    footer. The frame takes whatever the ascent and the name leave, and the video
    is contained inside it, so it is as large as it can be at any window without
    ever being cropped. dvh, never vh — see the scrolling note. */
-.moment-page .main{margin:0;padding:0;height:auto;min-height:0}
+/* Nothing but the thing itself: no symbol above, no name below. */
+.bare .main{margin:0;padding:0;height:auto;min-height:0}
+.bare .thoughts-list{min-height:100vh;min-height:100dvh;
+    padding:calc(10vh + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
+            calc(6rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left))}
 .moment{display:flex;flex-direction:column;max-width:640px;margin:0 auto;
     height:100vh;height:100dvh;text-align:center;
     padding:calc(3vh + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
