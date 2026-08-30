@@ -59,6 +59,8 @@ sections. An entry may still carry `link` to point at a hand-built page.
 
 **The document is its own contents.** Every section is a `<details class="section-fold">`
 whose `<summary>` is its heading, folded shut, with a small `+` that becomes `–`.
+The closing folds the same way, named by `closingLabel` (default *Conclusion*), so
+nothing on the page is left open.
 The parts (`.section-part`) group them, so the closed page reads as the table of
 contents and opens in place. There is no contents block on screen:
 `.thoughts-contents` is still rendered but `display:none`, shown **only in print** —
