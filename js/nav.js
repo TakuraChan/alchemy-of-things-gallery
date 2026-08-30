@@ -7,9 +7,14 @@ function ascentEscape(s){
     return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
+// The mark for home, alone.
+function homeMark(){
+    return '<a class="ascent-home" href="/" aria-label="Home"><img src="/images/symbol.svg" alt=""></a>';
+}
+
 function ascentLine(name,href,showHome){
     return '<p class="ascent">'
-        +(showHome&&href!=='/'?'<a class="ascent-home" href="/" aria-label="Home"><img src="/images/symbol.svg" alt=""></a>':'')
+        +(showHome&&href!=='/'?homeMark():'')
         +'<a class="ascent-up" href="'+ascentEscape(href)+'">'+ascentEscape(name)+'</a></p>';
 }
 

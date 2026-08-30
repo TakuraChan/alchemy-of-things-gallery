@@ -46,9 +46,7 @@
                 c.innerHTML=renderThought(e,i+1,meta);
                 wireThought(c);
             }else{
-                c.innerHTML=ascentLine(thoughtAscent(meta,i+1),'/thoughts.html',true)
-                    +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
-                    +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
+                c.innerHTML=thoughtHead(e)
                     +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')
                     +'<section>'+thoughtBody(e.text)+'</section>';
             }
