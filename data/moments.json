@@ -10,5 +10,17 @@
     "height": 1920,
     "duration": 12,
     "hasAudio": true
+  },
+  {
+    "id": "kahemba",
+    "title": "Kahemba",
+    "collectionId": "",
+    "type": "video",
+    "video": "/videos/moments/1788124138607.mp4",
+    "image": "/images/moments/1788124138607.jpg",
+    "width": 1080,
+    "height": 1920,
+    "duration": 7,
+    "hasAudio": true
   }
 ]
