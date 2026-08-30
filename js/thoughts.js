@@ -9,6 +9,7 @@
 //
 // Section bodies use a small set of marks, blank line between blocks:
 //   ### text      a subheading
+//   >> name       names the set-apart block that follows
 //   > line        a set-apart line; consecutive ones form one block
 //   1. item       a numbered procedure
 //   : term        a table entry — term, then a definition line, then "Label — value" lines
@@ -75,8 +76,14 @@ function renderBlocks(body){
         const lines=chunk.split('\n').map(l=>l.trim()).filter(Boolean);
         if(lines[0].startsWith('### '))
             return '<h3>'+inlineText(lines[0].slice(4))+'</h3>';
-        if(lines.every(l=>l.startsWith('> ')))
-            return '<div class="law">'+lines.map(l=>'<p>'+inlineText(l.slice(2))+'</p>').join('')+'</div>';
+        // A set-apart block, optionally named by a leading '>> ' line: a block
+        // stating the laws should say so rather than simply appearing.
+        const named=lines[0].startsWith('>> ');
+        const said=named?lines.slice(1):lines;
+        if(said.length&&said.every(l=>l.startsWith('> ')))
+            return '<div class="law">'
+                +(named?'<p class="law-name">'+inlineText(lines[0].slice(3))+'</p>':'')
+                +said.map(l=>'<p>'+inlineText(l.slice(2))+'</p>').join('')+'</div>';
         if(/^\d+\.\s/.test(lines[0]))
             return '<ol>'+lines.map(l=>'<li>'+inlineText(l.replace(/^\d+\.\s*/,''))+'</li>').join('')+'</ol>';
         if(lines[0].startsWith(': ')){

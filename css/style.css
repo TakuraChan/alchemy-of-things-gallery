@@ -233,7 +233,9 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts h3{font-family:var(--font-display);font-style:italic;font-size:1.05rem;font-weight:400;color:var(--muted);margin:2.5rem 0 1rem}
 .thoughts .numeral{color:var(--light);margin-right:.6rem}
 .thoughts .lede{font-family:var(--font-display);font-style:italic;color:var(--muted);font-size:.95rem;margin-bottom:1.75rem}
-.thoughts .law{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:1.75rem 0;margin:2.5rem 0;font-family:var(--font-display);font-style:italic;font-size:1.15rem;line-height:1.55}
+.thoughts .law{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:2.25rem 0;margin:3.5rem 0;font-family:var(--font-display);font-style:italic;font-size:1.3rem;line-height:1.5}
+.thoughts .law .law-name{font-size:.85rem;font-style:italic;color:var(--light);text-align:center;
+    margin-bottom:1.5rem;line-height:1.4}
 .thoughts .law p{margin-bottom:.75rem}
 .thoughts .law p:last-child{margin-bottom:0}
 .thoughts .entry{padding:1.25rem 0;border-top:1px solid var(--border)}
@@ -273,7 +275,7 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts-fold>summary{padding:1rem 0}
     .thoughts section{margin-bottom:3.5rem}
     .thoughts h2{font-size:1.15rem}
-    .thoughts .law{font-size:1.05rem}
+    .thoughts .law{font-size:1.15rem;padding:1.75rem 0;margin:2.75rem 0}
     .landing-symbol{width:30px;height:30px;top:2rem}
     .landing-image{max-width:90%;max-height:65vh}
     .landing-enter{bottom:3rem;padding:.9rem 2.5rem;font-size:.8rem}
@@ -353,6 +355,7 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts section{margin-bottom:2.5rem}
     .thoughts h2,.thoughts h3,.thoughts .lede{break-after:avoid}
     .thoughts .entry,.thoughts .law,.thoughts ol li{break-inside:avoid}
+    .thoughts .law{font-size:1.15rem;padding:1.75rem 0;margin:2.5rem 0;line-height:1.55}
     .thoughts-close{margin-top:3rem;padding-top:2rem}
     .thoughts-email{border:0}
 }
