@@ -57,13 +57,26 @@ heading, id, lede, body. `renderThought()` produces the same markup the reading
 CSS and the print styles already expect, and derives the contents from the
 sections. An entry may still carry `link` to point at a hand-built page.
 
-The note and the contents open the page folded shut — `<details class="thoughts-fold">`,
-a centred italic name on the hairline with a small `+` that becomes `–` when open —
-so a reader meets the piece first and can still see that it opens.
-Print opens both and drops the names, so the PDF is unaffected; `build-pdf.js` sets
-`details.open` before rendering as well. The PDF's title page break hangs off
-`.thoughts-standfirst` — it used to hang off `.thoughts-edition`, which an entry
-need not carry.
+**The document is its own contents.** Every section is a `<details class="section-fold">`
+whose `<summary>` is its heading, folded shut, with a small `+` that becomes `–`.
+The parts (`.section-part`) group them, so the closed page reads as the table of
+contents and opens in place. There is no contents block on screen:
+`.thoughts-contents` is still rendered but `display:none`, shown **only in print** —
+a page cannot be opened, so a printed copy still needs one.
+
+The note keeps its own fold (`.thoughts-fold`), a centred italic name on the
+hairline. Note that `.thoughts-fold:last-of-type` no longer reaches it: the section
+folds are `details` siblings too, so its hairlines are set outright.
+
+`wireThought()` opens a folded section when something links into it — from the
+note, from a shared URL, or on `hashchange` — and scrolls to it.
+
+In print every fold is opened (`build-pdf.js` sets `details.open`, and
+`::details-content` is made visible), the note's summary is hidden but a section's
+summary is shown as its heading, and the `+` is suppressed — including the
+`[open]` variant, whose higher specificity beat the print rule and printed a dash
+beside all eighteen headings. The title page break hangs off `.thoughts-standfirst`
+— it used to hang off `.thoughts-edition`, which an entry need not carry.
 
 Section bodies use a small set of marks, blank line between blocks:
 
