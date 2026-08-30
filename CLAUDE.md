@@ -82,6 +82,8 @@ Section bodies use a small set of marks, blank line between blocks:
 
 ```
 ### text      a subheading
+>> name       names the set-apart block below it, so a block stating the
+              laws says so rather than simply appearing
 > line        a set-apart line; consecutive ones form one block
 1. item       a numbered procedure
 : term        a table entry — term, a definition line, then "Label — value" lines

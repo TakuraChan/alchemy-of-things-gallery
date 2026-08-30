@@ -865,7 +865,7 @@ document.addEventListener('input',e=>{
 const serializeWork=w=>JSON.stringify((({_file,_sha,_folder,...rest})=>rest)(w),null,2);
 let editSections=[];  // Sections of the long-form entry being written
 
-const BODY_HINT='Blank line between blocks. ### subheading · &gt; set-apart line · 1. numbered step · : table entry (term, then a definition line, then "Label — value" lines)';
+const BODY_HINT='Blank line between blocks. ### subheading · &gt; set-apart line (&gt;&gt; names the block) · 1. numbered step · : table entry (term, then a definition line, then "Label — value" lines)';
 
 function slugify(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
 
