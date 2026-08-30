@@ -191,8 +191,14 @@ body.reading .main{height:auto;overflow-y:visible}
 .ascent-home{display:block;line-height:0}
 .ascent-home img{width:18px;height:18px;opacity:.5;margin-top:2px;transition:opacity .3s}
 .ascent-home:hover img{opacity:1}
-.thoughts-title{font-family:var(--font-display);font-style:italic;font-size:1.85rem;font-weight:400;line-height:1.3;text-align:center;margin-bottom:.75rem}
-.thoughts-standfirst{font-family:var(--font-display);font-style:italic;text-align:center;color:var(--muted);font-size:1rem;margin-bottom:1.5rem}
+/* The head holds still while the document moves under it. The symbol is on its
+   own line and the title is the way back, so nothing else needs naming here. */
+.thoughts-head{position:sticky;top:0;z-index:5;background:var(--bg);
+    padding-bottom:1.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.thoughts-head .ascent{margin-bottom:1.25rem}
+.thoughts-title{font-family:var(--font-display);font-style:italic;font-size:1.85rem;font-weight:400;line-height:1.3;text-align:center;margin-bottom:.5rem}
+.thoughts-title a{color:inherit}
+.thoughts-standfirst{font-family:var(--font-display);font-style:italic;text-align:center;color:var(--muted);font-size:1rem;margin-bottom:0}
 .thoughts-edition{text-align:center;color:var(--light);font-size:.8rem;margin-bottom:3.5rem}
 .thoughts p{margin-bottom:1.25rem}
 .thoughts p:last-child{margin-bottom:0}
@@ -200,9 +206,9 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts-note a{color:var(--muted);border-bottom:1px solid var(--border)}
 .thoughts-note a:hover{color:var(--text);opacity:1}
 .thoughts-contents{margin-bottom:5rem}
-.thoughts-fold{border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:2rem}
+.thoughts-fold{border-bottom:1px solid var(--border);margin-bottom:1.1rem}
 .thoughts-fold+.thoughts-fold{border-top:0}
-.thoughts-fold>summary{list-style:none;cursor:pointer;text-align:center;padding:1.1rem 0;font-family:var(--font-display);font-style:italic;font-size:.95rem;color:var(--light);transition:color .3s}
+.thoughts-fold>summary{list-style:none;cursor:pointer;text-align:center;padding:.55rem 0 1.1rem;font-family:var(--font-display);font-style:italic;font-size:.95rem;color:var(--light);transition:color .3s}
 .thoughts-fold>summary::-webkit-details-marker{display:none}
 .thoughts-fold>summary::after{content:'+';display:inline-block;margin-left:.55rem;
     font-family:var(--font-body);font-weight:300;font-size:.8rem;color:var(--light);vertical-align:middle}
@@ -218,8 +224,8 @@ body.reading .main{height:auto;overflow-y:visible}
 /* On screen the document is its own contents: a part is a name that opens onto
    its sections, and a section a name that opens onto the prose. */
 .thoughts-contents{display:none}
-.part-fold{margin-bottom:2.25rem}
-.part-fold>summary{list-style:none;cursor:pointer;text-align:center}
+.part-fold{margin-bottom:1.1rem}
+.part-fold>summary{list-style:none;cursor:pointer;text-align:center;padding:.55rem 0}
 .part-fold>summary::-webkit-details-marker{display:none}
 .part-fold>summary::after{content:'+';display:inline-block;margin-left:.6rem;
     font-family:var(--font-body);font-weight:300;font-size:.85rem;color:var(--light);vertical-align:middle}
@@ -228,7 +234,7 @@ body.reading .main{height:auto;overflow-y:visible}
 .part-name{display:inline;font-family:var(--font-display);font-style:italic;font-weight:400;
     font-size:1.5rem;line-height:1.35;color:var(--text);margin:0}
 .part-body{padding:2.25rem 0 1rem}
-.part-fold[open]{margin-bottom:3.5rem}
+.part-fold[open]{margin-bottom:2.5rem}
 .section-fold{margin-bottom:1.75rem;scroll-margin-top:2rem}
 .section-fold>summary{list-style:none;cursor:pointer}
 .section-fold>summary::-webkit-details-marker{display:none}
@@ -274,14 +280,17 @@ body.reading .main{height:auto;overflow-y:visible}
                 calc(2vh + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left))}
     .thoughts-list .thoughts-segment,.thoughts-list .ascent{margin-bottom:3.5rem}
     .thought-title{font-size:1.3rem}
-    .thoughts{padding:3vh 0 6rem}
+    .thoughts{padding:0 0 6rem}
     .thoughts-segment,.ascent{font-size:1.1rem;margin-bottom:2.5rem}
     .ascent-home img{width:16px;height:16px}
     .thoughts-title{font-size:1.5rem}
+    .thoughts-head{padding-top:2vh;padding-bottom:1rem;margin-bottom:1.25rem}
+    .thoughts-head .ascent{margin-bottom:1rem}
+    .part-fold{margin-bottom:1rem}
     .thoughts-edition{margin-bottom:2.5rem}
     .thoughts-note{margin-bottom:3rem}
     .thoughts-contents{margin-bottom:3.5rem}
-    .thoughts-fold{margin-bottom:1.5rem}
+    .thoughts-fold{margin-bottom:1rem}
     .thoughts-fold>summary{padding:1rem 0}
     .thoughts section{margin-bottom:3.5rem}
     .thoughts h2{font-size:1.15rem}
@@ -345,6 +354,9 @@ body.reading .main{height:auto;overflow-y:visible}
     /* .bare adds a screen's safe-area padding; a page has none, and any left
        here narrows the column and re-wraps the whole PDF. */
     .thoughts,.bare .thoughts{max-width:none;margin:0;padding:0}
+    .thoughts-head{display:contents}
+    .thoughts-title{margin-bottom:.75rem}
+    .thoughts-title a{text-decoration:none;color:inherit}
     .thoughts-title{font-size:22pt;margin-top:32vh}
     .thoughts-standfirst{font-size:12pt}
     .thoughts-standfirst{margin-bottom:0;break-after:page}
@@ -356,13 +368,13 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts-fold .thoughts-contents{padding:0}
     .thoughts-note{border:0;padding:0;margin:0 0 3rem}
     .thoughts-contents{display:block;margin-bottom:0;break-after:page}
-    .part-fold{margin:0}
+    .part-fold,.part-fold[open]{margin:0 0 3.5rem}
     .part-fold::details-content{content-visibility:visible;block-size:auto}
-    .part-fold>summary{display:block;list-style:none;text-align:left;margin-bottom:1.5rem}
+    .part-fold>summary{display:block;list-style:none;text-align:left;padding:0;margin-bottom:1.5rem}
     .part-fold>summary::after,.part-fold[open]>summary::after{content:none}
     .part-name{display:block;font-size:1.5rem}
     .part-body{padding:0}
-    .section-fold{margin-bottom:2.5rem}
+    .section-fold,.section-fold[open]{margin-bottom:2.5rem}
     .section-fold::details-content{content-visibility:visible;block-size:auto}
     .section-fold>summary{display:block;list-style:none}
     .section-fold>summary::after,.section-fold[open]>summary::after{content:none}

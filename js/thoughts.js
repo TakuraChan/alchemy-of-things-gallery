@@ -167,11 +167,21 @@ function wireThought(root){
 }
 
 // A structured entry to the full reading layout. `number` is its position.
+// The head of a piece: the mark for home on its own line, then the title, which
+// is itself the way back to the index — the name of the level you are in, doing
+// the work the word "Thoughts" was doing beside it. It holds still while the
+// document moves under it.
+function thoughtHead(e){
+    return '<header class="thoughts-head">'
+        +'<p class="ascent">'+homeMark()+'</p>'
+        +'<h1 class="thoughts-title"><a href="/thoughts.html">'+escapeText(e.title||'Untitled')+'</a></h1>'
+        +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
+        +(e.edition?'<p class="thoughts-edition">'+escapeText(e.edition)+'</p>':'')
+        +'</header>';
+}
+
 function renderThought(e,number,meta){
-    let h=ascentLine(thoughtAscent(meta,number),'/thoughts.html',true);
-    h+='<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>';
-    if(e.standfirst)h+='<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>';
-    if(e.edition)h+='<p class="thoughts-edition">'+escapeText(e.edition)+'</p>';
+    let h=thoughtHead(e);
     // The note and the contents are folded shut, so the piece opens with the piece.
     // A fold is the site's ordinary move: a name that opens into what it names.
     if(e.note)h+=fold(e.noteLabel||'A note',thoughtBody(e.note),'thoughts-note');
