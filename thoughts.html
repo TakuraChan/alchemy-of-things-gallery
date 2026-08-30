@@ -23,32 +23,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="reading">
-    <nav class="nav">
-        <div class="nav-links"></div>
-    </nav>
+<body class="reading bare">
     <main class="main">
         <section class="thoughts-list">
-            <p class="thoughts-segment">Thoughts</p>
+            <p class="thoughts-segment"><a href="/" id="thoughts-name">Thoughts</a></p>
             <div id="thought-entries"></div>
         </section>
     </main>
-    <footer class="footer">
-        <div class="footer-content">
-            <img src="/images/symbol.svg" alt="" class="symbol-footer">
-            <p class="footer-text">alchemy of things</p>
-        </div>
-    </footer>
     <script src="/js/nav.js"></script>
     <script src="/js/thoughts.js"></script>
     <script>
         (async()=>{
             const c=document.getElementById('thought-entries');
-            const entries=await loadThoughts();
+            const [entries,meta]=await Promise.all([loadThoughts(),thoughtsMeta()]);
+            document.getElementById('thoughts-name').textContent=meta.name;
+            document.title=meta.name+' — Alchemy of Things';
             if(!entries.length){c.innerHTML='<p class="thought-empty">new thinking coming soon</p>';return}
             c.innerHTML=entries.map((e,i)=>`
                 <a class="thought-entry" href="${thoughtHref(e)}">
-                    <span class="thought-number">Thought experiment ${i+1}</span>
+                    ${meta.showEntryLabel?`<span class="thought-number">${escapeText(meta.entryLabel)} ${i+1}</span>`:''}
                     <span class="thought-title">${escapeText(e.title||'Untitled')}</span>
                 </a>`).join('');
         })();

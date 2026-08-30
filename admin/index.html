@@ -173,11 +173,16 @@
                 <div class="field"><label>Name</label><input type="text" id="cat-name" placeholder="e.g. Architecture, Poetry" required></div>
                 <div class="field"><label>Collection Label</label><input type="text" id="cat-label" placeholder="e.g. Sketch, Series, Chapter, Poem" value="Collection"></div>
                 <div class="field"><label>Type</label>
-                    <select id="cat-type" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
+                    <select id="cat-type" onchange="syncCategoryFields()" style="width:100%;padding:.875rem;border:1px solid var(--border);background:var(--card);font-family:inherit;font-size:1rem">
                         <option value="image">Image-based (paintings, photos, sketches)</option>
                         <option value="text">Text-based (poetry, writing, stories)</option>
                         <option value="video">Video (moments)</option>
                     </select>
+                </div>
+                <div id="cat-entry-fields" style="display:none">
+                    <div class="field"><label class="check"><input type="checkbox" id="cat-show-label" checked><span>Number the entries</span></label></div>
+                    <div class="field"><label>Entry label <span style="color:var(--light);font-size:.8rem">(the small line above each title)</span></label>
+                        <input type="text" id="cat-entry-label" placeholder="Thought experiment"></div>
                 </div>
                 <div class="field"><label class="check"><input type="checkbox" id="cat-visible" checked><span>Visible</span></label></div>
                 <button type="submit" class="btn submit" id="cat-btn">Add Category</button>
@@ -2525,6 +2530,8 @@ async function saveCategory(e){
     const label=document.getElementById('cat-label').value.trim()||'Collection';
     const type=document.getElementById('cat-type').value||'image';
     const visible=document.getElementById('cat-visible').checked;
+    const showEntryLabel=document.getElementById('cat-show-label').checked;
+    const entryLabel=document.getElementById('cat-entry-label').value.trim();
     if(!name){alert('Enter a name');return}
 
     const btn=document.getElementById('cat-btn');
@@ -2537,7 +2544,13 @@ async function saveCategory(e){
         if(editingId){
             // Update existing category
             const cat=categories.find(c=>c.id===editingId);
-            if(cat){cat.name=name;cat.collectionLabel=label;cat.type=type;cat.visible=visible;}
+            if(cat){
+                cat.name=name;cat.collectionLabel=label;cat.type=type;cat.visible=visible;
+                if(type==='text'){
+                    cat.showEntryLabel=showEntryLabel;
+                    if(entryLabel)cat.entryLabel=entryLabel; else delete cat.entryLabel;
+                }
+            }
             const existing=await getFile('data/categories.json');
             await gh('/contents/data/categories.json','PUT',{
                 message:'Update category: '+name,
@@ -2553,6 +2566,7 @@ async function saveCategory(e){
             const id=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
             if(categories.find(c=>c.id===id)){btn.disabled=false;btn.textContent='Add Category';alert('Category already exists');return false;}
             const newCat={id,name,type,order:categories.length+1,visible,collectionLabel:label};
+            if(type==='text'){newCat.showEntryLabel=showEntryLabel;if(entryLabel)newCat.entryLabel=entryLabel;}
             categories.push(newCat);
             const existing=await getFile('data/categories.json');
             await gh('/contents/data/categories.json','PUT',{
@@ -2578,6 +2592,7 @@ async function saveCategory(e){
             }
         }
         document.getElementById('cat-form').reset();
+        syncCategoryFields();
         document.getElementById('cat-label').value='Collection';
         buildTabs();
         renderCategories();
@@ -2590,6 +2605,13 @@ async function saveCategory(e){
     return false;
 }
 
+// The entry label belongs to a written section; it means nothing for images.
+function syncCategoryFields(){
+    const box=document.getElementById('cat-entry-fields');
+    const type=document.getElementById('cat-type');
+    if(box&&type)box.style.display=type.value==='text'?'block':'none';
+}
+
 function editCategory(id){
     const cat=categories.find(c=>c.id===id);
     if(!cat)return;
@@ -2597,6 +2619,9 @@ function editCategory(id){
     document.getElementById('cat-label').value=cat.collectionLabel||'Collection';
     document.getElementById('cat-type').value=cat.type||'image';
     document.getElementById('cat-visible').checked=cat.visible!==false;
+    document.getElementById('cat-show-label').checked=cat.showEntryLabel!==false;
+    document.getElementById('cat-entry-label').value=cat.entryLabel||'';
+    syncCategoryFields();
     const btn=document.getElementById('cat-btn');
     btn.textContent='Update Category';
     btn.dataset.editingId=id;
