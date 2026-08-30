@@ -112,6 +112,17 @@ function fold(name,inner,cls,tag){
         +'</details>';
 }
 
+// One section, folded shut behind its own heading.
+function sectionFold(s){
+    return '<details class="section-fold" id="'+escapeText(s.id||'')+'">'
+        +'<summary><h2>'+(s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
+        +escapeText(s.heading||'')+'</h2></summary>'
+        +'<div class="section-body">'
+        +(s.lede?'<p class="lede">'+inlineText(s.lede)+'</p>':'')
+        +renderBlocks(s.body)
+        +'</div></details>';
+}
+
 function sectionLabel(s){
     return (s.numeral?s.numeral+'. ':'')+(s.heading||'');
 }
@@ -123,8 +134,12 @@ function openThoughtTarget(hash){
     let el=null;
     try{el=document.querySelector(hash)}catch(e){return}
     if(!el)return;
-    const fold=el.closest?el.closest('details'):null;
-    if(fold)fold.open=true;
+    // Open every fold above it — a section now sits inside its part.
+    let node=el;
+    while(node){
+        if(node.tagName==='DETAILS')node.open=true;
+        node=node.parentElement;
+    }
     if(el.scrollIntoView)el.scrollIntoView({block:'start'});
 }
 
@@ -166,25 +181,31 @@ function renderThought(e,number,meta){
         h+='<nav class="thoughts-contents">'+list+'</nav>';
     }
 
-    // Each section folded shut behind its own name. The parts still group them,
-    // so the closed document reads as its own table of contents.
-    let part='';
+    // A part is a level, not a label: it folds, and opens on the names of its
+    // sections, each of which folds onto the prose. The closed page is the whole
+    // document at its widest reading — the parts alone.
+    const groups=[];
     sections.forEach(s=>{
-        if(s.part&&s.part!==part){part=s.part;h+='<p class="section-part">'+escapeText(part)+'</p>'}
-        h+='<details class="section-fold" id="'+escapeText(s.id||'')+'">';
-        h+='<summary><h2>'+(s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
-            +escapeText(s.heading||'')+'</h2></summary>';
-        h+='<div class="section-body">';
-        if(s.lede)h+='<p class="lede">'+inlineText(s.lede)+'</p>';
-        h+=renderBlocks(s.body);
-        h+='</div></details>';
+        const name=s.part||'';
+        const last=groups[groups.length-1];
+        if(last&&last.name===name)last.items.push(s);
+        else groups.push({name,items:[s]});
+    });
+    groups.forEach(g=>{
+        const inner=g.items.map(sectionFold).join('');
+        if(!g.name){h+=inner;return}   // a section belonging to no part stands alone
+        h+='<details class="part-fold">'
+            +'<summary><h2 class="part-name">'+escapeText(g.name)+'</h2></summary>'
+            +'<div class="part-body">'+inner+'</div>'
+            +'</details>';
     });
 
     if(e.image)h+='<img class="thought-image" src="'+escapeText(e.image)+'" alt="">';
-    // The conclusion folds like everything else, so the closed page is complete.
-    if(e.closing)h+='<details class="section-fold" id="closing">'
-        +'<summary><h2>'+escapeText(e.closingLabel||'Conclusion')+'</h2></summary>'
-        +'<div class="section-body">'+renderBlocks(e.closing)+'</div></details>';
+    // The conclusion is a peer of the parts, not of the sections inside them,
+    // so it folds and reads as one.
+    if(e.closing)h+='<details class="part-fold" id="closing">'
+        +'<summary><h2 class="part-name">'+escapeText(e.closingLabel||'Conclusion')+'</h2></summary>'
+        +'<div class="part-body">'+renderBlocks(e.closing)+'</div></details>';
 
     if(e.closeLine||e.email||e.pdf||e.colophon){
         h+='<div class="thoughts-close">';
