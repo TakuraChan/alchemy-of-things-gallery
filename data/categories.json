@@ -6,7 +6,8 @@
     "order": 1,
     "visible": true,
     "collectionLabel": "Collection",
-    "file": "thoughts.html"
+    "file": "thoughts.html",
+    "showEntryLabel": false
   },
   {
     "id": "paintings",

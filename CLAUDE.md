@@ -276,6 +276,13 @@ success. Three things keep that from happening again:
 file is already written by then, and a stale index means the site keeps showing
 the old text.
 
+### A work whose collection was deleted
+`loadCategoryWorks()` groups by `collectionId` but renders only the collections
+that exist, so deleting a collection used to make its works **vanish from the
+admin** — the files were still in the repo and still on the site, but there was no
+way to reach them. Grouping now checks the id against the live collections and
+drops anything orphaned into Uncategorized, where it can be re-assigned.
+
 ### Unfinished Works
 - Detected by `collectionId === 'unfinished'` OR `w.unfinished === true`
 - Display with 90% grayscale filter

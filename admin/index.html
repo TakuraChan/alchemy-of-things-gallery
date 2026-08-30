@@ -1234,8 +1234,12 @@ async function loadCategoryWorks(cat){
         const grouped={};
         const uncategorized=[];
 
+        // A work whose collection no longer exists belongs under Uncategorized.
+        // Grouping it under the dead id hid it from this screen entirely — the
+        // file was still in the repo and still on the site, but unreachable here.
+        const liveCollections=new Set(categoryCollections.map(c=>c.id));
         allWorks.forEach(w=>{
-            if(w.collectionId){
+            if(w.collectionId&&liveCollections.has(w.collectionId)){
                 if(!grouped[w.collectionId])grouped[w.collectionId]=[];
                 grouped[w.collectionId].push(w);
             }else{
