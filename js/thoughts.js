@@ -111,8 +111,7 @@ function sectionLabel(s){
 
 // A structured entry to the full reading layout. `number` is its position.
 function renderThought(e,number,meta){
-    let h='<p class="thoughts-segment"><a href="/thoughts.html">'
-        +escapeText(thoughtAscent(meta,number))+'</a></p>';
+    let h=ascentLine(thoughtAscent(meta,number),'/thoughts.html',true);
     h+='<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>';
     if(e.standfirst)h+='<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>';
     if(e.edition)h+='<p class="thoughts-edition">'+escapeText(e.edition)+'</p>';

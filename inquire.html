@@ -18,12 +18,9 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <nav class="nav">
-        <div class="nav-links"></div>
-    </nav>
     <main class="main">
         <section class="inquiry">
-            <a href="javascript:history.back()" class="back-link">Back</a>
+            <p class="ascent" id="ascent"></p>
             <h1>Inquire</h1>
             <p class="work-ref" id="work-ref"></p>
             <form name="inquiry" method="POST" data-netlify="true" netlify-honeypot="bot-field" id="form">
@@ -47,6 +44,13 @@
     <script>
         const p=new URLSearchParams(location.search),w=p.get('work');
         if(w){document.getElementById('work-ref').textContent='Regarding: '+w;document.getElementById('work-input').value=w}
+        // Up from an inquiry is the work it concerns, not wherever the browser
+        // happens to have been.
+        const wid=p.get('id'),wtype=p.get('type')||'paintings',wcol=p.get('collection');
+        const upHref=wid?('/work.html?id='+encodeURIComponent(wid)+'&type='+encodeURIComponent(wtype)
+                +(wcol?'&collection='+encodeURIComponent(wcol):''))
+            :(wtype==='paintings'?'/':'/'+wtype+'.html');
+        document.getElementById('ascent').outerHTML=ascentLine(w||'Inquire',upHref,true);
         document.getElementById('form').onsubmit=async function(e){
             e.preventDefault();const b=this.querySelector('button');b.textContent='sending...';b.disabled=true;
             try{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(this))});

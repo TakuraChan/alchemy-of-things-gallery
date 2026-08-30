@@ -1,6 +1,31 @@
 // The document scrolls on a phone, so anything laid over it holds it still.
 function lockScroll(on){document.body.classList.toggle('locked',on)}
 
+// What is laid over the page closes the way a phone expects: a swipe down, or
+// Escape at a desk. No horizontal gesture anywhere — iOS already uses an edge
+// swipe for back, and the galleries here scroll sideways; taking that over would
+// fight both. The name at the top of the page is the way up instead.
+function dismissible(el,close){
+    if(!el)return;
+    let y0=null,tracking=false;
+    el.addEventListener('touchstart',e=>{
+        if(e.touches.length!==1)return;
+        // Only from the top of anything that scrolls inside, or it fights the scroll.
+        const box=e.target.closest&&e.target.closest('[data-scrolls],.work-lightbox-content,.portfolio-modal-content');
+        if(box&&box.scrollTop>4)return;
+        tracking=true;y0=e.touches[0].clientY;
+    },{passive:true});
+    el.addEventListener('touchend',e=>{
+        if(!tracking)return;
+        tracking=false;
+        const dy=e.changedTouches[0].clientY-y0;
+        if(dy>70)close();
+    },{passive:true});
+    document.addEventListener('keydown',e=>{
+        if(e.key==='Escape'&&el.classList.contains('active'))close();
+    });
+}
+
 // Content cache to avoid redundant fetches
 let contentCache=null;
 
@@ -276,6 +301,9 @@ async function loadCollections(type){
         document.body.appendChild(lightbox);
 
         // Click handlers for work thumbnails
+        const closeWorkLightbox=()=>{lightbox.classList.remove('active');lockScroll(false)};
+        dismissible(lightbox,closeWorkLightbox);
+
         c.querySelectorAll('.work-thumb').forEach(thumb=>{
             thumb.addEventListener('click',()=>{
                 const w=JSON.parse(thumb.dataset.work);
@@ -297,7 +325,7 @@ async function loadCollections(type){
                         ${isTextWork||isUnfinished?'':(`<p>${w.year||''} · ${w.medium||''} · ${w.dimensions||''}</p>`)}
                         ${editionInfo}
                         ${isUnfinished?'<p style="font-style:italic;color:#888">Work in progress</p>':isTextWork?'':(`<p>${w.available?'Available':'Sold'}</p>`)}
-                        ${!isUnfinished&&!isTextWork&&w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                        ${!isUnfinished&&!isTextWork&&w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}&id=${encodeURIComponent(w.id||'')}&type=${encodeURIComponent(t)}${w.collectionId?'&collection='+encodeURIComponent(w.collectionId):''}" class="inquire-btn">Inquire</a>`:''}
                         ${isTextWork?'':createHeartRatingUI(w.id,isUnfinished)}
                     </div>
                 `;
@@ -326,7 +354,7 @@ async function loadCollection(){
     // Determine back link and text
     let back,backText;
     if(type==='paintings'){
-        back='/';
+        back='/paintings.html';
         backText='Paintings';
     }else if(type==='photography'){
         back='/photography.html';
@@ -336,6 +364,10 @@ async function loadCollection(){
         // Capitalize first letter
         backText=type.charAt(0).toUpperCase()+type.slice(1);
     }
+
+    // One line at the top, the same one every page below the hub carries.
+    const ascent=document.getElementById('ascent');
+    if(ascent)ascent.outerHTML=ascentLine(backText,back,true);
 
     try{
         // Determine works file
@@ -355,7 +387,7 @@ async function loadCollection(){
             // Empty collection - show "soon" message
             const content=await getContent();
             const comingSoonText=content.general?.comingSoon||'new work coming soon';
-            c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p><a href="${back}" class="back-link">${backText}</a></div>`;
+            c.innerHTML=`<div class="collection-soon"><p>${comingSoonText}</p></div>`;
             return;
         }
 
@@ -417,7 +449,7 @@ async function loadSingleWork(){
     // Determine back link
     let backBase;
     if(type==='paintings'){
-        backBase='/';
+        backBase='/paintings.html';
     }else if(type==='photography'){
         backBase='/photography.html';
     }else{
@@ -425,7 +457,7 @@ async function loadSingleWork(){
     }
 
     const back=collectionId?`/collection.html?id=${collectionId}&type=${type}`:backBase;
-    const backText=type.charAt(0).toUpperCase()+type.slice(1);
+    let backText=type.charAt(0).toUpperCase()+type.slice(1);
 
     // Determine works file
     let path;
@@ -446,9 +478,20 @@ async function loadSingleWork(){
         }
         if(!w){c.innerHTML='<p class="empty">Work not found.</p>';return}
         document.title=w.title+' — Alchemy of Things';
-        // Hide header and footer on mobile
+        // The name of what this work belongs to, when it belongs to one.
+        if(collectionId){
+            try{
+                const cr=await fetch('/data/'+(type==='paintings'?'paintings-collections':type==='photography'?'observations':type+'-collections')+'.json?_='+Date.now());
+                if(cr.ok){
+                    const cols=await cr.json();
+                    const col=Array.isArray(cols)?cols.find(x=>x&&x.id===collectionId):null;
+                    if(col&&col.name)backText=col.name;
+                }
+            }catch(e){}
+        }
+
+        // Hide the footer on mobile so the work has the page
         if(window.innerWidth<=768){
-            document.querySelector('.nav').style.display='none';
             document.querySelector('.footer').style.display='none';
             document.querySelector('.main').style.marginTop='0';
             document.querySelector('.main').style.marginBottom='0';
@@ -474,21 +517,24 @@ async function loadSingleWork(){
             if(parts.length)editionInfo=`<p class="edition-info">${parts.join(' · ')}</p>`;
         }
         c.innerHTML=`
-            <a href="${back}" class="back-link mobile-back-arrow">Back</a>
-            <img src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
+            ${ascentLine(backText,back,true)}
+            <img class="work-full" src="${w.image}${cacheBust}" alt="${w.title}" onerror="this.src='/images/symbol.svg'">
             <div class="single-work-meta">
                 <div><h1>${w.title}</h1><p>${w.year} · ${w.medium} · ${w.dimensions}</p>${editionInfo}${showAvailability?`<p>${w.available?'Available':'Sold'}</p>`:''}</div>
-                ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}" class="inquire-btn">Inquire</a>`:''}
+                ${w.available?`<a href="/inquire.html?work=${encodeURIComponent(w.title)}&id=${encodeURIComponent(w.id||id)}&type=${encodeURIComponent(type)}${collectionId?'&collection='+encodeURIComponent(collectionId):''}" class="inquire-btn">Inquire</a>`:''}
             </div>
         `;
 
-        // Add lightbox functionality
-        const img=c.querySelector('img');
+        // Add lightbox functionality. Name the work's own image: the ascent line
+        // above it carries the symbol, and a bare querySelector('img') took that.
+        const img=c.querySelector('img.work-full');
         const lightbox=document.createElement('div');
         lightbox.className='lightbox';
         lightbox.innerHTML=`<img src="${w.image}${cacheBust}" alt="${w.title}"><button class="lightbox-close" aria-label="Close">×</button>`;
         document.body.appendChild(lightbox);
 
+        const closeImage=()=>{lightbox.classList.remove('active');lockScroll(false)};
+        dismissible(lightbox,closeImage);
         img.addEventListener('click',()=>{lightbox.classList.add('active');lockScroll(true)});
         lightbox.addEventListener('click',(e)=>{
             if(e.target===lightbox||e.target.classList.contains('lightbox-close')){
