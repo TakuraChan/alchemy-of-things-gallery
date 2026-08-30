@@ -1,11 +1,10 @@
 [
   {
     "id": "alchemy-of-things",
-    "title": "Alchemy of Things",
+    "title": "On the alchemy of things",
     "type": "text",
     "order": 1,
-    "standfirst": "A framework for recombination under constraint",
-    "edition": "Second draft · 2026 · Takura Changwa",
+    "standfirst": "An interrogation of how things become",
     "note": "A note on rigour. This is a second draft. It is unpublished and unreviewed.\n\nMaybe it can be the first of many subjects to be tested by its own methods.\n\nSeveral of the concepts I borrow here come from fields I do not practise, and no part of this document has been read by a specialist in any of them. Where it reaches into physics, chemistry, engineering or philosophy, I am reading outside my training. I offer those parallels as resonances, not as proofs, and maybe they are worth holding loosely.\n\nThis is a proposition to be tested, not a finding. I am not simply open to correction. [I am asking for it](#a-request-for-testing).",
     "sections": [
       {
@@ -157,6 +156,6 @@
     "email": "review@alchemyofthings.com",
     "pdf": "/documents/alchemy-of-things.pdf",
     "closeLine": "Please send your results, disagreements, criticisms, failures and observations.",
-    "colophon": "Alchemy of Things\nSecond draft, 2026\nTakura Changwa\nUnpublished and unreviewed"
+    "colophon": "On the alchemy of things\nSecond draft, 2026\nTakura Changwa\nUnpublished and unreviewed"
   }
 ]

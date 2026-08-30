@@ -205,6 +205,9 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts-fold:last-of-type{border-bottom:1px solid var(--border);margin-bottom:4rem}
 .thoughts-fold>summary{list-style:none;cursor:pointer;text-align:center;padding:1.1rem 0;font-family:var(--font-display);font-style:italic;font-size:.95rem;color:var(--light);transition:color .3s}
 .thoughts-fold>summary::-webkit-details-marker{display:none}
+.thoughts-fold>summary::after{content:'+';display:inline-block;margin-left:.55rem;
+    font-family:var(--font-body);font-weight:300;font-size:.8rem;color:var(--light);vertical-align:middle}
+.thoughts-fold[open]>summary::after{content:'\2013'}
 .thoughts-fold>summary:hover{color:var(--text)}
 .thoughts-fold[open]>summary{color:var(--muted)}
 .thoughts-fold .thoughts-note{border:0;padding:0 0 2rem;margin:0}
@@ -317,7 +320,8 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts,.bare .thoughts{max-width:none;margin:0;padding:0}
     .thoughts-title{font-size:22pt;margin-top:32vh}
     .thoughts-standfirst{font-size:12pt}
-    .thoughts-edition{margin-bottom:0;break-after:page}
+    .thoughts-standfirst{margin-bottom:0;break-after:page}
+    .thoughts-edition{margin-bottom:0}
     .thoughts-fold,.thoughts-fold:last-of-type{border:0;margin:0}
     .thoughts-fold>summary{display:none}
     .thoughts-fold::details-content{content-visibility:visible;block-size:auto}

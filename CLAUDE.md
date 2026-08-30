@@ -58,9 +58,12 @@ CSS and the print styles already expect, and derives the contents from the
 sections. An entry may still carry `link` to point at a hand-built page.
 
 The note and the contents open the page folded shut — `<details class="thoughts-fold">`,
-a centred italic name on the hairline, no marker — so a reader meets the piece first.
-Print opens both and drops the names, so the PDF is unchanged; `build-pdf.js` sets
-`details.open` before rendering as well.
+a centred italic name on the hairline with a small `+` that becomes `–` when open —
+so a reader meets the piece first and can still see that it opens.
+Print opens both and drops the names, so the PDF is unaffected; `build-pdf.js` sets
+`details.open` before rendering as well. The PDF's title page break hangs off
+`.thoughts-standfirst` — it used to hang off `.thoughts-edition`, which an entry
+need not carry.
 
 Section bodies use a small set of marks, blank line between blocks:
 
