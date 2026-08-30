@@ -46,7 +46,7 @@
                 c.innerHTML=renderThought(e,i+1,meta);
                 wireThought(c);
             }else{
-                c.innerHTML=thoughtHead(e)
+                c.innerHTML=thoughtHead(e,meta)
                     +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')
                     +'<section>'+thoughtBody(e.text)+'</section>';
             }
