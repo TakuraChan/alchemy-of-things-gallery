@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-30T10:42:53.234Z",
+  "time": "2026-08-30T18:46:52.558Z",
   "adminVersion": "2026-08-26.2",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
@@ -26,7 +26,7 @@
       "status": 200,
       "result": "ok",
       "entries": 100,
-      "views": 113
+      "views": 135
     }
   ],
   "deployedData": [
@@ -51,12 +51,10 @@
   ],
   "errorCount": 0,
   "errors": [],
-  "logCount": 4,
+  "logCount": 2,
   "log": [
-    "[12:42:48] GitHub API: GET /contents/data/categories.json",
-    "[12:42:50] GitHub response: 200",
-    "[12:42:51] [diag] Loading collections for thoughts...",
-    "[12:42:51] [diag] GitHub API: GET /contents/data/thoughts-collections.json"
+    "[20:46:43] GitHub API: GET /contents/data/categories.json",
+    "[20:46:48] GitHub response: 200"
   ],
   "reason": "admin opened"
 }
