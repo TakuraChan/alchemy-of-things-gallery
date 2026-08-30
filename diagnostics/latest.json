@@ -1,5 +1,5 @@
 {
-  "time": "2026-08-30T18:46:52.558Z",
+  "time": "2026-08-30T21:08:02.193Z",
   "adminVersion": "2026-08-26.2",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
@@ -26,7 +26,7 @@
       "status": 200,
       "result": "ok",
       "entries": 100,
-      "views": 135
+      "views": 138
     }
   ],
   "deployedData": [
@@ -49,12 +49,25 @@
       "entries": 14
     }
   ],
-  "errorCount": 0,
-  "errors": [],
-  "logCount": 2,
-  "log": [
-    "[20:46:43] GitHub API: GET /contents/data/categories.json",
-    "[20:46:48] GitHub response: 200"
+  "errorCount": 2,
+  "errors": [
+    "[23:07:44] Load collections error: Load failed",
+    "[23:07:44] Load works error: moments Load failed"
   ],
-  "reason": "admin opened"
+  "logCount": 12,
+  "log": [
+    "[23:07:37] GitHub API: GET /contents/data/categories.json",
+    "[23:07:38] GitHub response: 200",
+    "[23:07:40] [diag] Saving diagnostics/latest.json...",
+    "[23:07:40] [diag] GitHub API: GET /contents/diagnostics/latest.json",
+    "[23:07:41] [diag] Loading collections for moments...",
+    "[23:07:41] [diag] GitHub API: GET /contents/data/moments-collections.json",
+    "[23:07:44] [diag] GitHub API: PUT /contents/diagnostics/latest.json",
+    "[23:07:44] [diag] Load collections error: Load failed",
+    "[23:07:44] Load collections error: Load failed",
+    "[23:07:44] [diag] GitHub API: GET /contents/data/moments",
+    "[23:07:44] [diag] Save error: Load failed",
+    "[23:07:44] Load works error: moments Load failed"
+  ],
+  "reason": "manual"
 }
