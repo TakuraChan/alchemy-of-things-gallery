@@ -167,21 +167,21 @@ function wireThought(root){
 }
 
 // A structured entry to the full reading layout. `number` is its position.
-// The head of a piece: the mark for home on its own line, then the title, which
-// is itself the way back to the index — the name of the level you are in, doing
-// the work the word "Thoughts" was doing beside it. It holds still while the
-// document moves under it.
-function thoughtHead(e){
+// The head of a piece: the name of the section, which is the way back to its
+// index, then the title and what the piece is asking. No rules, no mark — it
+// holds still while the document moves under it.
+function thoughtHead(e,meta){
     return '<header class="thoughts-head">'
-        +'<p class="ascent">'+homeMark()+'</p>'
-        +'<h1 class="thoughts-title"><a href="/thoughts.html">'+escapeText(e.title||'Untitled')+'</a></h1>'
+        +'<p class="ascent"><a class="ascent-up" href="/thoughts.html">'
+        +escapeText((meta&&meta.name)||THOUGHTS_DEFAULTS.name)+'</a></p>'
+        +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
         +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
         +(e.edition?'<p class="thoughts-edition">'+escapeText(e.edition)+'</p>':'')
         +'</header>';
 }
 
 function renderThought(e,number,meta){
-    let h=thoughtHead(e);
+    let h=thoughtHead(e,meta);
     // The note and the contents are folded shut, so the piece opens with the piece.
     // A fold is the site's ordinary move: a name that opens into what it names.
     if(e.note)h+=fold(e.noteLabel||'A note',thoughtBody(e.note),'thoughts-note');

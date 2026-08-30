@@ -45,9 +45,10 @@ fields only for a text category (`syncCategoryFields()`).
 - `thoughts/entry.html` - Generic reader for entries written in the admin
   (`?id=<entry-id>`). Renders title + text in the reading layout, bare as well.
   **The head holds still**: `.thoughts-head` is `position:sticky` and carries the
-  symbol alone on its line, then the title — which is itself the link back to the
-  index, doing the work the word *Thoughts* did beside it. Only the document below
-  moves. In print the head is `display:contents`, so it fragments as loose elements.
+  section's name — the link back to the index — then the title and the descriptor.
+  No symbol, no rules; the note and the parts are set apart by space alone. Only
+  the document below moves. In print the head is `display:contents`, so it
+  fragments as loose elements.
 
   **Print spacing must be named, not inherited.** Every fold is open in print, so
   `.part-fold[open]` and `.section-fold[open]` outrank a bare `.part-fold` inside
