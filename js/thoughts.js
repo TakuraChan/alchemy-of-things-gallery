@@ -181,7 +181,10 @@ function renderThought(e,number,meta){
     });
 
     if(e.image)h+='<img class="thought-image" src="'+escapeText(e.image)+'" alt="">';
-    if(e.closing)h+='<section id="closing">'+renderBlocks(e.closing)+'</section>';
+    // The conclusion folds like everything else, so the closed page is complete.
+    if(e.closing)h+='<details class="section-fold" id="closing">'
+        +'<summary><h2>'+escapeText(e.closingLabel||'Conclusion')+'</h2></summary>'
+        +'<div class="section-body">'+renderBlocks(e.closing)+'</div></details>';
 
     if(e.closeLine||e.email||e.pdf||e.colophon){
         h+='<div class="thoughts-close">';
