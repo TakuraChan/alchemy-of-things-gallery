@@ -25,6 +25,30 @@ function inlineText(s){
         .replace(/\*([^*]+)\*/g,'<em>$1</em>');
 }
 
+// What the section calls itself, and whether its entries are numbered, both come
+// from the category — so they are editable in the admin rather than written here.
+const THOUGHTS_DEFAULTS={name:'Thoughts',entryLabel:'Thought experiment',showEntryLabel:true};
+
+async function thoughtsMeta(){
+    try{
+        const r=await fetch('/data/categories.json?_='+Date.now());
+        if(!r.ok)return THOUGHTS_DEFAULTS;
+        const cats=await r.json();
+        const c=Array.isArray(cats)?cats.find(x=>x&&x.id==='thoughts'):null;
+        if(!c)return THOUGHTS_DEFAULTS;
+        return {name:c.name||THOUGHTS_DEFAULTS.name,
+                entryLabel:c.entryLabel||THOUGHTS_DEFAULTS.entryLabel,
+                showEntryLabel:c.showEntryLabel!==false};
+    }catch{return THOUGHTS_DEFAULTS}
+}
+
+// The line that names where you are: the entry's number when they are numbered,
+// the name of the section when they are not.
+function thoughtAscent(meta,number){
+    const m=meta||THOUGHTS_DEFAULTS;
+    return m.showEntryLabel?(m.entryLabel+' '+number):m.name;
+}
+
 function thoughtHref(e){
     return e.link||('/thoughts/entry.html?id='+encodeURIComponent(e.id));
 }
@@ -86,8 +110,9 @@ function sectionLabel(s){
 }
 
 // A structured entry to the full reading layout. `number` is its position.
-function renderThought(e,number){
-    let h='<p class="thoughts-segment"><a href="/thoughts.html">Thought experiment '+number+'</a></p>';
+function renderThought(e,number,meta){
+    let h='<p class="thoughts-segment"><a href="/thoughts.html">'
+        +escapeText(thoughtAscent(meta,number))+'</a></p>';
     h+='<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>';
     if(e.standfirst)h+='<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>';
     if(e.edition)h+='<p class="thoughts-edition">'+escapeText(e.edition)+'</p>';

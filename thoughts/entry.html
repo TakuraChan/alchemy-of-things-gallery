@@ -23,38 +23,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="reading">
-    <nav class="nav">
-        <div class="nav-links"></div>
-    </nav>
+<body class="reading bare">
     <main class="main">
         <article class="thoughts" id="entry"></article>
     </main>
-    <footer class="footer">
-        <div class="footer-content">
-            <img src="/images/symbol.svg" alt="" class="symbol-footer">
-            <p class="footer-text">alchemy of things</p>
-        </div>
-    </footer>
     <script src="/js/nav.js"></script>
     <script src="/js/thoughts.js"></script>
     <script>
         (async()=>{
             const c=document.getElementById('entry');
             const id=new URLSearchParams(location.search).get('id');
-            const entries=await loadThoughts();
+            const [entries,meta]=await Promise.all([loadThoughts(),thoughtsMeta()]);
             const i=entries.findIndex(e=>e.id===id);
             if(i<0){
-                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">Thoughts</a></p>'
+                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">'+escapeText(meta.name)+'</a></p>'
                     +'<p class="thought-empty">This thought is not here.</p>';
                 return;
             }
             const e=entries[i];
             document.title=e.title+' — Alchemy of Things';
             if(e.sections&&e.sections.length){
-                c.innerHTML=renderThought(e,i+1);
+                c.innerHTML=renderThought(e,i+1,meta);
             }else{
-                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">Thought experiment '+(i+1)+'</a></p>'
+                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">'+escapeText(thoughtAscent(meta,i+1))+'</a></p>'
                     +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
                     +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
                     +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')

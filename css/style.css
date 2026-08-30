@@ -151,6 +151,8 @@ body.reading .main{height:auto;overflow-y:visible}
    ever being cropped. dvh, never vh — see the scrolling note. */
 /* Nothing but the thing itself: no symbol above, no name below. */
 .bare .main{margin:0;padding:0;height:auto;min-height:0}
+.bare .thoughts{padding:calc(6vh + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
+            calc(6rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left))}
 .bare .thoughts-list{min-height:100vh;min-height:100dvh;
     padding:calc(10vh + env(safe-area-inset-top)) calc(1.5rem + env(safe-area-inset-right))
             calc(6rem + env(safe-area-inset-bottom)) calc(1.5rem + env(safe-area-inset-left))}
@@ -302,7 +304,9 @@ body.reading .main{height:auto;overflow-y:visible}
     .nav,.footer,.thoughts-segment,.thoughts-pdf{display:none!important}
     body,body.reading{display:block;overflow:visible;background:#fff;font-size:10.5pt;line-height:1.6}
     .main{margin:0;padding:0;height:auto;overflow:visible}
-    .thoughts{max-width:none;margin:0;padding:0}
+    /* .bare adds a screen's safe-area padding; a page has none, and any left
+       here narrows the column and re-wraps the whole PDF. */
+    .thoughts,.bare .thoughts{max-width:none;margin:0;padding:0}
     .thoughts-title{font-size:22pt;margin-top:32vh}
     .thoughts-standfirst{font-size:12pt}
     .thoughts-edition{margin-bottom:0;break-after:page}

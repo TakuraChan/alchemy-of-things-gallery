@@ -30,9 +30,23 @@ Images: WebP format, stored in /images/
 ### Frontend
 - `index.html` - Landing + hub (hub nav = categories.json + Thoughts + About)
 - `thoughts.html` - Index of thought experiments, rendered from `data/thoughts.json`.
-  Numbering is positional: entries sort by `order`, then count from one.
+  Numbering is positional: entries sort by `order`, then count from one. Bare
+  (`body.bare`, like Moments): no symbol, no footer; the section's own name is the
+  link up to the hub.
+
+The section's name and the small line above each title are **not written in the
+pages** — they come from the `thoughts` entry in `data/categories.json` and are
+edited in the admin's Categories tab: `name` (the heading, the hub link and the
+document title), `entryLabel` (default *Thought experiment*) and `showEntryLabel`.
+With the label off, an entry's ascent line reads the section name instead of its
+number. `thoughtsMeta()` and `thoughtAscent()` in `js/thoughts.js` hold the
+defaults, so a missing field never blanks the page. The admin shows those two
+fields only for a text category (`syncCategoryFields()`).
 - `thoughts/entry.html` - Generic reader for entries written in the admin
-  (`?id=<entry-id>`). Renders title + text in the reading layout.
+  (`?id=<entry-id>`). Renders title + text in the reading layout, bare as well.
+  **`.bare` adds safe-area padding for a screen; the print block must cancel it**
+  (`.thoughts,.bare .thoughts{padding:0}`) or the column narrows and the whole
+  PDF re-wraps — 514 lines became 541 before that was caught.
 - `js/thoughts.js` - Loader and renderer: `loadThoughts()`, `thoughtHref()`,
   `thoughtBody()`, `renderBlocks()`, `renderThought()`.
 
