@@ -112,6 +112,15 @@ function fold(name,inner,cls,tag){
         +'</details>';
 }
 
+// A fold at the level of a part: a part itself, a section that belongs to none,
+// or the conclusion. `name` is already-safe markup.
+function partFold(name,inner,id){
+    return '<details class="part-fold"'+(id?' id="'+escapeText(id)+'"':'')+'>'
+        +'<summary><h2 class="part-name">'+name+'</h2></summary>'
+        +'<div class="part-body">'+inner+'</div>'
+        +'</details>';
+}
+
 // One section, folded shut behind its own heading.
 function sectionFold(s){
     return '<details class="section-fold" id="'+escapeText(s.id||'')+'">'
@@ -192,20 +201,25 @@ function renderThought(e,number,meta){
         else groups.push({name,items:[s]});
     });
     groups.forEach(g=>{
-        const inner=g.items.map(sectionFold).join('');
-        if(!g.name){h+=inner;return}   // a section belonging to no part stands alone
-        h+='<details class="part-fold">'
-            +'<summary><h2 class="part-name">'+escapeText(g.name)+'</h2></summary>'
-            +'<div class="part-body">'+inner+'</div>'
-            +'</details>';
+        // A section belonging to no part stands as a peer of the parts: one name,
+        // one fold. Nothing that stands alone should be wrapped in itself.
+        if(!g.name){
+            g.items.forEach(s=>{
+                h+=partFold(
+                    (s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
+                        +escapeText(s.heading||''),
+                    (s.lede?'<p class="lede">'+inlineText(s.lede)+'</p>':'')+renderBlocks(s.body),
+                    s.id);
+            });
+            return;
+        }
+        h+=partFold(escapeText(g.name),g.items.map(sectionFold).join(''));
     });
 
     if(e.image)h+='<img class="thought-image" src="'+escapeText(e.image)+'" alt="">';
     // The conclusion is a peer of the parts, not of the sections inside them,
     // so it folds and reads as one.
-    if(e.closing)h+='<details class="part-fold" id="closing">'
-        +'<summary><h2 class="part-name">'+escapeText(e.closingLabel||'Conclusion')+'</h2></summary>'
-        +'<div class="part-body">'+renderBlocks(e.closing)+'</div></details>';
+    if(e.closing)h+=partFold(escapeText(e.closingLabel||'Conclusion'),renderBlocks(e.closing),'closing');
 
     if(e.closeLine||e.email||e.pdf||e.colophon){
         h+='<div class="thoughts-close">';

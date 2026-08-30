@@ -64,10 +64,15 @@ onto the names of its sections, each a `<details class="section-fold">` whose
 is a part-fold too (named by `closingLabel`, default *Conclusion*), since it is a
 peer of the parts rather than of the sections inside them.
 
-So the page arrives as eight names and the whole document is one screen; opening a
+So the page arrives as nine names and the whole document is one screen; opening a
 part costs one tap, its section another. `renderThought()` groups **consecutive**
-sections by their `part` field, so re-ordering sections in the admin re-groups them;
-a section with no part stands on its own. There is no contents block on screen:
+sections by their `part` field, so re-ordering sections in the admin re-groups them.
+
+**A section with no part stands as a peer of the parts** — one fold, its own name
+(numeral included), no wrapper. That is how *XIII Pillars* stands alone: the thing
+in the document that is chosen rather than derived. Leave a section's part blank in
+the admin and it stands the same way; nothing that stands alone is wrapped in
+itself. There is no contents block on screen:
 `.thoughts-contents` is still rendered but `display:none`, shown **only in print** —
 a page cannot be opened, so a printed copy still needs one. In print the parts are
 plain headings.
