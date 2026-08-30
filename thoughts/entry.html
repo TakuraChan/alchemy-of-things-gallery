@@ -44,6 +44,7 @@
             document.title=e.title+' — Alchemy of Things';
             if(e.sections&&e.sections.length){
                 c.innerHTML=renderThought(e,i+1,meta);
+                wireThought(c);
             }else{
                 c.innerHTML=ascentLine(thoughtAscent(meta,i+1),'/thoughts.html',true)
                     +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'

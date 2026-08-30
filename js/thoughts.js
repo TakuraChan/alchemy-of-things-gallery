@@ -109,6 +109,32 @@ function sectionLabel(s){
     return (s.numeral?s.numeral+'. ':'')+(s.heading||'');
 }
 
+// A link into a section that is folded shut must open it — from the note, from
+// the contents in a printed copy someone is following, or from a shared URL.
+function openThoughtTarget(hash){
+    if(!hash||hash.length<2)return;
+    let el=null;
+    try{el=document.querySelector(hash)}catch(e){return}
+    if(!el)return;
+    const fold=el.closest?el.closest('details'):null;
+    if(fold)fold.open=true;
+    if(el.scrollIntoView)el.scrollIntoView({block:'start'});
+}
+
+function wireThought(root){
+    root.addEventListener('click',e=>{
+        const a=e.target.closest&&e.target.closest('a[href^="#"]');
+        if(!a)return;
+        const hash=a.getAttribute('href');
+        if(!hash||hash==='#')return;
+        e.preventDefault();
+        history.replaceState(null,'',hash);
+        openThoughtTarget(hash);
+    });
+    if(location.hash)setTimeout(()=>openThoughtTarget(location.hash),0);
+    window.addEventListener('hashchange',()=>openThoughtTarget(location.hash));
+}
+
 // A structured entry to the full reading layout. `number` is its position.
 function renderThought(e,number,meta){
     let h=ascentLine(thoughtAscent(meta,number),'/thoughts.html',true);
@@ -120,22 +146,31 @@ function renderThought(e,number,meta){
     if(e.note)h+=fold(e.noteLabel||'A note',thoughtBody(e.note),'thoughts-note');
 
     const sections=(e.sections||[]).filter(s=>s.heading||s.body);
+
+    // A printed page cannot be opened, so it keeps a contents. On screen there
+    // is none: the document itself is the contents, each section a name that
+    // opens. `.thoughts-contents` is print-only for exactly that reason.
     if(sections.length>1){
         let part='',list='';
         sections.forEach(s=>{
             if(s.part&&s.part!==part){part=s.part;list+='<p class="thoughts-part">'+escapeText(part)+'</p>'}
             list+='<a href="#'+escapeText(s.id||'')+'">'+escapeText(sectionLabel(s))+'</a>';
         });
-        h+=fold('Contents',list,'thoughts-contents','nav');
+        h+='<nav class="thoughts-contents">'+list+'</nav>';
     }
 
+    // Each section folded shut behind its own name. The parts still group them,
+    // so the closed document reads as its own table of contents.
+    let part='';
     sections.forEach(s=>{
-        h+='<section id="'+escapeText(s.id||'')+'">';
-        if(s.heading)h+='<h2>'+(s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
-            +escapeText(s.heading)+'</h2>';
+        if(s.part&&s.part!==part){part=s.part;h+='<p class="section-part">'+escapeText(part)+'</p>'}
+        h+='<details class="section-fold" id="'+escapeText(s.id||'')+'">';
+        h+='<summary><h2>'+(s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
+            +escapeText(s.heading||'')+'</h2></summary>';
+        h+='<div class="section-body">';
         if(s.lede)h+='<p class="lede">'+inlineText(s.lede)+'</p>';
         h+=renderBlocks(s.body);
-        h+='</section>';
+        h+='</div></details>';
     });
 
     if(e.image)h+='<img class="thought-image" src="'+escapeText(e.image)+'" alt="">';
