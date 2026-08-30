@@ -1,3 +1,18 @@
+// The ascent: one line at the top of every page below the hub. The site's mark
+// when home is more than one step away, then the name of the level above — the
+// name is the way back, so there is no arrow anywhere. On a section index home
+// and "up one" are the same place, so the symbol is left off and the name does
+// both jobs.
+function ascentEscape(s){
+    return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function ascentLine(name,href,showHome){
+    return '<p class="ascent">'
+        +(showHome&&href!=='/'?'<a class="ascent-home" href="/" aria-label="Home"><img src="/images/symbol.svg" alt=""></a>':'')
+        +'<a class="ascent-up" href="'+ascentEscape(href)+'">'+ascentEscape(name)+'</a></p>';
+}
+
 // Dynamic navigation loader
 async function loadNav(){
     try{

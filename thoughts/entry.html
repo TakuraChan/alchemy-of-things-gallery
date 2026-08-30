@@ -36,7 +36,7 @@
             const [entries,meta]=await Promise.all([loadThoughts(),thoughtsMeta()]);
             const i=entries.findIndex(e=>e.id===id);
             if(i<0){
-                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">'+escapeText(meta.name)+'</a></p>'
+                c.innerHTML=ascentLine(meta.name,'/thoughts.html',true)
                     +'<p class="thought-empty">This thought is not here.</p>';
                 return;
             }
@@ -45,7 +45,7 @@
             if(e.sections&&e.sections.length){
                 c.innerHTML=renderThought(e,i+1,meta);
             }else{
-                c.innerHTML='<p class="thoughts-segment"><a href="/thoughts.html">'+escapeText(thoughtAscent(meta,i+1))+'</a></p>'
+                c.innerHTML=ascentLine(thoughtAscent(meta,i+1),'/thoughts.html',true)
                     +'<h1 class="thoughts-title">'+escapeText(e.title||'Untitled')+'</h1>'
                     +(e.standfirst?'<p class="thoughts-standfirst">'+escapeText(e.standfirst)+'</p>':'')
                     +(e.image?'<img class="thought-image" src="'+escapeText(e.image)+'" alt="">':'')

@@ -190,6 +190,38 @@ instead of the generic reader — that is how the long-form pieces are attached.
 The admin form does not manage `link` or `order`, so `saveWorkDynamic()` spreads
 the existing work when editing to avoid dropping them.
 
+## Navigation — one idiom, everywhere below the hub
+`ascentLine(name,href,showHome)` in `js/nav.js` renders the only way out of any
+page: **the symbol for home, the name for one level up**. It is a line at the top
+of the content, never a fixed bar — the fixed bar was the one element that hovered
+over the work, and the same line then serves a bare page and a chromed one alike.
+
+- The symbol appears **only when home is more than one step away** — `ascentLine`
+  drops it when `href==='/'`, so the two marks never point at the same place.
+- A section index (Paintings, Thoughts, Moments…) is the name alone, linking home.
+- Below that the name is the parent: a collection names its section, a work names
+  its collection, an inquiry names its work (`/inquire.html` carries `id`/`type`/
+  `collection` so it can).
+- **There is no arrow anywhere.** `.back-link` (`← Paintings`), `← Back` on a work
+  page and `history.back()` on an inquiry were four idioms for one distance; all
+  are gone, and their styles with them.
+- Print hides `.ascent` along with `.nav`/`.footer`, so the PDF is unaffected.
+- Only `index.html` and `about.html` keep the fixed `.nav` symbol: the top of the
+  site, and the one page hung off it.
+
+Watch the ordering trap: the ascent puts a symbol `<img>` at the start of the
+content, so `container.querySelector('img')` now finds *it*. The work page's own
+image is `img.work-full` for that reason.
+
+### Gestures
+What a phone already gives is not rebuilt: iOS has an edge-swipe for back and both
+platforms have a system back, so **no horizontal gesture is bound site-wide** — it
+would fight that and the sideways galleries. What is missing is added instead:
+`dismissible(el,close)` in `js/main.js` closes any overlay on a **swipe down** or
+**Escape** (both lightboxes and the portfolio modal), and only starts the gesture
+when the overlay's own scroller is at the top. Moments keeps its own set (left,
+right, up), which is a media-viewer idiom rather than a site-wide one.
+
 ## Key Patterns
 
 ### Image Paths

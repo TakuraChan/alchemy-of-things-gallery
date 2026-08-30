@@ -36,7 +36,7 @@ const SOUND_ICON='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 function renderMoment(m){
     const w=m.width||1080,h=m.height||1920;
     const poster=m.poster||m.image||'';
-    let s='<p class="thoughts-segment"><a href="/moments.html">Moments</a></p>';
+    let s=ascentLine('Moments','/moments.html',true);
     s+='<div class="moment-frame">'
         +'<video class="moment-video" width="'+w+'" height="'+h+'"'
         +' src="'+momentEscape(m.video||'')+'"'

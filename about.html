@@ -85,6 +85,8 @@
             lockScroll(false);
         });
 
+        dismissible(portfolioModal,()=>{portfolioModal.classList.remove('active');lockScroll(false)});
+
         portfolioModal.addEventListener('click',e=>{
             if(e.target===portfolioModal){portfolioModal.classList.remove('active');lockScroll(false)}
         });

@@ -36,7 +36,7 @@
             const moments=await loadMoments();
             const m=moments.find(x=>x.id===id);
             if(!m){
-                c.innerHTML='<p class="thoughts-segment"><a href="/moments.html">Moments</a></p>'
+                c.innerHTML=ascentLine('Moments','/moments.html',true)
                     +'<p class="thought-empty">This moment is not here.</p>';
                 return;
             }
