@@ -57,21 +57,28 @@ heading, id, lede, body. `renderThought()` produces the same markup the reading
 CSS and the print styles already expect, and derives the contents from the
 sections. An entry may still carry `link` to point at a hand-built page.
 
-**The document is its own contents.** Every section is a `<details class="section-fold">`
-whose `<summary>` is its heading, folded shut, with a small `+` that becomes `–`.
-The closing folds the same way, named by `closingLabel` (default *Conclusion*), so
-nothing on the page is left open.
-The parts (`.section-part`) group them, so the closed page reads as the table of
-contents and opens in place. There is no contents block on screen:
+**The document is its own contents, at two levels.** A part is a
+`<details class="part-fold">` — its `<summary>` is the part's name — and it opens
+onto the names of its sections, each a `<details class="section-fold">` whose
+`<summary>` is its heading. Both fold shut with a `+` that becomes `–`. The closing
+is a part-fold too (named by `closingLabel`, default *Conclusion*), since it is a
+peer of the parts rather than of the sections inside them.
+
+So the page arrives as eight names and the whole document is one screen; opening a
+part costs one tap, its section another. `renderThought()` groups **consecutive**
+sections by their `part` field, so re-ordering sections in the admin re-groups them;
+a section with no part stands on its own. There is no contents block on screen:
 `.thoughts-contents` is still rendered but `display:none`, shown **only in print** —
-a page cannot be opened, so a printed copy still needs one.
+a page cannot be opened, so a printed copy still needs one. In print the parts are
+plain headings.
 
 The note keeps its own fold (`.thoughts-fold`), a centred italic name on the
 hairline. Note that `.thoughts-fold:last-of-type` no longer reaches it: the section
 folds are `details` siblings too, so its hairlines are set outright.
 
 `wireThought()` opens a folded section when something links into it — from the
-note, from a shared URL, or on `hashchange` — and scrolls to it.
+note, from a shared URL, or on `hashchange` — and scrolls to it. It walks **every**
+`<details>` above the target, since a section now sits inside its part.
 
 In print every fold is opened (`build-pdf.js` sets `details.open`, and
 `::details-content` is made visible), the note's summary is hidden but a section's

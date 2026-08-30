@@ -215,10 +215,20 @@ body.reading .main{height:auto;overflow-y:visible}
 .thoughts-contents a{display:block;color:var(--muted);font-size:.9rem;padding:.3rem 0}
 .thoughts-contents a:hover{color:var(--text);opacity:1}
 .thoughts section{margin-bottom:4.5rem;scroll-margin-top:70px}
-/* On screen the document is its own contents: a section is a name that opens. */
+/* On screen the document is its own contents: a part is a name that opens onto
+   its sections, and a section a name that opens onto the prose. */
 .thoughts-contents{display:none}
-.section-part{font-family:var(--font-display);font-style:italic;font-size:.9rem;color:var(--light);
-    margin:2.5rem 0 1.25rem;text-align:center}
+.part-fold{margin-bottom:2.25rem}
+.part-fold>summary{list-style:none;cursor:pointer;text-align:center}
+.part-fold>summary::-webkit-details-marker{display:none}
+.part-fold>summary::after{content:'+';display:inline-block;margin-left:.6rem;
+    font-family:var(--font-body);font-weight:300;font-size:.85rem;color:var(--light);vertical-align:middle}
+.part-fold[open]>summary::after{content:'\2013'}
+.part-fold>summary:hover .part-name{opacity:.6}
+.part-name{display:inline;font-family:var(--font-display);font-style:italic;font-weight:400;
+    font-size:1.5rem;line-height:1.35;color:var(--text);margin:0}
+.part-body{padding:2.25rem 0 1rem}
+.part-fold[open]{margin-bottom:3.5rem}
 .section-fold{margin-bottom:1.75rem;scroll-margin-top:2rem}
 .section-fold>summary{list-style:none;cursor:pointer}
 .section-fold>summary::-webkit-details-marker{display:none}
@@ -276,6 +286,8 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts section{margin-bottom:3.5rem}
     .thoughts h2{font-size:1.15rem}
     .thoughts .law{font-size:1.15rem;padding:1.75rem 0;margin:2.75rem 0}
+    .part-name{font-size:1.25rem}
+    .part-body{padding:1.75rem 0 .5rem}
     .landing-symbol{width:30px;height:30px;top:2rem}
     .landing-image{max-width:90%;max-height:65vh}
     .landing-enter{bottom:3rem;padding:.9rem 2.5rem;font-size:.8rem}
@@ -344,7 +356,12 @@ body.reading .main{height:auto;overflow-y:visible}
     .thoughts-fold .thoughts-contents{padding:0}
     .thoughts-note{border:0;padding:0;margin:0 0 3rem}
     .thoughts-contents{display:block;margin-bottom:0;break-after:page}
-    .section-part{display:none}
+    .part-fold{margin:0}
+    .part-fold::details-content{content-visibility:visible;block-size:auto}
+    .part-fold>summary{display:block;list-style:none;text-align:left;margin-bottom:1.5rem}
+    .part-fold>summary::after,.part-fold[open]>summary::after{content:none}
+    .part-name{display:block;font-size:1.5rem}
+    .part-body{padding:0}
     .section-fold{margin-bottom:2.5rem}
     .section-fold::details-content{content-visibility:visible;block-size:auto}
     .section-fold>summary{display:block;list-style:none}
