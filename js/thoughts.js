@@ -123,7 +123,7 @@ function partFold(name,inner,id){
 
 // One section, folded shut behind its own heading.
 function sectionFold(s){
-    return '<details class="section-fold" id="'+escapeText(s.id||'')+'">'
+    return '<details class="section-fold" open id="'+escapeText(s.id||'')+'">'
         +'<summary><h2>'+(s.numeral?'<span class="numeral">'+escapeText(s.numeral)+'</span>':'')
         +escapeText(s.heading||'')+'</h2></summary>'
         +'<div class="section-body">'
@@ -153,6 +153,14 @@ function openThoughtTarget(hash){
 }
 
 function wireThought(root){
+    // Opening a part opens everything in it. A section can still be closed on
+    // its own; opening its part again brings it back.
+    root.querySelectorAll('.part-fold').forEach(part=>{
+        part.addEventListener('toggle',()=>{
+            if(part.open)part.querySelectorAll('.section-fold').forEach(sec=>{sec.open=true});
+        });
+    });
+
     root.addEventListener('click',e=>{
         const a=e.target.closest&&e.target.closest('a[href^="#"]');
         if(!a)return;

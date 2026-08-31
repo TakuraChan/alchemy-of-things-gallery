@@ -74,8 +74,10 @@ onto the names of its sections, each a `<details class="section-fold">` whose
 is a part-fold too (named by `closingLabel`, default *Conclusion*), since it is a
 peer of the parts rather than of the sections inside them.
 
-So the page arrives as nine names and the whole document is one screen; opening a
-part costs one tap, its section another. `renderThought()` groups **consecutive**
+So the page arrives as nine names and the whole document is one screen. **One tap
+reaches the prose**: a section is rendered `open`, and opening a part re-opens
+every section inside it, so no second plus is ever in the way. A section can still
+be closed on its own; opening its part again brings it back. `renderThought()` groups **consecutive**
 sections by their `part` field, so re-ordering sections in the admin re-groups them.
 
 **A section with no part stands as a peer of the parts** — one fold, its own name
