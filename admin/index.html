@@ -77,6 +77,13 @@
         .panel[open]>summary::after{content:'\2013'}
         .panel[open]>summary{border-bottom:1px solid var(--border);color:var(--text)}
         .panel-count{margin-left:auto;color:var(--light);font-size:.75rem}
+.place>summary,.place-flat{display:flex;align-items:center;gap:.6rem;font-size:.85rem;padding:.35rem 0;list-style:none}
+.place>summary{cursor:pointer}
+.place>summary::-webkit-details-marker{display:none}
+.place>summary::after{content:'+';color:var(--light);font-size:.85rem;line-height:1;width:.7rem;text-align:right}
+.place[open]>summary::after{content:'\2013'}
+.place-flat{padding-right:.7rem}
+.place-body{padding:0 0 .5rem}
         .visits-map{margin-bottom:1rem;background:var(--card);border:1px solid var(--border)}
         .visits-map svg{display:block;width:100%;height:auto;touch-action:pan-y}
         .panel-body{padding:1rem;max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -2409,20 +2416,22 @@ async function loadVisits(){
         });
         // Closed on arrival: the count is on the summary, and the list — countries,
         // their regions, their cities — is long enough to be asked for.
-        html+='<details class="panel"><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
+        // The countries are the list; what is inside each one is asked for.
+        html+='<details class="panel" open><summary>Where<span class="panel-count">'+countries.length+'</span></summary><div class="panel-body">'
             +(countries.length?countries.map(([k,n])=>{
                 const regions=(byCountry[k]||[]).sort((a,b)=>b[1]-a[1]);
                 const cities=(citiesOf[ccOf[k]]||[]).sort((a,b)=>b[1]-a[1]);
-                return '<div style="padding:.35rem 0">'
-                    +'<div style="display:flex;align-items:center;gap:.6rem;font-size:.85rem">'
-                    +'<span style="flex:1">'+esc(k)+'</span>'
+                const line='<span style="flex:1">'+esc(k)+'</span>'
                     +'<span style="width:'+Math.max(4,Math.round(n/max*90))+'px;height:6px;background:'+visitsShade(n,max)+'"></span>'
-                    +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span></div>'
-                    +regions.map(([r,rn])=>'<div style="display:flex;gap:.6rem;font-size:.8rem;color:var(--muted);padding:.15rem 0 0 1rem">'
+                    +'<span style="color:var(--muted);min-width:2.5rem;text-align:right">'+n+'</span>';
+                const inside=regions.map(([r,rn])=>'<div style="display:flex;gap:.6rem;font-size:.8rem;color:var(--muted);padding:.15rem 0 0 1rem">'
                         +'<span style="flex:1">'+esc(r)+'</span><span>'+rn+'</span></div>').join('')
                     +cities.map(([c,cn])=>'<div style="display:flex;gap:.6rem;font-size:.75rem;color:var(--light);padding:.1rem 0 0 2rem">'
-                        +'<span style="flex:1">'+esc(c)+'</span><span>'+cn+'</span></div>').join('')
-                    +'</div>';
+                        +'<span style="flex:1">'+esc(c)+'</span><span>'+cn+'</span></div>').join('');
+                // A country with nothing inside it does not pretend to open.
+                if(!inside)return '<div class="place place-flat">'+line+'</div>';
+                return '<details class="place"><summary>'+line+'</summary>'
+                    +'<div class="place-body">'+inside+'</div></details>';
               }).join('')
               :'<p style="color:var(--muted);font-size:.85rem">No locations recorded yet.</p>')
             +'</div></details>';
