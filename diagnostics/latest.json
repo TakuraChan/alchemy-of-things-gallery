@@ -1,5 +1,5 @@
 {
-  "time": "2026-09-02T17:39:09.463Z",
+  "time": "2026-09-02T18:58:22.566Z",
   "adminVersion": "2026-08-26.2",
   "origin": "https://alchemyofthings.com",
   "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6 Mobile/15E148 Safari/604.1",
@@ -26,7 +26,7 @@
       "status": 200,
       "result": "ok",
       "entries": 100,
-      "views": 190
+      "views": 192
     }
   ],
   "deployedData": [
@@ -49,12 +49,53 @@
       "entries": 14
     }
   ],
-  "errorCount": 0,
-  "errors": [],
-  "logCount": 2,
-  "log": [
-    "[19:39:05] GitHub API: GET /contents/data/categories.json",
-    "[19:39:06] GitHub response: 200"
+  "errorCount": 2,
+  "errors": [
+    "[20:58:01] Load works error: paintings Request timed out - check your internet connection",
+    "[20:58:01] Load works error: photography Request timed out - check your internet connection"
   ],
-  "reason": "admin opened"
+  "logCount": 82,
+  "log": [
+    "[20:03:15] GitHub API: GET /contents/data/paintings/primitive.json",
+    "[20:03:16] GitHub response: 200",
+    "[20:03:16] GitHub API: GET /contents/data/photography/imagined-mountains.json",
+    "[20:03:16] GitHub response: 200",
+    "[20:03:16] GitHub API: GET /contents/data/moments/cascais.json",
+    "[20:03:16] GitHub response: 200",
+    "[20:03:16] GitHub API: GET /contents/data/paintings/the-space-between.json",
+    "[20:03:16] GitHub response: 200",
+    "[20:03:16] GitHub API: GET /contents/data/photography/just-be.json",
+    "[20:03:16] GitHub response: 200",
+    "[20:03:16] GitHub API: GET /contents/data/moments/kahemba.json",
+    "[20:03:17] GitHub response: 200",
+    "[20:03:17] GitHub API: GET /contents/data/paintings/third-moon-1-of-2.json",
+    "[20:03:17] GitHub response: 200",
+    "[20:03:17] GitHub API: GET /contents/data/photography/limbo.json",
+    "[20:03:17] GitHub response: 200",
+    "[20:03:17] GitHub response: 200",
+    "[20:03:17] GitHub API: GET /contents/data/paintings/third-moon-2-of-2.json",
+    "[20:03:18] GitHub response: 200",
+    "[20:03:18] GitHub API: GET /contents/data/photography/moons-part.json",
+    "[20:03:18] GitHub response: 200",
+    "[20:03:18] GitHub API: GET /contents/data/paintings/unfinished-1775754608868-0.json",
+    "[20:03:18] GitHub response: 200",
+    "[20:03:18] GitHub API: GET /contents/data/photography/nyura.json",
+    "[20:03:18] GitHub response: 200",
+    "[20:03:18] GitHub API: GET /contents/data/paintings/unfinished-1775754617051-1.json",
+    "[20:03:19] GitHub response: 200",
+    "[20:03:19] GitHub API: GET /contents/data/photography/still.json",
+    "[20:03:19] GitHub response: 200",
+    "[20:03:19] GitHub API: GET /contents/data/paintings/unfinished-1775754621015-2.json",
+    "[20:03:20] GitHub response: 200",
+    "[20:03:20] GitHub API: GET /contents/data/photography/transcendent.json",
+    "[20:03:20] GitHub response: 200",
+    "[20:03:20] GitHub API: GET /contents/data/paintings/unfinished-1775754624879-3.json",
+    "[20:03:20] GitHub response: 200",
+    "[20:03:20] GitHub API: GET /contents/data/photography/unrequited.json",
+    "[20:58:01] GitHub timeout after 30s",
+    "[20:58:01] Load works error: paintings Request timed out - check your internet connection",
+    "[20:58:01] GitHub timeout after 30s",
+    "[20:58:01] Load works error: photography Request timed out - check your internet connection"
+  ],
+  "reason": "errors logged"
 }
