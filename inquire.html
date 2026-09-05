@@ -30,8 +30,10 @@
                 <div class="field"><label>Name</label><input type="text" name="name" required></div>
                 <div class="field"><label>Email</label><input type="email" name="email" required></div>
                 <div class="field"><label>Message</label><textarea name="message" required></textarea></div>
-                <button type="submit">Send inquiry</button>
+                <button type="submit">send inquiry</button>
             </form>
+            <p class="contact-alt">or write directly to
+                <a href="mailto:inquire@alchemyofthings.com">inquire@alchemyofthings.com</a></p>
         </section>
     </main>
     <footer class="footer">
@@ -52,10 +54,25 @@
             :(wtype==='paintings'?'/':'/'+wtype+'.html');
         document.getElementById('ascent').outerHTML=ascentLine(w||'Inquire',upHref,true);
         document.getElementById('form').onsubmit=async function(e){
-            e.preventDefault();const b=this.querySelector('button');b.textContent='sending...';b.disabled=true;
-            try{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(new FormData(this))});
-            if(r.ok)this.innerHTML='<p class="success">Thank you. A response will follow.</p>';else throw 0}
-            catch(e){b.textContent='Send inquiry';b.disabled=false;alert('Error. Try again.')}
+            e.preventDefault();
+            const b=this.querySelector('button');
+            b.textContent='sending...';b.disabled=true;
+            try{
+                const r=await fetch('/',{method:'POST',
+                    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+                    body:new URLSearchParams(new FormData(this))});
+                if(!r.ok)throw new Error(r.status);
+                this.innerHTML='<p class="success">Thank you. Your message has been received.'
+                    +'<br>A response will follow.</p>';
+            }catch(err){
+                // An alert says nothing and takes the address with it when dismissed.
+                b.textContent='send inquiry';b.disabled=false;
+                const note=document.getElementById('send-failed')||document.createElement('p');
+                note.id='send-failed';note.className='contact-alt';
+                note.innerHTML='That did not send. Please try again, or write to '
+                    +'<a href="mailto:inquire@alchemyofthings.com">inquire@alchemyofthings.com</a>.';
+                this.appendChild(note);
+            }
         };
     </script>
 </body>
