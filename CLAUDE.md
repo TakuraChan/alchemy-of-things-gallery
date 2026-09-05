@@ -355,11 +355,12 @@ the dashboard **whether or not the notification email is delivered**. That matte
 here: submissions sat uncollected while the site advertised addresses that were not
 being read.
 
-**The addresses on the site are not one address.** `about.html` hardcodes
-`inquiry@`, `data/content.json` sets `inquire@` (and overwrites About at runtime),
-`data/settings.json` says `inquiry@`, `contact.html` offers `inquiry@`, the old
-`contact.html` used `enquiries@`, and the thoughts entry replies to `review@`.
-Before changing any of them, decide which one is actually monitored.
+**Only two mailboxes exist**: `inquire@alchemyofthings.com` and
+`review@alchemyofthings.com`. The site used to advertise `inquiry@` (about.html,
+settings.json) and `enquiries@` (the old contact page) as well — neither is a real
+mailbox, so anything sent to them was lost. Everything now points at `inquire@`,
+except the thought experiment, which replies to `review@` on purpose. **Check any
+new address against those two before putting it on a page.**
 
 Notification email is configured in the Netlify UI — **Project configuration →
 Notifications → Form submission notifications** — not in this repo, and not
