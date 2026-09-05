@@ -75,12 +75,18 @@ a:hover{opacity:.6}
 .work-ref{font-size:.9rem;color:var(--muted);margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
 .field{margin-bottom:1.5rem}
 .field label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.5rem}
-.field input,.field textarea{width:100%;padding:1rem;border:1px solid var(--border);background:var(--bg);font-family:var(--font-body);font-size:1rem}
-.field input:focus,.field textarea:focus{outline:0;border-color:var(--text)}
+.field input,.field textarea,.field select{width:100%;padding:1rem;border:1px solid var(--border);background:var(--bg);font-family:var(--font-body);font-weight:300;font-size:1rem;color:var(--text)}
+.field input:focus,.field textarea:focus,.field select:focus{outline:0;border-color:var(--text)}
+.field select{border-radius:0;height:calc(1rem*2 + 1.7rem)}
 .field textarea{min-height:150px;resize:vertical}
-.inquiry button{padding:1rem 3rem;border:1px solid var(--text);background:var(--text);color:var(--bg);font-family:var(--font-body);font-size:.85rem;cursor:pointer;transition:all .3s}
+.inquiry button{padding:1rem 3rem;border:1px solid var(--text);background:var(--text);color:var(--bg);font-family:var(--font-body);font-size:.85rem;text-transform:lowercase;letter-spacing:.05em;cursor:pointer;transition:all .3s}
 .inquiry button:hover{background:0 0;color:var(--text)}
 .success{text-align:center;color:var(--muted);padding:3rem 0}
+/* The address stays on the page: the form is the way, not the only way. */
+.about-write a{font-family:var(--font-display);font-style:italic;font-size:1.15rem}
+.contact-alt{margin-top:2rem;text-align:center;font-size:.85rem;color:var(--light)}
+.contact-alt a{color:var(--muted);border-bottom:1px solid var(--border)}
+.contact-alt a:hover{color:var(--text);opacity:1}
 .footer{padding:4rem;display:flex;justify-content:center}
 .footer-content{display:flex;flex-direction:column;align-items:center;gap:.5rem}
 .symbol-footer{display:none}
