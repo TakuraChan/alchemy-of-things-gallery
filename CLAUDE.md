@@ -344,6 +344,12 @@ Netlify Forms is **enabled** on the project (`alchemyofthings`, site id
   in a hidden field.
 - `contact` — `contact.html`, general, with the `reason` select.
 
+Both forms behave the same way, and should stay that way: the live address sits
+under the form, a send that works replaces it with a plain confirmation, and a send
+that fails keeps the typed message, re-enables the button and offers the address
+inline. **No `alert()` on a public page** — it says nothing and takes the address
+with it when dismissed.
+
 A form is detected from the **deployed HTML**, so it must carry `data-netlify="true"`
 and a `name`. Both post by `fetch` to `/` as `application/x-www-form-urlencoded`,
 which is why each also carries a hidden `form-name` — without it Netlify cannot tell
