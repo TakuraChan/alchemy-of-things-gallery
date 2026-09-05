@@ -161,6 +161,10 @@ clip trimmed to 15s takes 15s to encode, not 30. Published length is capped at
 eight to fifteen seconds is where a loop reads as a held moment. The poster is the
 first frame **of the window**.
 
+- `contact.html` - The contact form. `name`, `email`, an optional `reason`
+  (Inquiry / Painting inquiry / Other) and `message`, posted to **Netlify Forms**
+  under the form name `contact`. Linked from About, which keeps its address below
+  it: the form is the primary path, not the only one.
 - `about.html` - About + portfolio modal
 - `js/main.js` - All frontend logic (gallery, lightbox, ratings)
 - `css/style.css` - All styles (`.thoughts*` block = long-form reading)
@@ -331,6 +335,36 @@ drops anything orphaned into Uncategorized, where it can be re-assigned.
 - Detected by `collectionId === 'unfinished'` OR `w.unfinished === true`
 - Display with 90% grayscale filter
 - No ratings shown
+
+## Forms
+Netlify Forms is **enabled** on the project (`alchemyofthings`, site id
+`ea7e70d4-1cfc-4687-9522-5cde5c2a0be0`). Two forms exist:
+
+- `inquiry` — `inquire.html`, reached from a work page, carries the work's title
+  in a hidden field.
+- `contact` — `contact.html`, general, with the `reason` select.
+
+A form is detected from the **deployed HTML**, so it must carry `data-netlify="true"`
+and a `name`. Both post by `fetch` to `/` as `application/x-www-form-urlencoded`,
+which is why each also carries a hidden `form-name` — without it Netlify cannot tell
+which form a scripted POST belongs to. `netlify-honeypot="bot-field"` plus an empty
+`bot-field` input is the whole spam defence; no captcha.
+
+Netlify stores every submission server side with its own timestamp and shows it in
+the dashboard **whether or not the notification email is delivered**. That matters
+here: submissions sat uncollected while the site advertised addresses that were not
+being read.
+
+**The addresses on the site are not one address.** `about.html` hardcodes
+`inquiry@`, `data/content.json` sets `inquire@` (and overwrites About at runtime),
+`data/settings.json` says `inquiry@`, `contact.html` offers `inquiry@`, the old
+`contact.html` used `enquiries@`, and the thoughts entry replies to `review@`.
+Before changing any of them, decide which one is actually monitored.
+
+Notification email is configured in the Netlify UI — **Project configuration →
+Notifications → Form submission notifications** — not in this repo, and not
+through the Netlify MCP, which can toggle forms on and off and read submissions
+but cannot set the notification hook.
 
 ## Visits
 One tab covers views and appreciations together. `netlify/functions/visit.js`
